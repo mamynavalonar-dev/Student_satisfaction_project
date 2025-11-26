@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+
+{% block title %}Accueil - Prédicteur de Satisfaction{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero Section -->
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="display-4 text-primary mb-3">🎓 Prédicteur de Satisfaction Étudiante</h1>
+            <p class="lead">Utilisez l'intelligence artificielle pour prédire la satisfaction des étudiants en fonction des caractéristiques des cours</p>
+        </div>
+    </div>
+
+    <!-- Status Cards -->
+    <div class="row mb-5">
+        <div class="col-md-3">
+            <div class="card stats-card h-100">
+                <div class="card-body text-center">
+                    <h2 class="card-title">{{ total_feedbacks|default:0 }}</h2>
+                    <p class="card-text">Avis Collectés</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body text-center">
+                    <h2 class="card-title">{{ satisfied_count|default:0 }}</h2>
+                    <p class="card-text">Étudiants Satisfaits</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body text-center">
+                    <h2 class="card-title">
+                        {% if total_feedbacks > 0 %}
+                            {{ satisfied_count|default:0 }}/{{ total_feedbacks }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </h2>
+                    <p class="card-text">Taux de Satisfaction</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card {% if model_loaded %}bg-success{% else %}bg-warning{% endif %} text-white h-100">
+                <div class="card-body text-center">
+                    <h2 class="card-title">
+                        {% if model_loaded %}
+                            ✅
+                        {% else %}
+                            ⚠️
+                        {% endif %}
+                    </h2>
+                    <p class="card-text">Modèle IA</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="text-center mb-4">Actions Rapides</h2>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3 ">
+                        <i class="bi bi-magic" style="font-size: 3rem; color: #007bff;"></i>
+                        <h3>🔮</h3>
+                    </div>
+                    <h4>Faire une Prédiction</h4>
+                    <p class="text-muted">Prédisez la satisfaction d'un étudiant en saisissant les caractéristiques du cours</p>
+                    <a href="{% url 'predict' %}" class="btn btn-primary">
+                        Commencer la Prédiction
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <h3>🧠</h3>
+                    </div>
+                    <h4>Entraîner le Modèle</h4>
+                    <p class="text-muted">Uploadez de nouvelles données pour améliorer les performances du modèle</p>
+                    <a href="{% url 'train_model' %}" class="btn btn-success">
+                        Entraîner le Modèle
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <h3>📊</h3>
+                    </div>
+                    <h4>Voir les Statistiques</h4>
+                    <p class="text-muted">Analysez les données et les tendances de satisfaction des étudiants</p>
+                    <a href="{% url 'statistics' %}" class="btn btn-info">
+                        Voir les Stats
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- How it works -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h3 class="text-center mb-4">Comment ça fonctionne ?</h3>
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <div class="mb-3">
+                                <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                    <span class="fs-4">1</span>
+                                </div>
+                            </div>
+                            <h5>Collecte des Données</h5>
+                            <p class="text-muted">Rassemblement des avis étudiants avec les caractéristiques des cours</p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="mb-3">
+                                <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                    <span class="fs-4">2</span>
+                                </div>
+                            </div>
+                            <h5>Entraînement IA</h5>
+                            <p class="text-muted">Le réseau de neurones apprend les patterns de satisfaction</p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="mb-3">
+                                <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                    <span class="fs-4">3</span>
+                                </div>
+                            </div>
+                            <h5>Prédiction</h5>
+                            <p class="text-muted">Prédiction de la satisfaction pour de nouveaux cours</p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="mb-3">
+                                <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                    <span class="fs-4">4</span>
+                                </div>
+                            </div>
+                            <h5>Amélioration</h5>
+                            <p class="text-muted">Utilisation des insights pour améliorer les cours</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features -->
+    <div class="row">
+        <div class="col-12">
+            <h3 class="text-center mb-4">Fonctionnalités Principales</h3>
+        </div>
+        <div class="col-md-6">
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">
+                    <strong>🤖 Intelligence Artificielle</strong><br>
+                    <small class="text-muted">Réseau de neurones MLP pour des prédictions précises</small>
+                </li>
+                <li class="list-group-item">
+                    <strong>📈 Analyse en Temps Réel</strong><br>
+                    <small class="text-muted">Prédictions instantanées avec probabilités</small>
+                </li>
+                <li class="list-group-item">
+                    <strong>📊 Visualisation de Données</strong><br>
+                    <small class="text-muted">Graphiques et statistiques détaillées</small>
+                </li>
+            </ul>
+        </div>
+        <div class="col-md-6">
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">
+                    <strong>🔄 Entraînement Personnalisé</strong><br>
+                    <small class="text-muted">Uploadez vos propres données d'entraînement</small>
+                </li>
+                <li class="list-group-item">
+                    <strong>💾 Export de Données</strong><br>
+                    <small class="text-muted">Exportation des résultats en format CSV</small>
+                </li>
+                <li class="list-group-item">
+                    <strong>🌐 Interface Web</strong><br>
+                    <small class="text-muted">Interface intuitive et responsive</small>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

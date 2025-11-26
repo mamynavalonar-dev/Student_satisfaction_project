@@ -1,0 +1,120 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion & Inscription - Prédicteur de Satisfaction</title>
+
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="{% static 'auth/css/animate.min.css' %}">
+
+
+    <link rel="stylesheet" href="{% static 'auth/st-inscr.css' %}">
+</head>
+<style>
+    body {
+        background: url("{% static 'auth/fond.jpg' %}") no-repeat center center fixed;
+        background-size: cover;
+    }
+</style>
+
+<body>
+
+    <div class="wrapper" style="border: 2px solid rgb(101, 101, 250);border-radius: 10px;box-shadow: 0 0 20px rgba(43,43,252,1);">
+        <span class="rotate-bg" style=" background: linear-gradient(90deg, rgba(43,43,252,1) 4%, rgba(0,212,255,1) 64%);"></span>
+        <span class="rotate-bg2" ></span>
+
+        <div class="form-box login">
+            <h2 class="title animation tlt" style="--i:0; --j:21">Connexion</h2>
+
+            {% if messages %}
+                {% for message in messages %}
+                    {% if "login_error" in message.tags %}
+                        <div class="alert alert-danger" style="color: red; text-align: center; font-size: 14px; margin-bottom: 10px;">{{ message }}</div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+
+            <form action="{% url 'login_register' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="login">
+
+                <div class="input-box animation" style="--i:1; --j:22">
+                    <input type="text" name="username" required>
+                    <label>Nom d'utilisateur</label>
+                    <i class='bx bxs-user'></i>
+                </div>
+
+                <div class="input-box animation" style="--i:2; --j:23">
+                    <input type="password" name="password" required>
+                    <label>Mot de passe</label>
+                    <i class='bx bxs-lock-alt'></i>
+                </div>
+
+                <button type="submit" class="btn animation" style="--i:3; --j:24">Se connecter</button>
+
+                <div class="linkTxt animation" style="--i:5; --j:25">
+                    <p>Pas encore de compte ? <a href="#" class="register-link">S'inscrire</a></p>
+                </div>
+            </form>
+        </div>
+
+        <div class="info-text login">
+            <h2 class="animation" style="--i:0; --j:20">Bon Retour!</h2>
+            <p class="animation" style="--i:1; --j:21">Connectez-vous pour accéder à votre tableau de bord.</p>
+        </div>
+
+        <div class="form-box register" >
+            <h2 class="title animation" style="--i:17; --j:0">Inscription</h2>
+
+            {% if messages %}
+                {% for message in messages %}
+                    {% if "register_error" in message.tags %}
+                         <div class="alert alert-danger" style="color: red; text-align: center; font-size: 14px; margin-bottom: 10px;">{{ message }}</div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+
+            <form action="{% url 'login_register' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="register">
+
+                <div class="input-box animation" style="--i:18; --j:1">
+                    <input type="text" name="username" required>
+                    <label>Nom d'utilisateur</label>
+                    <i class='bx bxs-user'></i>
+                </div>
+
+                <div class="input-box animation" style="--i:19; --j:2">
+                    <input type="email" name="email" required>
+                    <label>Email</label>
+                    <i class='bx bxs-envelope'></i>
+                </div>
+
+                <div class="input-box animation" style="--i:20; --j:3">
+                    <input type="password" name="password" required>
+                    <label>Mot de passe</label>
+                    <i class='bx bxs-lock-alt'></i>
+                </div>
+
+                <button type="submit" class="btn animation" style="--i:21; --j:4">S'inscrire</button>
+
+                <div class="linkTxt animation" style="--i:22; --j:5">
+                    <p>Déjà un compte ? <a href="#" class="login-link">Se connecter</a></p>
+                </div>
+            </form>
+        </div>
+
+        <div class="info-text register">
+            <h2 class="animation" style="--i:17; --j:0;">Bienvenue!</h2>
+            <p class="animation" style="--i:18; --j:1;">Créez un compte pour commencer à utiliser le prédicteur.</p>
+        </div>
+    </div>
+
+    <script src="{% static 'vendor/js/jquery-3.7.1.min.js' %}"></script>
+    <script src="{% static 'vendor/js/jquery.lettering.js' %}"></script>
+    <script src="{% static 'vendor/js/jquery.textillate.min.js' %}"></script>
+    <script src="{% static 'auth/app.js' %}"></script>
+</body>
+</html>

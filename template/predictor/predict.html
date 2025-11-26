@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block nav_active %}page-predict{% endblock %}
+{% block nav_predict %}active{% endblock %}
+
+{% block title %}Prédiction - Satisfaction Étudiante{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="text-center mb-4">🔮 Prédiction de Satisfaction</h1>
+            <p class="text-center text-muted mb-5">Saisissez les caractéristiques du cours pour prédire la satisfaction de l'étudiant</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Caractéristiques du Cours</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="predictionForm">
+                        {% csrf_token %}
+                        {% for field in form %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                            <div class="form-text">{{ field.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        <button type="submit" class="btn btn-primary btn-lg w-100" id="predictBtn">
+                            <span class="spinner-border spinner-border-sm d-none" id="spinner"></span>
+                            Prédire la Satisfaction
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            {% if prediction_result %}
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Résultat de la Prédiction</h4>
+                </div>
+                <div class="card-body">
+                    <div class="prediction-result {% if prediction_result.prediction == 1 %}satisfied{% else %}unsatisfied{% endif %} text-center mb-4">
+                        <h2 class="mb-3">
+                            {% if prediction_result.prediction == 1 %}
+                                😊 {{ prediction_result.satisfaction_text }}
+                            {% else %}
+                                😞 {{ prediction_result.satisfaction_text }}
+                            {% endif %}
+                        </h2>
+                        <h3>
+                            Probabilité: {{ prediction_result.prediction_probability|floatformat:1 }}%
+                        </h3>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Confiance de la prédiction:</label>
+                        <div class="probability-bar">
+                            <div class="probability-fill {% if prediction_result.prediction == 1 %}bg-success{% else %}bg-danger{% endif %}"
+                                 style="width: {{ prediction_result.prediction_probability|floatformat:1 }}%;">
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-1">
+                            <small>Non Satisfait ({{ prediction_result.probability_unsatisfied|floatformat:1 }}%)</small>
+                            <small>Satisfait ({{ prediction_result.probability_satisfied|floatformat:1 }}%)</small>
+                        </div>
+                    </div>
+
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6 class="card-title">Données utilisées:</h6>
+                            <ul class="list-unstyled mb-0">
+                                <li><strong>Qualité enseignement:</strong> {{ input_data.qualite_enseignement }}/7</li>
+                                <li><strong>Charge de travail:</strong> {{ input_data.charge_travail }}/7</li>
+                                <li><strong>Interactivité:</strong> {{ input_data.interactivite }}/7</li>
+                                <li><strong>Type de cours:</strong> {{ input_data.type_cours|capfirst }}</li>
+                                <li><strong>Niveau étudiant:</strong> {{ input_data.niveau_etudiant }}</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <h6>💡 Recommandations:</h6>
+                        {% if prediction_result.prediction == 0 %}
+                        <div class="alert alert-warning">
+                            <strong>Pour améliorer la satisfaction:</strong>
+                            <ul class="mb-0">
+                                {% if input_data.qualite_enseignement < 4 %}<li>Améliorer la qualité de l'enseignement.</li>{% endif %}
+                                {% if input_data.interactivite < 4 %}<li>Augmenter l'interactivité des cours.</li>{% endif %}
+                                {% if input_data.charge_travail > 5 %}<li>Envisager de réduire la charge de travail.</li>{% endif %}
+                                {% if input_data.charge_travail < 3 %}<li>La charge de travail est peut-être trop légère, vérifier si le contenu est suffisant.</li>{% endif %}
+                                {% if not input_data.qualite_enseignement < 4 and not input_data.interactivite < 4 and not input_data.charge_travail > 5 and not input_data.charge_travail < 3 %}
+                                <li>Analyser les retours qualitatifs pour identifier des points d'amélioration spécifiques.</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-success">
+                            <strong>Points forts identifiés:</strong>
+                            <ul class="mb-0">
+                                {% if input_data.qualite_enseignement >= 5 %}<li>Excellente qualité d'enseignement perçue.</li>{% endif %}
+                                {% if input_data.interactivite >= 5 %}<li>Très bonne interactivité en cours.</li>{% endif %}
+                                {% if input_data.charge_travail >= 3 and input_data.charge_travail <= 5 %}<li>La charge de travail semble bien équilibrée.</li>{% endif %}
+                                {% if not input_data.qualite_enseignement >= 5 and not input_data.interactivite >= 5 %}
+                                <li>La configuration générale du cours est favorable à la satisfaction.</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mt-3 text-center">
+                        <a href="{% url 'predict' %}" class="btn btn-outline-primary">Nouvelle Prédiction</a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="mb-0">Instructions</h4>
+                    </div>
+                    <div class="card-body">
+                         <div class="alert alert-info">
+                            <h6>Comment utiliser ce prédicteur:</h6>
+                            <ol>
+                                <li><strong>Qualité d'enseignement:</strong> Notez de 1 (très insatisfait) à 7 (très satisfait)</li>
+                                <li><strong>Charge de travail:</strong> Indiquez de 1 (très léger) à 7 (très lourd)</li>
+                                <li><strong>Interactivité:</strong> Évaluez de 1 (très non interactif) à 7 (très interactif)</li>
+                                <li><strong>Type de cours:</strong> Sélectionnez le format du cours</li>
+                                <li><strong>Niveau étudiant:</strong> Choisissez le niveau académique</li>
+                            </ol>
+                        </div>
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6>🧠 À propos du modèle:</h6>
+                                <p class="mb-2">Ce prédicteur utilise un <strong>réseau de neurones MLP</strong> (Multi-Layer Perceptron) entraîné sur des données d'avis étudiants.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<style>.prediction-result{animation:slideIn .5s ease-out}.prediction-result.satisfied{border-left:4px solid #28a745;padding-left:15px}.prediction-result.unsatisfied{border-left:4px solid #dc3545;padding-left:15px}@keyframes slideIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}.probability-bar{width:100%;height:20px;background-color:#e9ecef;border-radius:10px;overflow:hidden;position:relative}.probability-fill{height:100%;border-radius:10px;transition:width 1.5s ease-out;position:relative}.probability-fill::after{content:'';position:absolute;top:0;right:0;bottom:0;left:0;background:linear-gradient(45deg,transparent 25%,rgba(255,255,255,.2) 25%,rgba(255,255,255,.2) 50%,transparent 50%,transparent 75%,rgba(255,255,255,.2) 75%);background-size:15px 15px;animation:move 1s linear infinite}@keyframes move{0%{background-position:0 0}100%{background-position:30px 0}}.card{box-shadow:0 2px 4px rgba(0,0,0,.1);border:none;transition:transform .2s ease-in-out}.card:hover{transform:translateY(-2px);box-shadow:0 4px 8px rgba(0,0,0,.15)}.btn-primary{background:linear-gradient(135deg,#007bff 0%,#0056b3 100%);border:none;transition:all .3s ease}.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,123,255,.3)}.alert{border:none;border-radius:8px}.spinner-border-sm{width:1rem;height:1rem}</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded',function(){const e=document.getElementById("predictionForm"),t=document.getElementById("predictBtn"),o=document.getElementById("spinner");e&&t&&o&&e.addEventListener("submit",function(e){t.disabled=!0,o.classList.remove("d-none"),t.innerHTML='<span class="spinner-border spinner-border-sm me-2"></span> Prédiction en cours...'});const n=document.querySelectorAll(".probability-fill");n.forEach(e=>{const t=e.style.width;e.style.width="0%",setTimeout(()=>{e.style.width=t},500)});const d=e?e.querySelectorAll("input, select"):[];d.forEach(e=>{e.addEventListener("change",function(){!function(e){const t=e.value,o=e.name;e.classList.remove("is-invalid","is-valid"),"qualite_enseignement"===o||"interactivite"===o||"charge_travail"===o?t>=1&&t<=7?e.classList.add("is-valid"):""!==t&&e.classList.add("is-invalid"):""!==t&&e.classList.add("is-valid")}(this)})})});
+</script>
+{% endblock %}

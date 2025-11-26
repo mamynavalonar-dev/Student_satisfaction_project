@@ -1,0 +1,314 @@
+{% extends 'base.html' %}
+
+{% block nav_active %}page-train{% endblock %}
+{% block nav_train %}active{% endblock %}
+
+{% block title %}Entraînement - Modèle IA{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="text-center mb-4">🧠 Entraînement du Modèle</h1>
+            <p class="text-center text-muted mb-5">Uploadez vos données pour entraîner un nouveau modèle de prédiction</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">📤 Nouveau Entraînement</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" id="trainingForm">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="{{ form.csv_file.id_for_label }}" class="form-label">
+                                {{ form.csv_file.label }}
+                            </label>
+                            {{ form.csv_file }}
+                            <div class="form-text">
+                                <small>Le fichier CSV doit contenir les colonnes: qualite_enseignement (1-7), charge_travail (1-7), interactivite (1-7), type_cours, niveau_etudiant, satisfaction (0 ou 1)</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">
+                                {{ form.notes.label }}
+                            </label>
+                            {{ form.notes }}
+                        </div>
+
+                        <button type="submit" class="btn btn-success btn-lg w-100" id="trainBtn">
+                            <span class="spinner-border spinner-border-sm d-none" id="trainSpinner"></span>
+                            Démarrer l'Entraînement
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">📋 Format des Données Requis</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Colonne</th>
+                                    <th>Type</th>
+                                    <th>Valeurs Attendues</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>qualite_enseignement</code></td>
+                                    <td>Entier</td>
+                                    <td>1-7 (1=Très insatisfait, 7=Très satisfait)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>charge_travail</code></td>
+                                    <td>Entier</td>
+                                    <td>1-7 (1=Très léger, 7=Très lourd)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>interactivite</code></td>
+                                    <td>Entier</td>
+                                    <td>1-7 (1=Très non interactif, 7=Très interactif)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>type_cours</code></td>
+                                    <td>Texte</td>
+                                    <td><code>présentiel</code>, <code>distanciel</code>, <code>hybride</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>niveau_etudiant</code></td>
+                                    <td>Texte</td>
+                                    <td><code>L1</code>, <code>L2</code>, <code>L3</code></td>
+                                </tr>
+                                <tr class="table-info">
+                                    <td><strong><code>satisfaction</code></strong></td>
+                                    <td><strong>Binaire</strong></td>
+                                    <td><strong><code>1</code> (satisfait) ou <code>0</code> (non satisfait)</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">🤖 État Actuel du Modèle</h4>
+                </div>
+                <div class="card-body">
+                    {% if model_loaded %}
+                        <div class="alert alert-success">
+                            <h5 class="alert-heading">✅ Modèle Actif</h5>
+                            <p class="mb-0">Un modèle est actuellement chargé et prêt pour les prédictions.</p>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning">
+                             <h5 class="alert-heading">⚠️ Aucun Modèle Chargé</h5>
+                            <p class="mb-0">Aucun modèle n'est actuellement chargé. Veuillez en entraîner un pour activer la fonctionnalité de prédiction.</p>
+                        </div>
+                    {% endif %}
+
+                    <div class="card bg-light mt-3">
+                        <div class="card-body">
+                            <h6>⚙️ Configuration du Réseau de Neurones :</h6>
+                            <ul class="list-unstyled small mb-0">
+                                <li><strong>Architecture :</strong> MLP (Multi-Layer Perceptron)</li>
+                                <li><strong>Couches cachées :</strong> (128, 64, 32) neurones</li>
+                                <li><strong>Fonction d'activation :</strong> ReLU</li>
+                                <li><strong>Optimiseur :</strong> Adam</li>
+                                <li><strong>Régularisation :</strong> L2 (alpha=0.001)</li>
+                                <li><strong>Early Stopping :</strong> Activé (arrêt anticipé si la performance ne s'améliore pas)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h4 class="mb-0">📈 Historique des Entraînements</h4>
+                </div>
+                <div class="card-body">
+                    {% if trainings %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Précision</th>
+                                        <th>Échantillons</th>
+                                        <th>État</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for training in trainings %}
+                                    <tr class="{% if training.is_active %}table-primary{% endif %}">
+                                        <td>
+                                            <small>{{ training.training_date|date:"d/m/Y H:i" }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge {% if training.accuracy >= 0.9 %}bg-success{% elif training.accuracy >= 0.8 %}bg-info{% elif training.accuracy >= 0.7 %}bg-warning{% else %}bg-danger{% endif %}">
+                                                {{ training.accuracy|floatformat:2 }}%
+                                            </span>
+                                        </td>
+                                        <td>{{ training.dataset_size }}</td>
+                                        <td>
+                                            {% if training.is_active %}
+                                                <span class="badge bg-primary">Actif</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Archivé</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <p>Aucun entraînement précédent</p>
+                            <i class="bi bi-clock-history" style="font-size: 3rem;"></i>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">💡 Évolution de la Performance du Modèle</h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Ce graphique montre l'évolution de la précision du modèle à chaque nouvel entraînement. Il permet de visualiser si le modèle "apprend" et s'améliore avec le temps.</p>
+                    <div style="height: 350px;">
+                        <canvas id="evolutionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gestion du formulaire d'entraînement
+    const trainingForm = document.getElementById('trainingForm');
+    if (trainingForm) {
+        trainingForm.addEventListener('submit', function(e) {
+            const btn = document.getElementById('trainBtn');
+            const spinner = document.getElementById('trainSpinner');
+            
+            btn.disabled = true;
+            spinner.classList.remove('d-none');
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Entraînement en cours...';
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-info mt-3';
+            alertDiv.innerHTML = `
+                <h6><i class="bi bi-gear-fill"></i> L'entraînement a commencé...</h6>
+                <p class="mb-0 small">Ce processus peut prendre quelques instants. Veuillez ne pas quitter la page.</p>
+                <div class="progress mt-2">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" style="width: 100%"></div>
+                </div>
+            `;
+            trainingForm.appendChild(alertDiv);
+        });
+    }
+
+    // Validation du fichier CSV
+    const fileInput = document.querySelector('input[type="file"]');
+    if(fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file && !file.name.toLowerCase().endsWith('.csv')) {
+                alert('Veuillez sélectionner un fichier au format CSV.');
+                this.value = '';
+            }
+        });
+    }
+
+    // GRAPHIQUE D'ÉVOLUTION
+    const historyDataString = '{{ training_history|escapejs }}';
+    try {
+        // Correction du format JSON
+        const historyData = historyDataString ? JSON.parse(historyDataString) : {dates: [], accuracies: []};
+        const evolutionCtx = document.getElementById('evolutionChart');
+        
+        if (evolutionCtx && historyData.dates && historyData.dates.length > 0) {
+            new Chart(evolutionCtx, {
+                type: 'line',
+                data: {
+                    labels: historyData.dates,
+                    datasets: [{
+                        label: 'Précision du Modèle (%)',
+                        data: historyData.accuracies,
+                        borderColor: '#007bff',
+                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                        fill: true,
+                        tension: 0.2,
+                        pointBackgroundColor: '#007bff',
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            suggestedMin: 50,
+                            suggestedMax: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 20
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` Précision: ${context.parsed.y.toFixed(2)}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        } else {
+            // Message si pas de données
+            evolutionCtx.parentElement.innerHTML = '<p class="text-muted text-center">Aucune donnée d\'évolution disponible</p>';
+        }
+    } catch (e) {
+        console.error("Erreur lors de l'analyse des données de l'historique:", e);
+    }
+});
+</script>
+{% endblock %}
