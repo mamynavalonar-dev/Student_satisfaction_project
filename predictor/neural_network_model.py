@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import warnings
 import os
 import unicodedata
 from datetime import datetime
@@ -16,10 +17,11 @@ from sklearn.metrics import (
     accuracy_score,
     confusion_matrix,
     f1_score,
+    make_scorer,
     precision_score,
     recall_score,
 )
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV, StratifiedKFold, train_test_split
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
@@ -173,7 +175,21 @@ def _make_one_hot_encoder():
         return OneHotEncoder(handle_unknown="ignore", sparse=False)
 
 
-def _build_pipeline() -> Pipeline:
+DEFAULT_CV_SPLITS = 3
+DEFAULT_PARAM_GRID = {
+    "classifier__hidden_layer_sizes": [
+        (64, 32),
+        (128, 64, 32),
+    ],
+    "classifier__alpha": [0.0001, 0.001],
+}
+
+
+def _build_pipeline(
+    *,
+    hidden_layer_sizes=(128, 64, 32),
+    alpha=0.001,
+) -> Pipeline:
     preprocessor = ColumnTransformer(
         transformers=[
             ("numeric", StandardScaler(), NUMERIC_COLUMNS),
@@ -183,10 +199,10 @@ def _build_pipeline() -> Pipeline:
     )
 
     classifier = MLPClassifier(
-        hidden_layer_sizes=(128, 64, 32),
+        hidden_layer_sizes=tuple(hidden_layer_sizes),
         activation="relu",
         solver="adam",
-        alpha=0.001,
+        alpha=float(alpha),
         max_iter=1000,
         random_state=42,
         early_stopping=True,
@@ -199,10 +215,110 @@ def _build_pipeline() -> Pipeline:
     ])
 
 
-def train_model(df: pd.DataFrame):
-    """Entraîne le MLP sans fuite train/test et sauvegarde un artefact portable."""
-    # Les erreurs de validation du CSV restent des ValueError afin que la vue
-    # puisse les présenter comme des données invalides.
+def _tuning_scoring():
+    return {
+        "accuracy": make_scorer(accuracy_score),
+        "precision": make_scorer(precision_score, zero_division=0),
+        "recall": make_scorer(recall_score, zero_division=0),
+        "f1": make_scorer(f1_score, zero_division=0),
+    }
+
+
+def _make_model_search(*, cv_splits=DEFAULT_CV_SPLITS, param_grid=None):
+    if int(cv_splits) < 2:
+        raise ValueError("La validation croisée nécessite au moins 2 plis.")
+
+    grid = param_grid or DEFAULT_PARAM_GRID
+    cv = StratifiedKFold(
+        n_splits=int(cv_splits),
+        shuffle=True,
+        random_state=42,
+    )
+
+    return GridSearchCV(
+        estimator=_build_pipeline(),
+        param_grid=grid,
+        scoring=_tuning_scoring(),
+        refit="f1",
+        cv=cv,
+        n_jobs=1,
+        return_train_score=False,
+        error_score="raise",
+    )
+
+
+def _python_param_value(value):
+    if isinstance(value, tuple):
+        return [int(item) for item in value]
+    if isinstance(value, (np.integer,)):
+        return int(value)
+    if isinstance(value, (np.floating,)):
+        return float(value)
+    return value
+
+
+def _model_selection_payload(search, *, requested_cv_splits: int):
+    best_index = int(search.best_index_)
+    results = search.cv_results_
+
+    def mean(metric):
+        return float(results[f"mean_test_{metric}"][best_index])
+
+    def std(metric):
+        return float(results[f"std_test_{metric}"][best_index])
+
+    candidates = []
+    for index, params in enumerate(results["params"]):
+        candidates.append(
+            {
+                "hidden_layer_sizes": _python_param_value(
+                    params.get("classifier__hidden_layer_sizes")
+                ),
+                "alpha": float(params.get("classifier__alpha")),
+                "accuracy_mean": float(results["mean_test_accuracy"][index]),
+                "accuracy_std": float(results["std_test_accuracy"][index]),
+                "precision_mean": float(results["mean_test_precision"][index]),
+                "precision_std": float(results["std_test_precision"][index]),
+                "recall_mean": float(results["mean_test_recall"][index]),
+                "recall_std": float(results["std_test_recall"][index]),
+                "f1_mean": float(results["mean_test_f1"][index]),
+                "f1_std": float(results["std_test_f1"][index]),
+                "rank_f1": int(results["rank_test_f1"][index]),
+            }
+        )
+
+    best_params = search.best_params_
+    return {
+        "method": "GridSearchCV",
+        "selection_metric": "f1",
+        "requested_cv_splits": int(requested_cv_splits),
+        "cv_splits": int(search.n_splits_),
+        "candidate_count": int(len(results["params"])),
+        "selected_hidden_layer_sizes": _python_param_value(
+            best_params["classifier__hidden_layer_sizes"]
+        ),
+        "selected_alpha": float(best_params["classifier__alpha"]),
+        "accuracy_mean": mean("accuracy"),
+        "accuracy_std": std("accuracy"),
+        "precision_mean": mean("precision"),
+        "precision_std": std("precision"),
+        "recall_mean": mean("recall"),
+        "recall_std": std("recall"),
+        "f1_mean": mean("f1"),
+        "f1_std": std("f1"),
+        "refit_time_seconds": float(getattr(search, "refit_time_", 0.0)),
+        "candidates": candidates,
+    }
+
+
+def train_model(
+    df: pd.DataFrame,
+    *,
+    param_grid=None,
+    cv_splits=DEFAULT_CV_SPLITS,
+):
+    # Protocole : split externe d'abord, tuning uniquement sur X_train,
+    # puis une seule évaluation finale sur X_test jamais utilisé pour la sélection.
     data = validate_training_dataframe(df)
     duplicates_removed = int(data.attrs.get("duplicates_removed", 0))
 
@@ -218,8 +334,30 @@ def train_model(df: pd.DataFrame):
             stratify=y,
         )
 
-        pipeline = _build_pipeline()
-        pipeline.fit(X_train, y_train)
+        requested_cv_splits = int(cv_splits)
+        if requested_cv_splits < 2:
+            raise ValueError("La validation croisée nécessite au moins 2 plis.")
+
+        minority_train_count = int(y_train.value_counts().min())
+        effective_cv_splits = min(requested_cv_splits, minority_train_count)
+        if effective_cv_splits < 2:
+            raise ValueError(
+                "Pas assez d'observations par classe dans le train pour la validation croisée."
+            )
+
+        search = _make_model_search(
+            cv_splits=effective_cv_splits,
+            param_grid=param_grid,
+        )
+        search.fit(X_train, y_train)
+
+        # GridSearchCV avec refit='f1' réentraîne le meilleur pipeline
+        # sur tout X_train. Le hold-out X_test n'a participé à aucun choix.
+        pipeline = search.best_estimator_
+        selection = _model_selection_payload(
+            search,
+            requested_cv_splits=requested_cv_splits,
+        )
 
         y_pred = pipeline.predict(X_test)
 
@@ -239,18 +377,35 @@ def train_model(df: pd.DataFrame):
             "train_size": int(len(X_train)),
             "test_size": int(len(X_test)),
             "duplicates_removed": duplicates_removed,
+            "cv_folds": int(selection["cv_splits"]),
+            "cv_accuracy_mean": float(selection["accuracy_mean"]),
+            "cv_accuracy_std": float(selection["accuracy_std"]),
+            "cv_precision_mean": float(selection["precision_mean"]),
+            "cv_precision_std": float(selection["precision_std"]),
+            "cv_recall_mean": float(selection["recall_mean"]),
+            "cv_recall_std": float(selection["recall_std"]),
+            "cv_f1_mean": float(selection["f1_mean"]),
+            "cv_f1_std": float(selection["f1_std"]),
+            "selected_hidden_layer_sizes": list(
+                selection["selected_hidden_layer_sizes"]
+            ),
+            "selected_alpha": float(selection["selected_alpha"]),
+            "candidate_count": int(selection["candidate_count"]),
         }
 
         MODEL_DIR.mkdir(parents=True, exist_ok=True)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-        model_filename = f"student_satisfaction_model_{timestamp}_{uuid4().hex[:8]}.joblib"
+        model_filename = (
+            f"student_satisfaction_model_{timestamp}_{uuid4().hex[:8]}.joblib"
+        )
         model_path = MODEL_DIR / model_filename
         temp_path = model_path.with_suffix(".tmp")
 
         model_data = {
-            "schema_version": 2,
+            "schema_version": 3,
             "pipeline": pipeline,
             "metrics": metrics,
+            "model_selection": selection,
             "accuracy": accuracy,
             "training_date": datetime.now(),
             "feature_names": FEATURE_COLUMNS,
@@ -271,11 +426,14 @@ def train_model(df: pd.DataFrame):
         relative_model_path = model_path.relative_to(BASE_DIR).as_posix()
         return accuracy, relative_model_path, metrics
 
+    except ValueError:
+        raise
     except Exception as exc:
         logger.exception("Échec interne de l'entraînement du modèle")
         raise RuntimeError(
             "Une erreur interne est survenue pendant l'entraînement du modèle."
         ) from exc
+
 
 def _resolve_model_path(stored_path: str) -> Path | None:
     path = Path(stored_path)
@@ -301,6 +459,34 @@ def _resolve_model_path(stored_path: str) -> Path | None:
     return None
 
 
+
+
+class ModelVersionMismatchError(ValueError):
+    """Artefact scikit-learn sérialisé avec une autre version."""
+
+    def __init__(self, original_version, current_version):
+        self.original_version = str(original_version)
+        self.current_version = str(current_version)
+        super().__init__(
+            "Version scikit-learn incompatible : "
+            f"modèle {self.original_version}, "
+            f"environnement {self.current_version}."
+        )
+
+
+def _load_joblib_strict(model_path):
+    """Charge un joblib en refusant explicitement les versions sklearn différentes."""
+    from sklearn.exceptions import InconsistentVersionWarning
+
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", InconsistentVersionWarning)
+            return joblib.load(model_path)
+    except InconsistentVersionWarning as exc:
+        raise ModelVersionMismatchError(
+            exc.original_sklearn_version,
+            exc.current_sklearn_version,
+        ) from exc
 
 def _classify_model_artifact(model_data):
     # Vérifie la structure minimale nécessaire à la prédiction.
@@ -339,7 +525,7 @@ def _classify_model_artifact(model_data):
 
 
 def inspect_model_artifact(stored_path: str):
-    # Retourne des métadonnées légères pour l'interface de gestion.
+    """Retourne des métadonnées sûres pour l'interface de gestion des modèles."""
     result = {
         "available": False,
         "compatible": False,
@@ -366,7 +552,16 @@ def inspect_model_artifact(stored_path: str):
         pass
 
     try:
-        model_data = joblib.load(model_path)
+        model_data = _load_joblib_strict(model_path)
+    except ModelVersionMismatchError as exc:
+        result["compatible"] = False
+        result["format_label"] = "Version scikit-learn différente"
+        result["reason"] = (
+            f"Enregistré avec scikit-learn {exc.original_version}, "
+            f"environnement actuel {exc.current_version}. "
+            "Réentraînez ce modèle avant de l'activer."
+        )
+        return result
     except Exception as exc:
         logger.exception("Impossible d'inspecter l'artefact %s", model_path)
         result["reason"] = f"Artefact illisible : {exc.__class__.__name__}."
@@ -376,12 +571,22 @@ def inspect_model_artifact(stored_path: str):
     result["compatible"] = compatible
     result["format_label"] = format_label
     result["reason"] = reason
-    result["schema_version"] = model_data.get("schema_version")
+    result["schema_version"] = (
+        model_data.get("schema_version") if isinstance(model_data, dict) else None
+    )
 
-    metrics = model_data.get("metrics")
+    metrics = model_data.get("metrics") if isinstance(model_data, dict) else None
     if isinstance(metrics, dict):
         clean_metrics = {}
-        for key in ("accuracy", "precision", "recall", "f1", "train_size", "test_size", "dataset_size"):
+        for key in (
+            "accuracy",
+            "precision",
+            "recall",
+            "f1",
+            "train_size",
+            "test_size",
+            "dataset_size",
+        ):
             value = metrics.get(key)
             if value is None:
                 continue
@@ -393,18 +598,28 @@ def inspect_model_artifact(stored_path: str):
 
     return result
 
-
 def load_model_artifact(stored_path: str):
-    # Charge un artefact uniquement s'il existe et respecte un format supporté.
+    """Charge un artefact historique seulement s'il est disponible et compatible."""
     model_path = _resolve_model_path(stored_path)
     if model_path is None:
-        raise FileNotFoundError("Le fichier .joblib associé à cet entraînement est introuvable.")
+        raise FileNotFoundError(
+            "Le fichier .joblib associé à cet entraînement est introuvable."
+        )
 
     try:
-        model_data = joblib.load(model_path)
+        model_data = _load_joblib_strict(model_path)
+    except ModelVersionMismatchError as exc:
+        raise ValueError(
+            "Version scikit-learn incompatible : "
+            f"modèle {exc.original_version}, "
+            f"environnement {exc.current_version}. "
+            "Réentraînez le modèle avant de l'activer."
+        ) from exc
     except Exception as exc:
         logger.exception("Impossible de charger l'artefact historique %s", model_path)
-        raise ValueError("Le fichier du modèle existe mais ne peut pas être chargé.") from exc
+        raise ValueError(
+            "Le fichier du modèle existe mais ne peut pas être chargé."
+        ) from exc
 
     compatible, _format_label, reason = _classify_model_artifact(model_data)
     if not compatible:

@@ -787,19 +787,32 @@ class ComplianceV8Tests(TestCase):
                 patch("predictor.neural_network_model.BASE_DIR", fake_base),
                 patch("predictor.neural_network_model.MODEL_DIR", fake_model_dir),
             ):
-                accuracy, relative_path, metrics = train_model(frame)
+                accuracy, relative_path, metrics = train_model(
+                    frame,
+                    param_grid={
+                        "classifier__hidden_layer_sizes": [(64, 32)],
+                        "classifier__alpha": [0.001],
+                    },
+                    cv_splits=2,
+                )
 
             artifact_path = fake_base / relative_path
             self.assertTrue(artifact_path.is_file())
 
             artifact = joblib.load(artifact_path)
-            self.assertEqual(artifact["schema_version"], 2)
+            self.assertEqual(artifact["schema_version"], 3)
             self.assertIn("pipeline", artifact)
             self.assertIn("preprocessor", artifact["pipeline"].named_steps)
             self.assertIn("classifier", artifact["pipeline"].named_steps)
             self.assertIn("explanation_background", artifact)
             self.assertEqual(len(artifact["explanation_background"]), 40)
             self.assertIn("explanation_reference", artifact)
+            self.assertIn("model_selection", artifact)
+            self.assertEqual(artifact["model_selection"]["selection_metric"], "f1")
+            self.assertEqual(artifact["model_selection"]["cv_splits"], 2)
+            self.assertEqual(artifact["model_selection"]["candidate_count"], 1)
+            self.assertIn("cv_f1_mean", metrics)
+            self.assertIn("cv_f1_std", metrics)
             self.assertEqual(len(artifact["explanation_reference"]["features"]), metrics["test_size"])
             self.assertEqual(len(artifact["explanation_reference"]["target"]), metrics["test_size"])
 
@@ -1279,3 +1292,179 @@ class ModelManagementTests(TestCase):
         self.assertContains(response, "74,00%")
         self.assertContains(response, "Pipeline v2")
         self.assertContains(response, reverse("activate_model", args=[training.pk]))
+
+class ModelTuningTests(TestCase):
+    def test_pipeline_builder_applies_hidden_layers_and_alpha(self):
+        from .neural_network_model import _build_pipeline
+
+        pipeline = _build_pipeline(
+            hidden_layer_sizes=(64, 32),
+            alpha=0.0001,
+        )
+        classifier = pipeline.named_steps["classifier"]
+
+        self.assertEqual(classifier.hidden_layer_sizes, (64, 32))
+        self.assertEqual(classifier.alpha, 0.0001)
+        self.assertTrue(classifier.early_stopping)
+
+    def test_model_search_is_stratified_three_fold_and_refits_on_f1(self):
+        from sklearn.model_selection import StratifiedKFold
+
+        from .neural_network_model import _make_model_search
+
+        search = _make_model_search()
+
+        self.assertEqual(search.refit, "f1")
+        self.assertIsInstance(search.cv, StratifiedKFold)
+        self.assertEqual(search.cv.n_splits, 3)
+        self.assertTrue(search.cv.shuffle)
+        self.assertEqual(search.cv.random_state, 42)
+        self.assertEqual(
+            set(search.scoring.keys()),
+            {"accuracy", "precision", "recall", "f1"},
+        )
+        self.assertEqual(
+            len(search.param_grid["classifier__hidden_layer_sizes"])
+            * len(search.param_grid["classifier__alpha"]),
+            4,
+        )
+
+    def test_model_search_rejects_less_than_two_folds(self):
+        from .neural_network_model import _make_model_search
+
+        with self.assertRaises(ValueError):
+            _make_model_search(cv_splits=1)
+
+    def test_active_training_configuration_reads_v3_selection(self):
+        from .neural_network_model import _build_pipeline
+        from .views import _active_training_configuration
+
+        model_data = {
+            "schema_version": 3,
+            "pipeline": _build_pipeline(
+                hidden_layer_sizes=(64, 32),
+                alpha=0.0001,
+            ),
+            "model_selection": {
+                "cv_splits": 3,
+                "candidate_count": 4,
+                "f1_mean": 0.7123,
+                "f1_std": 0.021,
+            },
+        }
+
+        config = _active_training_configuration(model_data)
+
+        self.assertTrue(config["tuned"])
+        self.assertEqual(config["layers_display"], "(64, 32)")
+        self.assertEqual(config["alpha"], 0.0001)
+        self.assertEqual(config["cv_folds"], 3)
+        self.assertEqual(config["candidate_count"], 4)
+        self.assertEqual(config["cv_f1_percent"], 71.23)
+
+    def test_management_rows_expose_cv_metrics_and_selected_parameters(self):
+        from unittest.mock import patch
+
+        from .models import ModelTraining
+        from .views import _model_management_rows
+
+        training = ModelTraining.objects.create(
+            accuracy=0.73,
+            dataset_size=2000,
+            model_file="v3.joblib",
+            notes="v3 tuning",
+            is_active=True,
+        )
+        artifact_info = {
+            "available": True,
+            "compatible": True,
+            "format_label": "Pipeline v3",
+            "reason": "",
+            "file_name": "v3.joblib",
+            "file_size_mb": 0.3,
+            "metrics": {
+                "f1": 0.70,
+                "cv_f1_mean": 0.72,
+                "cv_f1_std": 0.02,
+                "cv_folds": 3,
+                "candidate_count": 4,
+            },
+            "model_selection": {
+                "selected_hidden_layer_sizes": [64, 32],
+                "selected_alpha": 0.0001,
+            },
+        }
+
+        with patch(
+            "predictor.views.inspect_model_artifact",
+            return_value=artifact_info,
+        ):
+            rows = _model_management_rows([training])
+
+        self.assertEqual(rows[0]["cv_f1_percent"], 72.0)
+        self.assertEqual(rows[0]["cv_f1_std_percent"], 2.0)
+        self.assertEqual(rows[0]["selected_layers_display"], "(64, 32)")
+        self.assertEqual(rows[0]["selected_alpha"], 0.0001)
+
+class ModelVersionCompatibilityTests(TestCase):
+    def _version_warning(self):
+        from sklearn.exceptions import InconsistentVersionWarning
+
+        return InconsistentVersionWarning(
+            estimator_name="MLPClassifier",
+            current_sklearn_version="1.9.0",
+            original_sklearn_version="1.7.0",
+        )
+
+    def test_inspection_marks_cross_version_artifact_incompatible(self):
+        from pathlib import Path
+        from unittest.mock import patch
+
+        from .neural_network_model import inspect_model_artifact
+
+        fake_path = Path("legacy.joblib")
+        fake_stat = type("Stat", (), {"st_size": 1024})()
+
+        with (
+            patch(
+                "predictor.neural_network_model._resolve_model_path",
+                return_value=fake_path,
+            ),
+            patch.object(Path, "stat", return_value=fake_stat),
+            patch(
+                "predictor.neural_network_model.joblib.load",
+                side_effect=self._version_warning(),
+            ),
+        ):
+            info = inspect_model_artifact("legacy.joblib")
+
+        self.assertTrue(info["available"])
+        self.assertFalse(info["compatible"])
+        self.assertEqual(
+            info["format_label"],
+            "Version scikit-learn différente",
+        )
+        self.assertIn("1.7.0", info["reason"])
+        self.assertIn("1.9.0", info["reason"])
+
+    def test_activation_loader_refuses_cross_version_artifact(self):
+        from pathlib import Path
+        from unittest.mock import patch
+
+        from .neural_network_model import load_model_artifact
+
+        with (
+            patch(
+                "predictor.neural_network_model._resolve_model_path",
+                return_value=Path("legacy.joblib"),
+            ),
+            patch(
+                "predictor.neural_network_model.joblib.load",
+                side_effect=self._version_warning(),
+            ),
+        ):
+            with self.assertRaisesMessage(
+                ValueError,
+                "Version scikit-learn incompatible",
+            ):
+                load_model_artifact("legacy.joblib")

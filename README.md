@@ -138,3 +138,19 @@ La page **Entraînement** permet désormais d'inspecter les modèles enregistré
 - refus d'activation lorsqu'un fichier est absent, illisible ou incompatible.
 
 Les anciens entraînements dont le fichier n'existe plus restent visibles comme historique mais ne peuvent pas être activés.
+
+## Validation croisée et réglage automatique du MLP
+
+Les nouveaux entraînements utilisent un protocole de sélection qui préserve un véritable jeu de test final :
+
+1. le dataset validé est séparé une seule fois en **train 80 % / test final 20 %**, avec stratification ;
+2. le **grid-search** est exécuté uniquement sur le train avec une validation croisée `StratifiedKFold` reproductible à 3 plis ;
+3. quatre configurations sont comparées : couches `(64, 32)` ou `(128, 64, 32)`, avec `alpha=0.0001` ou `alpha=0.001` ;
+4. le meilleur réglage est choisi selon le **F1-score moyen en validation croisée** ;
+5. ce meilleur pipeline est réentraîné sur tout le train puis évalué **une seule fois** sur le test final qui n'a participé à aucun choix d'hyperparamètres.
+
+L'artefact `.joblib` V3 enregistre les hyperparamètres retenus, les moyennes et écarts-types CV pour Accuracy/Precision/Recall/F1, ainsi que les résultats des quatre candidats. Les anciens artefacts V1/V2 restent compatibles et activables lorsqu'ils existent physiquement.
+
+### Compatibilité des anciens artefacts scikit-learn
+
+Les fichiers `.joblib` sont liés à la version de scikit-learn utilisée lors de leur entraînement. Lorsqu'un artefact a été sérialisé avec une autre version, l'application le conserve dans l'historique mais le marque **Version scikit-learn différente** et interdit son activation. Il doit être réentraîné avec l'environnement courant avant d'être utilisé.

@@ -548,6 +548,12 @@ def _model_management_rows(trainings):
     for training in trainings:
         info = inspect_model_artifact(training.model_file)
         metrics = info.get("metrics") or {}
+        selection = info.get("model_selection") or {}
+        selected_layers = selection.get("selected_hidden_layer_sizes")
+        if isinstance(selected_layers, (list, tuple)):
+            selected_layers_display = "(" + ", ".join(str(int(value)) for value in selected_layers) + ")"
+        else:
+            selected_layers_display = None
         rows.append(
             {
                 "training": training,
@@ -565,9 +571,67 @@ def _model_management_rows(trainings):
                 "f1_percent": _artifact_metric_percent(metrics, "f1"),
                 "train_size": metrics.get("train_size"),
                 "test_size": metrics.get("test_size"),
+                "cv_f1_percent": _artifact_metric_percent(metrics, "cv_f1_mean"),
+                "cv_f1_std_percent": _artifact_metric_percent(metrics, "cv_f1_std"),
+                "cv_folds": metrics.get("cv_folds"),
+                "candidate_count": metrics.get("candidate_count"),
+                "selected_layers_display": selected_layers_display,
+                "selected_alpha": selection.get("selected_alpha"),
             }
         )
     return rows
+
+
+
+def _active_training_configuration(model_data):
+    if not isinstance(model_data, dict):
+        return None
+
+    pipeline = model_data.get("pipeline")
+    if pipeline is None:
+        return {
+            "format_label": "Ancien format",
+            "layers_display": "—",
+            "alpha": None,
+            "tuned": False,
+            "cv_folds": None,
+            "candidate_count": None,
+            "cv_f1_percent": None,
+            "cv_f1_std_percent": None,
+        }
+
+    classifier = pipeline.named_steps.get("classifier")
+    if classifier is None:
+        return None
+
+    layers = getattr(classifier, "hidden_layer_sizes", ())
+    if isinstance(layers, int):
+        layers = (layers,)
+    layers_display = "(" + ", ".join(str(int(value)) for value in layers) + ")"
+
+    selection = model_data.get("model_selection") or {}
+    return {
+        "format_label": (
+            f"Pipeline v{model_data.get('schema_version')}"
+            if model_data.get("schema_version") is not None
+            else "Pipeline"
+        ),
+        "layers_display": layers_display,
+        "alpha": float(getattr(classifier, "alpha", 0.0)),
+        "tuned": bool(selection),
+        "cv_folds": selection.get("cv_splits"),
+        "candidate_count": selection.get("candidate_count"),
+        "cv_f1_percent": (
+            round(float(selection["f1_mean"]) * 100.0, 2)
+            if selection.get("f1_mean") is not None
+            else None
+        ),
+        "cv_f1_std_percent": (
+            round(float(selection["f1_std"]) * 100.0, 2)
+            if selection.get("f1_std") is not None
+            else None
+        ),
+    }
 
 @login_required(login_url="login_register")
 def train_model_view(request):
@@ -603,6 +667,9 @@ def train_model_view(request):
             "réentraînez le MLP."
         )
 
+    active_model_data = load_current_model()
+    active_training_config = _active_training_configuration(active_model_data)
+
     if request.method == "POST":
         form = TrainingForm(request.POST, request.FILES)
         if form.is_valid():
@@ -628,8 +695,9 @@ def train_model_view(request):
                 notify_user(
                     request.user,
                     "Modèle MLP entraîné",
-                    f"Entraînement #{training.id} terminé : Accuracy {accuracy:.2%}, "
-                    f"F1-score {metrics['f1']:.2%}, {metrics['dataset_size']} échantillons.",
+                    f"Entraînement #{training.id} terminé : Accuracy test {accuracy:.2%}, "
+                    f"F1 test {metrics['f1']:.2%}, F1 CV {metrics['cv_f1_mean']:.2%} "
+                    f"± {metrics['cv_f1_std']:.2%}, {metrics['dataset_size']} échantillons.",
                     level="success",
                     event_type="training",
                     target_url=reverse("train_model"),
@@ -642,7 +710,10 @@ def train_model_view(request):
                 messages.success(
                     request,
                     "Modèle entraîné avec succès ! "
-                    f"Accuracy : {accuracy:.2%} | F1-score : {metrics['f1']:.2%}"
+                    f"Accuracy test : {accuracy:.2%} | F1 test : {metrics['f1']:.2%} | "
+                    f"F1 CV : {metrics['cv_f1_mean']:.2%} ± {metrics['cv_f1_std']:.2%} | "
+                    f"Couches : {tuple(metrics['selected_hidden_layer_sizes'])} | "
+                    f"alpha={metrics['selected_alpha']}"
                     f"{duplicate_info}",
                 )
                 return redirect("train_model")
@@ -661,7 +732,8 @@ def train_model_view(request):
     context = {
         "form": form,
         "trainings": trainings,
-        "model_loaded": load_current_model() is not None,
+        "model_loaded": active_model_data is not None,
+        "active_training_config": active_training_config,
         "training_history": json.dumps(training_history, ensure_ascii=False),
         "model_rows": model_rows,
         "active_model_warning": active_model_warning,

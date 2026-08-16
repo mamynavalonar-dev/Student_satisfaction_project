@@ -41,9 +41,15 @@
                             {{ form.notes }}
                         </div>
 
+                        <div class="alert alert-info small">
+                            <strong>Sélection automatique :</strong> le CSV est d'abord séparé en train 80 % / test final 20 %.
+                            Le grid-search compare 4 configurations du MLP par validation croisée stratifiée à 3 plis
+                            uniquement sur le train, puis le meilleur modèle est évalué une seule fois sur le test final.
+                        </div>
+
                         <button type="submit" class="btn btn-success btn-lg w-100" id="trainBtn">
                             <span class="spinner-border spinner-border-sm d-none" id="trainSpinner"></span>
-                            Démarrer l'Entraînement
+                            Entraîner + sélectionner le meilleur MLP
                         </button>
                     </form>
                 </div>
@@ -124,11 +130,26 @@
                             <h6>⚙️ Configuration du Réseau de Neurones :</h6>
                             <ul class="list-unstyled small mb-0">
                                 <li><strong>Architecture :</strong> MLP (Multi-Layer Perceptron)</li>
-                                <li><strong>Couches cachées :</strong> (128, 64, 32) neurones</li>
+                                {% if active_training_config %}
+                                <li><strong>Format :</strong> {{ active_training_config.format_label }}</li>
+                                <li><strong>Couches cachées :</strong> {{ active_training_config.layers_display }} neurones</li>
+                                {% if active_training_config.alpha != None %}
+                                <li><strong>Régularisation :</strong> L2 (alpha={{ active_training_config.alpha }})</li>
+                                {% endif %}
+                                {% if active_training_config.tuned %}
+                                <li><strong>Sélection :</strong> Grid-search de {{ active_training_config.candidate_count }} configurations</li>
+                                <li><strong>Validation croisée :</strong> {{ active_training_config.cv_folds }} plis stratifiés</li>
+                                <li><strong>F1 CV :</strong> {{ active_training_config.cv_f1_percent|floatformat:2 }}% ± {{ active_training_config.cv_f1_std_percent|floatformat:2 }}%</li>
+                                {% else %}
+                                <li><strong>Sélection :</strong> artefact antérieur sans métriques CV enregistrées</li>
+                                {% endif %}
+                                {% else %}
+                                <li><strong>Couches candidates :</strong> (64, 32) ou (128, 64, 32)</li>
+                                <li><strong>Alpha candidat :</strong> 0.0001 ou 0.001</li>
+                                {% endif %}
                                 <li><strong>Fonction d'activation :</strong> ReLU</li>
                                 <li><strong>Optimiseur :</strong> Adam</li>
-                                <li><strong>Régularisation :</strong> L2 (alpha=0.001)</li>
-                                <li><strong>Early Stopping :</strong> Activé (arrêt anticipé si la performance ne s'améliore pas)</li>
+                                <li><strong>Early Stopping :</strong> Activé</li>
                             </ul>
                         </div>
                     </div>
@@ -245,6 +266,11 @@
                                     </td>
                                     <td>
                                         {% if row.f1_percent != None %}<strong>{{ row.f1_percent|floatformat:2 }}%</strong>{% else %}<span class="text-muted">—</span>{% endif %}
+                                        {% if row.cv_f1_percent != None %}
+                                        <div class="small text-primary mt-1">
+                                            CV {{ row.cv_folds|floatformat:0 }} plis : {{ row.cv_f1_percent|floatformat:2 }}% ± {{ row.cv_f1_std_percent|floatformat:2 }}%
+                                        </div>
+                                        {% endif %}
                                     </td>
                                     <td>
                                         {{ row.training.dataset_size }}
@@ -261,6 +287,11 @@
                                             <span class="badge bg-danger">Fichier absent</span>
                                         {% endif %}
                                         <div class="small mt-1">{{ row.format_label }}</div>
+                                        {% if row.selected_layers_display %}
+                                        <div class="small text-primary">
+                                            {{ row.selected_layers_display }} · alpha={{ row.selected_alpha }} · {{ row.candidate_count|floatformat:0 }} configs
+                                        </div>
+                                        {% endif %}
                                         <div class="small text-muted" title="{{ row.file_name }}">
                                             {{ row.file_name|truncatechars:32 }}
                                             {% if row.file_size_mb != None %} · {{ row.file_size_mb }} Mo{% endif %}
@@ -349,7 +380,7 @@ document.addEventListener('DOMContentLoaded', function() {
             alertDiv.className = 'alert alert-info mt-3';
             alertDiv.innerHTML = `
                 <h6><i class="bi bi-gear-fill"></i> L'entraînement a commencé...</h6>
-                <p class="mb-0 small">Ce processus peut prendre quelques instants. Veuillez ne pas quitter la page.</p>
+                <p class="mb-0 small">Le grid-search exécute plusieurs entraînements par validation croisée. Le traitement peut prendre plusieurs minutes ; ne fermez pas cette page.</p>
                 <div class="progress mt-2">
                     <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" style="width: 100%"></div>
                 </div>
