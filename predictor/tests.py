@@ -1161,3 +1161,121 @@ class BatchPredictionTests(TestCase):
                 for message in rendered_messages
             )
         )
+
+class ModelManagementTests(TestCase):
+    def setUp(self):
+        from django.contrib.auth import get_user_model
+        self.user = get_user_model().objects.create_user(
+            username="model-manager",
+            email="model-manager@example.com",
+            password="ModelManagement123!",
+        )
+        self.client.force_login(self.user)
+
+    def _training(self, *, accuracy=0.70, model_file="model.joblib", active=False):
+        from .models import ModelTraining
+        return ModelTraining.objects.create(
+            accuracy=accuracy,
+            dataset_size=200,
+            model_file=model_file,
+            notes="test gestion modèle",
+            is_active=active,
+        )
+
+    def test_inspect_model_artifact_reports_missing_file_without_exception(self):
+        from unittest.mock import patch
+        from .neural_network_model import inspect_model_artifact
+        with patch("predictor.neural_network_model._resolve_model_path", return_value=None):
+            info = inspect_model_artifact("missing.joblib")
+        self.assertFalse(info["available"])
+        self.assertFalse(info["compatible"])
+        self.assertIn("introuvable", info["reason"])
+
+    def test_activate_model_keeps_exactly_one_active_training(self):
+        from pathlib import Path
+        from unittest.mock import patch
+        from django.urls import reverse
+        from .models import ModelTraining
+
+        old = self._training(model_file="old.joblib", active=True)
+        target = self._training(accuracy=0.81, model_file="target.joblib", active=False)
+
+        with patch(
+            "predictor.views.load_model_artifact",
+            return_value=({"pipeline": object()}, Path("target.joblib")),
+        ):
+            response = self.client.post(reverse("activate_model", args=[target.pk]))
+
+        self.assertEqual(response.status_code, 302)
+        old.refresh_from_db()
+        target.refresh_from_db()
+        self.assertFalse(old.is_active)
+        self.assertTrue(target.is_active)
+        self.assertEqual(ModelTraining.objects.filter(is_active=True).count(), 1)
+
+    def test_activate_model_refuses_missing_artifact_and_preserves_current(self):
+        from unittest.mock import patch
+        from django.urls import reverse
+
+        current = self._training(model_file="current.joblib", active=True)
+        target = self._training(model_file="missing.joblib", active=False)
+
+        with patch("predictor.views.load_model_artifact", side_effect=FileNotFoundError("missing")):
+            response = self.client.post(reverse("activate_model", args=[target.pk]))
+
+        self.assertEqual(response.status_code, 302)
+        current.refresh_from_db()
+        target.refresh_from_db()
+        self.assertTrue(current.is_active)
+        self.assertFalse(target.is_active)
+
+    def test_deactivate_active_model_leaves_no_active_training(self):
+        from django.urls import reverse
+        from .models import ModelTraining
+
+        current = self._training(model_file="current.joblib", active=True)
+        response = self.client.post(reverse("deactivate_model", args=[current.pk]))
+
+        self.assertEqual(response.status_code, 302)
+        current.refresh_from_db()
+        self.assertFalse(current.is_active)
+        self.assertEqual(ModelTraining.objects.filter(is_active=True).count(), 0)
+
+    def test_model_management_actions_are_post_only(self):
+        from django.urls import reverse
+        training = self._training(model_file="current.joblib", active=False)
+        self.assertEqual(self.client.get(reverse("activate_model", args=[training.pk])).status_code, 405)
+        self.assertEqual(self.client.get(reverse("deactivate_model", args=[training.pk])).status_code, 405)
+
+    def test_training_page_displays_management_state_and_metrics(self):
+        from unittest.mock import patch
+        from django.urls import reverse
+
+        training = self._training(accuracy=0.8125, model_file="available.joblib", active=False)
+        artifact_info = {
+            "available": True,
+            "compatible": True,
+            "format_label": "Pipeline v2",
+            "reason": "",
+            "file_name": "available.joblib",
+            "file_size_mb": 0.42,
+            "metrics": {
+                "precision": 0.76,
+                "recall": 0.72,
+                "f1": 0.74,
+                "train_size": 160,
+                "test_size": 40,
+            },
+        }
+
+        with (
+            patch("predictor.views.inspect_model_artifact", return_value=artifact_info),
+            patch("predictor.views.load_current_model", return_value=None),
+        ):
+            response = self.client.get(reverse("train_model"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Gestion et comparaison des modèles")
+        self.assertContains(response, "74,00%")
+        self.assertContains(response, "Pipeline v2")
+        self.assertContains(response, reverse("activate_model", args=[training.pk]))

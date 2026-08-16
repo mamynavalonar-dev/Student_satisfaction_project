@@ -301,6 +301,117 @@ def _resolve_model_path(stored_path: str) -> Path | None:
     return None
 
 
+
+def _classify_model_artifact(model_data):
+    # Vérifie la structure minimale nécessaire à la prédiction.
+    if not isinstance(model_data, dict):
+        return False, "Inconnu", "L'artefact n'est pas un dictionnaire attendu."
+
+    pipeline = model_data.get("pipeline")
+    if pipeline is not None:
+        if callable(getattr(pipeline, "predict", None)) and callable(
+            getattr(pipeline, "predict_proba", None)
+        ):
+            schema_version = model_data.get("schema_version")
+            label = f"Pipeline v{schema_version}" if schema_version is not None else "Pipeline"
+            return True, label, ""
+        return False, "Pipeline invalide", "Le pipeline ne fournit pas predict() et predict_proba()."
+
+    required_legacy = {"model", "scaler", "label_encoders"}
+    if required_legacy.issubset(model_data):
+        model = model_data.get("model")
+        scaler = model_data.get("scaler")
+        encoders = model_data.get("label_encoders")
+        if (
+            callable(getattr(model, "predict", None))
+            and callable(getattr(model, "predict_proba", None))
+            and callable(getattr(scaler, "transform", None))
+            and isinstance(encoders, dict)
+        ):
+            return True, "Ancien format", ""
+        return False, "Ancien format invalide", "Les composants historiques du modèle sont incomplets."
+
+    return (
+        False,
+        "Format non reconnu",
+        "L'artefact ne contient ni pipeline actuel ni structure historique compatible.",
+    )
+
+
+def inspect_model_artifact(stored_path: str):
+    # Retourne des métadonnées légères pour l'interface de gestion.
+    result = {
+        "available": False,
+        "compatible": False,
+        "format_label": "Indisponible",
+        "reason": "",
+        "resolved_path": None,
+        "file_name": Path(str(stored_path or "")).name or "—",
+        "file_size_mb": None,
+        "metrics": {},
+        "schema_version": None,
+    }
+
+    model_path = _resolve_model_path(stored_path)
+    if model_path is None:
+        result["reason"] = "Fichier .joblib introuvable."
+        return result
+
+    result["available"] = True
+    result["resolved_path"] = str(model_path)
+
+    try:
+        result["file_size_mb"] = round(model_path.stat().st_size / (1024 * 1024), 2)
+    except OSError:
+        pass
+
+    try:
+        model_data = joblib.load(model_path)
+    except Exception as exc:
+        logger.exception("Impossible d'inspecter l'artefact %s", model_path)
+        result["reason"] = f"Artefact illisible : {exc.__class__.__name__}."
+        return result
+
+    compatible, format_label, reason = _classify_model_artifact(model_data)
+    result["compatible"] = compatible
+    result["format_label"] = format_label
+    result["reason"] = reason
+    result["schema_version"] = model_data.get("schema_version")
+
+    metrics = model_data.get("metrics")
+    if isinstance(metrics, dict):
+        clean_metrics = {}
+        for key in ("accuracy", "precision", "recall", "f1", "train_size", "test_size", "dataset_size"):
+            value = metrics.get(key)
+            if value is None:
+                continue
+            try:
+                clean_metrics[key] = float(value)
+            except (TypeError, ValueError):
+                continue
+        result["metrics"] = clean_metrics
+
+    return result
+
+
+def load_model_artifact(stored_path: str):
+    # Charge un artefact uniquement s'il existe et respecte un format supporté.
+    model_path = _resolve_model_path(stored_path)
+    if model_path is None:
+        raise FileNotFoundError("Le fichier .joblib associé à cet entraînement est introuvable.")
+
+    try:
+        model_data = joblib.load(model_path)
+    except Exception as exc:
+        logger.exception("Impossible de charger l'artefact historique %s", model_path)
+        raise ValueError("Le fichier du modèle existe mais ne peut pas être chargé.") from exc
+
+    compatible, _format_label, reason = _classify_model_artifact(model_data)
+    if not compatible:
+        raise ValueError(reason or "Le format de ce modèle n'est pas compatible.")
+
+    return model_data, model_path
+
 def load_current_model():
     """Charge le modèle actif ; journalise les erreurs au lieu de les masquer."""
     try:

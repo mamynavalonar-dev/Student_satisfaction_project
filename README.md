@@ -124,3 +124,17 @@ Le traitement est vectorisé avec le modèle actif et produit :
 L'interface affiche un récapitulatif, les dix premières lignes et un bouton de téléchargement du CSV complet. Les exports temporaires sont isolés par utilisateur/session et les fichiers de plus de 24 heures sont nettoyés automatiquement. Un lot est limité à **5 Mo** et **5 000 lignes**.
 
 Les prédictions par lot ne sont pas enregistrées automatiquement dans `StudentFeedback`, afin de ne pas mélanger une analyse de masse avec l'historique des prédictions individuelles utilisé par le tableau de bord et la page Statistiques.
+
+## Gestion et comparaison des modèles
+
+La page **Entraînement** permet désormais d'inspecter les modèles enregistrés avant de les activer :
+
+- vérification de l'existence physique du fichier `.joblib` ;
+- contrôle du format de l'artefact (pipeline actuel ou ancien format compatible) ;
+- affichage d'Accuracy et, lorsqu'elles existent dans l'artefact, Precision, Recall et F1 ;
+- activation d'un modèle historique sans réentraînement ;
+- désactivation explicite du modèle actif ;
+- garantie transactionnelle qu'un seul modèle peut être actif après une activation ;
+- refus d'activation lorsqu'un fichier est absent, illisible ou incompatible.
+
+Les anciens entraînements dont le fichier n'existe plus restent visibles comme historique mais ne peuvent pas être activés.

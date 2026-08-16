@@ -34,7 +34,9 @@ from .models import ModelTraining, Notification, StudentFeedback
 from .notifications import notify_user
 from .utils_explain import get_global_importance, get_local_explanation
 from .neural_network_model import (
+    inspect_model_artifact,
     load_current_model,
+    load_model_artifact,
     predict_satisfaction,
     predict_satisfaction_batch,
     train_model,
@@ -530,9 +532,46 @@ def batch_predict_download(request, token):
     response["Cache-Control"] = "no-store"
     return response
 
+
+def _artifact_metric_percent(metrics, key):
+    value = (metrics or {}).get(key)
+    if value is None:
+        return None
+    try:
+        return round(float(value) * 100.0, 2)
+    except (TypeError, ValueError):
+        return None
+
+
+def _model_management_rows(trainings):
+    rows = []
+    for training in trainings:
+        info = inspect_model_artifact(training.model_file)
+        metrics = info.get("metrics") or {}
+        rows.append(
+            {
+                "training": training,
+                "available": bool(info.get("available")),
+                "compatible": bool(info.get("compatible")),
+                "can_activate": bool(info.get("available"))
+                and bool(info.get("compatible"))
+                and not training.is_active,
+                "format_label": info.get("format_label") or "—",
+                "reason": info.get("reason") or "",
+                "file_name": info.get("file_name") or "—",
+                "file_size_mb": info.get("file_size_mb"),
+                "precision_percent": _artifact_metric_percent(metrics, "precision"),
+                "recall_percent": _artifact_metric_percent(metrics, "recall"),
+                "f1_percent": _artifact_metric_percent(metrics, "f1"),
+                "train_size": metrics.get("train_size"),
+                "test_size": metrics.get("test_size"),
+            }
+        )
+    return rows
+
 @login_required(login_url="login_register")
 def train_model_view(request):
-    trainings = ModelTraining.objects.all().order_by("-training_date")[:10]
+    trainings = ModelTraining.objects.all().order_by("-training_date")[:25]
 
     # Le tableau reste du plus récent au plus ancien.
     # Le graphique, lui, doit représenter le temps de gauche à droite.
@@ -548,6 +587,21 @@ def train_model_view(request):
             for training in history_trainings
         ],
     }
+
+    model_rows = _model_management_rows(trainings)
+    active_model_row = next(
+        (row for row in model_rows if row["training"].is_active),
+        None,
+    )
+    active_model_warning = None
+    if active_model_row and not (
+        active_model_row["available"] and active_model_row["compatible"]
+    ):
+        active_model_warning = (
+            "Un entraînement est marqué actif dans la base, mais son fichier modèle "
+            "est indisponible ou incompatible. Activez un modèle disponible ou "
+            "réentraînez le MLP."
+        )
 
     if request.method == "POST":
         form = TrainingForm(request.POST, request.FILES)
@@ -609,6 +663,8 @@ def train_model_view(request):
         "trainings": trainings,
         "model_loaded": load_current_model() is not None,
         "training_history": json.dumps(training_history, ensure_ascii=False),
+        "model_rows": model_rows,
+        "active_model_warning": active_model_warning,
     }
     return render(request, "predictor/train.html", context)
 
@@ -652,6 +708,80 @@ def _rate_spread(rows):
         return 0.0
     return max(rates) - min(rates)
 
+
+
+@login_required(login_url="login_register")
+@require_POST
+def activate_model(request, pk):
+    training = get_object_or_404(ModelTraining, pk=pk)
+
+    try:
+        _model_data, resolved_path = load_model_artifact(training.model_file)
+    except FileNotFoundError:
+        messages.error(
+            request,
+            f"Le modèle #{training.id} ne peut pas être activé : son fichier .joblib est introuvable.",
+        )
+        return redirect("train_model")
+    except ValueError as exc:
+        messages.error(
+            request,
+            f"Le modèle #{training.id} ne peut pas être activé : {exc}",
+        )
+        return redirect("train_model")
+    except Exception:
+        logger.exception("Erreur inattendue pendant la vérification du modèle #%s", training.id)
+        messages.error(request, f"Le modèle #{training.id} n'a pas pu être vérifié.")
+        return redirect("train_model")
+
+    with transaction.atomic():
+        locked_training = ModelTraining.objects.select_for_update().get(pk=pk)
+        ModelTraining.objects.select_for_update().filter(
+            is_active=True
+        ).exclude(pk=pk).update(is_active=False)
+
+        if not locked_training.is_active:
+            locked_training.is_active = True
+            locked_training.save(update_fields=["is_active"])
+
+    notify_user(
+        request.user,
+        "Modèle MLP activé",
+        f"Entraînement #{training.id} activé : {Path(resolved_path).name}.",
+        level="success",
+        event_type="training",
+        target_url=reverse("train_model"),
+    )
+    messages.success(request, f"Le modèle #{training.id} est maintenant actif.")
+    return redirect("train_model")
+
+
+@login_required(login_url="login_register")
+@require_POST
+def deactivate_model(request, pk):
+    training = get_object_or_404(ModelTraining, pk=pk)
+
+    with transaction.atomic():
+        locked_training = ModelTraining.objects.select_for_update().get(pk=pk)
+        was_active = bool(locked_training.is_active)
+        if was_active:
+            locked_training.is_active = False
+            locked_training.save(update_fields=["is_active"])
+
+    if was_active:
+        notify_user(
+            request.user,
+            "Modèle MLP désactivé",
+            f"Entraînement #{training.id} désactivé. Les prédictions nécessitent désormais l'activation d'un autre modèle.",
+            level="warning",
+            event_type="training",
+            target_url=reverse("train_model"),
+        )
+        messages.warning(request, f"Le modèle #{training.id} a été désactivé.")
+    else:
+        messages.info(request, f"Le modèle #{training.id} était déjà inactif.")
+
+    return redirect("train_model")
 
 @login_required(login_url="login_register")
 def statistics(request):

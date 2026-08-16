@@ -17,6 +17,16 @@ urlpatterns = [
         name="batch_predict_download",
     ),
     path("train/", views.train_model_view, name="train_model"),
+    path(
+        "train/models/<int:pk>/activate/",
+        views.activate_model,
+        name="activate_model",
+    ),
+    path(
+        "train/models/<int:pk>/deactivate/",
+        views.deactivate_model,
+        name="deactivate_model",
+    ),
     path("statistics/", views.statistics, name="statistics"),
 
     path("notifications/", views.notifications_feed, name="notifications_feed"),
