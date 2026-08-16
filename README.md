@@ -154,3 +154,24 @@ L'artefact `.joblib` V3 enregistre les hyperparamètres retenus, les moyennes et
 ### Compatibilité des anciens artefacts scikit-learn
 
 Les fichiers `.joblib` sont liés à la version de scikit-learn utilisée lors de leur entraînement. Lorsqu'un artefact a été sérialisé avec une autre version, l'application le conserve dans l'historique mais le marque **Version scikit-learn différente** et interdit son activation. Il doit être réentraîné avec l'environnement courant avant d'être utilisé.
+
+## API REST V1
+
+L'API est disponible sous `/api/v1/`.
+
+### Authentification JWT
+
+- `POST /api/v1/auth/token/` — obtient `access` et `refresh` ;
+- `POST /api/v1/auth/token/refresh/` — renouvelle l'access token ;
+- utiliser ensuite `Authorization: Bearer <access_token>`.
+
+### Endpoints
+
+- `POST /api/v1/predict/` — prédiction individuelle authentifiée ;
+- `POST /api/v1/predict/batch/` — prédiction JSON vectorisée par lot ;
+- `GET /api/v1/models/` — modèles, **staff uniquement** ;
+- `GET /api/v1/feedbacks/` — prédictions enregistrées, **staff uniquement**, paginées ;
+- `GET /api/v1/schema/` — schéma OpenAPI ;
+- `GET /api/v1/docs/` — Swagger UI.
+
+Les prédictions API ne sont pas automatiquement enregistrées dans `StudentFeedback`. Les endpoints réutilisent le moteur et le validateur de l'application web.
