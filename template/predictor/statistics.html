@@ -2,427 +2,282 @@
 
 {% block nav_active %}page-stats{% endblock %}
 {% block nav_stats %}active{% endblock %}
+{% block title %}Statistiques - Analyse des prédictions{% endblock %}
 
-{% block title %}Statistiques - Analyse des Données{% endblock %}
+{% block extra_css %}
+<style>
+    .chart-shell { position: relative; min-height: 320px; }
+    .metric-value { font-size: clamp(1.6rem, 4vw, 2.2rem); font-weight: 700; }
+    .association-progress { height: 9px; }
+    .table-stats td, .table-stats th { vertical-align: middle; }
+    @media (max-width: 576px) { .chart-shell { min-height: 270px; } }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container">
-    <div class="row">
-        <div class="col-12">
-            <h1 class="text-center mb-4">📊 Analyse Statistique</h1>
-            <p class="text-center text-muted mb-5">Visualisez les tendances et les motifs dans les données de satisfaction</p>
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h1 class="mb-2">📊 Analyse Statistique</h1>
+            <p class="text-muted mb-0">Analyse descriptive des prédictions enregistrées par l'application.</p>
         </div>
     </div>
 
-    <!-- Cartes de résumé -->
-    <div class="row mb-5">
-        <div class="col-md-3">
-            <div class="card stats-card text-white h-100">
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card stats-card h-100 border-0 shadow-sm">
                 <div class="card-body text-center">
-                    <h2 class="card-title">{{ stats.total|default:0 }}</h2>
-                    <p class="card-text">Total des Avis</p>
+                    <div class="metric-value">{{ stats.total }}</div>
+                    <div>Prédictions enregistrées</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-success text-white h-100">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card bg-success text-white h-100 border-0 shadow-sm">
                 <div class="card-body text-center">
-                    <h2 class="card-title">{{ stats.satisfied|default:0 }}</h2>
-                    <p class="card-text">Étudiants Satisfaits</p>
+                    <div class="metric-value">{{ stats.satisfied }}</div>
+                    <div>Satisfaits prédits</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-danger text-white h-100">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card bg-danger text-white h-100 border-0 shadow-sm">
                 <div class="card-body text-center">
-                    <h2 class="card-title">{{ stats.unsatisfied|default:0 }}</h2>
-                    <p class="card-text">Étudiants Non Satisfaits</p>
+                    <div class="metric-value">{{ stats.unsatisfied }}</div>
+                    <div>Non satisfaits prédits</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-info text-white h-100">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card bg-info text-white h-100 border-0 shadow-sm">
                 <div class="card-body text-center">
-                    <h2 class="card-title">{{ stats.satisfaction_rate|default:0|floatformat:1 }}%</h2>
-                    <p class="card-text">Taux de Satisfaction</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Graphiques -->
-    <div class="row mb-5">
-        <div class="col-md-6">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h5 class="mb-0">🥧 Répartition de la Satisfaction</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="satisfactionPieChart" style="max-height: 400px;"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h5 class="mb-0">📈 Satisfaction par Type de Cours</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="typeCoursChart" style="max-height: 400px;"></canvas>
+                    <div class="metric-value">{{ stats.satisfaction_rate|floatformat:1 }}%</div>
+                    <div>Taux prédit satisfait</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row mb-5">
-        <div class="col-md-6">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h5 class="mb-0">🎓 Satisfaction par Niveau d'Étude</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="niveauChart" style="max-height: 400px;"></canvas>
-                </div>
+    {% if stats.total == 0 %}
+        <div class="alert alert-info text-center">
+            Aucune prédiction n'est encore enregistrée. Effectuez une prédiction pour alimenter les statistiques.
+        </div>
+    {% elif stats.total < 30 %}
+        <div class="alert alert-warning">
+            <strong>Échantillon encore limité :</strong>
+            seulement {{ stats.total }} prédiction{{ stats.total|pluralize }} enregistrée{{ stats.total|pluralize }}.
+            Les taux par sous-groupes et les associations observées peuvent varier fortement avec si peu de données.
+            Ils doivent être interprétés comme des indications descriptives, pas comme des conclusions générales.
+        </div>
+    {% endif %}
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-white"><h5 class="mb-0">🥧 Répartition globale</h5></div>
+                <div class="card-body"><div class="chart-shell"><canvas id="satisfactionChart"></canvas></div></div>
             </div>
         </div>
+        <div class="col-lg-6">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-white"><h5 class="mb-0">📚 Taux par type de cours</h5></div>
+                <div class="card-body"><div class="chart-shell"><canvas id="courseTypeChart"></canvas></div></div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-white"><h5 class="mb-0">🎓 Taux par niveau étudiant</h5></div>
+                <div class="card-body"><div class="chart-shell"><canvas id="levelChart"></canvas></div></div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-white"><h5 class="mb-0">📈 Taux selon les notes 1–7</h5></div>
+                <div class="card-body"><div class="chart-shell"><canvas id="scoreChart"></canvas></div></div>
+            </div>
+        </div>
+    </div>
 
-        <div class="col-md-6">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h5 class="mb-0">🔥 Facteurs d'Impact (Exemple)</h5>
+    <div class="row g-4 mb-4">
+        <div class="col-lg-7">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-1">🔎 Associations observées</h5>
+                    <p class="small text-muted mb-0">Écart entre le taux prédit le plus élevé et le plus faible parmi les valeurs observées de chaque facteur.</p>
                 </div>
                 <div class="card-body">
-                    <p class="small text-muted">Ceci est une représentation statique des facteurs généralement observés. Une analyse de corrélation dynamique nécessiterait des calculs plus poussés.</p>
-                    <div class="row text-center">
-                        <div class="col-6 mb-2">
-                            <div class="card bg-light">
-                                <div class="card-body">
-                                    <h6>Qualité Enseignement</h6>
-                                    <div class="progress">
-                                        <div class="progress-bar bg-success" style="width: 85%"></div>
-                                    </div>
-                                    <small>Impact: Très Élevé (85%)</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-6 mb-2">
-                            <div class="card bg-light">
-                                <div class="card-body">
-                                    <h6>Interactivité</h6>
-                                    <div class="progress">
-                                        <div class="progress-bar bg-info" style="width: 70%"></div>
-                                    </div>
-                                    <small>Impact: Élevé (70%)</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="card bg-light">
-                                <div class="card-body">
-                                    <h6>Charge de Travail</h6>
-                                    <div class="progress">
-                                        <div class="progress-bar bg-warning" style="width: 45%"></div>
-                                    </div>
-                                    <small>Impact: Moyen (45%)</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="card bg-light">
-                                <div class="card-body">
-                                    <h6>Type de Cours</h6>
-                                    <div class="progress">
-                                        <div class="progress-bar bg-secondary" style="width: 30%"></div>
-                                    </div>
-                                    <small>Impact: Modéré (30%)</small>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="alert alert-light border small">
+                        Ces valeurs sont calculées sur les prédictions enregistrées. Elles décrivent une association et ne constituent ni une causalité ni une importance interne des poids du MLP.
                     </div>
+                    {% for factor in association_factors %}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between gap-3 mb-1">
+                                <span>{{ factor.label }}</span>
+                                <strong>{{ factor.spread|floatformat:1 }} points</strong>
+                            </div>
+                            <div class="progress association-progress">
+                                <div class="progress-bar" role="progressbar" style="width: {{ factor.spread_width }}%" aria-valuenow="{{ factor.spread_width }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p class="text-muted mb-0">Pas assez de données.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-white"><h5 class="mb-0">🤖 Performance du modèle actif</h5></div>
+                <div class="card-body">
+                    {% if active_model %}
+                        <div class="row g-3">
+                            <div class="col-6"><span class="text-muted small">Accuracy</span><div class="fs-5 fw-bold">{% if active_model.accuracy != None %}{{ active_model.accuracy|floatformat:2 }}%{% else %}N/A{% endif %}</div></div>
+                            <div class="col-6"><span class="text-muted small">Precision</span><div class="fs-5 fw-bold">{% if active_model.precision != None %}{{ active_model.precision|floatformat:2 }}%{% else %}N/A{% endif %}</div></div>
+                            <div class="col-6"><span class="text-muted small">Recall</span><div class="fs-5 fw-bold">{% if active_model.recall != None %}{{ active_model.recall|floatformat:2 }}%{% else %}N/A{% endif %}</div></div>
+                            <div class="col-6"><span class="text-muted small">F1-score</span><div class="fs-5 fw-bold">{% if active_model.f1 != None %}{{ active_model.f1|floatformat:2 }}%{% else %}N/A{% endif %}</div></div>
+                        </div>
+                        <hr>
+                        <div class="small text-muted">
+                            Dataset : {{ active_model.dataset_size|default:"N/A" }}
+                            {% if active_model.train_size %} · Train : {{ active_model.train_size }}{% endif %}
+                            {% if active_model.test_size %} · Test : {{ active_model.test_size }}{% endif %}
+                        </div>
+                        {% if not active_model.has_detailed_metrics %}
+                            <div class="alert alert-warning py-2 mt-3 mb-0 small">Ancien artefact : réentraînez le modèle pour disposer de Precision, Recall et F1.</div>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-muted">Aucun modèle actif.</p>
+                        <a href="{% url 'train_model' %}" class="btn btn-success">Entraîner un modèle</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white"><h5 class="mb-0">Détail par type de cours</h5></div>
+                <div class="table-responsive">
+                    <table class="table table-stats mb-0">
+                        <thead><tr><th>Type</th><th>Total</th><th>Satisfaits</th><th>Taux</th></tr></thead>
+                        <tbody>
+                            {% for key, row in type_stats.items %}
+                                <tr><td>{{ row.label }}</td><td>{{ row.total }}</td><td>{{ row.satisfied }}</td><td>{{ row.rate|floatformat:1 }}%</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white"><h5 class="mb-0">Détail par niveau</h5></div>
+                <div class="table-responsive">
+                    <table class="table table-stats mb-0">
+                        <thead><tr><th>Niveau</th><th>Total</th><th>Satisfaits</th><th>Taux</th></tr></thead>
+                        <tbody>
+                            {% for key, row in niveau_stats.items %}
+                                <tr><td>{{ row.label }}</td><td>{{ row.total }}</td><td>{{ row.satisfied }}</td><td>{{ row.rate|floatformat:1 }}%</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<style>
-.stats-card {
-    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-    transition: transform 0.3s ease;
-}
-
-.stats-card:hover {
-    transform: translateY(-5px);
-}
-
-.card {
-    border: none;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-}
-
-.card:hover {
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
-}
-
-.progress {
-    height: 8px;
-    border-radius: 4px;
-}
-
-.progress-bar {
-    border-radius: 4px;
-}
-
-canvas {
-    max-width: 100% !important;
-    height: auto !important;
-}
-</style>
+{{ charts_data|json_script:"charts-data" }}
 {% endblock %}
 
 {% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Page de statistiques chargée');
-    
-    // Récupérer les données JSON depuis Django
-    const chartsDataElement = document.getElementById('charts-data');
-    let chartsData;
-    
-    try {
-        // Récupérer les données depuis le contexte Django
-        chartsData = {{ charts_data_json|safe }};
-        console.log('Données des graphiques:', chartsData);
-    } catch (e) {
-        console.error('Erreur lors de la récupération des données:', e);
-        // Données de fallback en cas d'erreur
-        chartsData = {
-            satisfaction_pie: {
-                labels: ['Satisfaits', 'Non Satisfaits'],
-                data: [0, 0]
-            },
-            type_cours_bar: {
-                labels: ['présentiel', 'distanciel', 'hybride'],
-                satisfied: [0, 0, 0],
-                unsatisfied: [0, 0, 0]
-            },
-            niveau_bar: {
-                labels: ['L1', 'L2', 'L3'],
-                rates: [0, 0, 0]
-            }
-        };
-    }
-    
-    // Configuration des couleurs
-    const colors = {
-        primary: '#007bff',
-        success: '#28a745',
-        danger: '#dc3545',
-        warning: '#ffc107',
-        info: '#17a2b8',
-        secondary: '#6c757d'
+document.addEventListener('DOMContentLoaded', () => {
+    const source = document.getElementById('charts-data');
+    if (!source || typeof Chart === 'undefined') return;
+
+    const charts = JSON.parse(source.textContent);
+    const percentageScale = {
+        beginAtZero: true,
+        suggestedMax: 100,
+        ticks: { callback: (value) => `${value}%` }
     };
 
-    // 1. Graphique en secteurs - Satisfaction globale
-    const satisfactionCtx = document.getElementById('satisfactionPieChart');
-    if (satisfactionCtx && chartsData.satisfaction_pie.data.length > 0) {
-        console.log('Création du graphique en secteurs');
-        
-        new Chart(satisfactionCtx, {
+    const satisfactionCanvas = document.getElementById('satisfactionChart');
+    if (satisfactionCanvas && charts.satisfaction.data.some((value) => value > 0)) {
+        new Chart(satisfactionCanvas, {
             type: 'doughnut',
             data: {
-                labels: chartsData.satisfaction_pie.labels,
-                datasets: [{
-                    data: chartsData.satisfaction_pie.data,
-                    backgroundColor: [colors.success, colors.danger],
-                    borderColor: '#fff',
-                    borderWidth: 2,
-                    hoverOffset: 10
-                }]
+                labels: charts.satisfaction.labels,
+                datasets: [{ data: charts.satisfaction.data }]
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: true,
-                aspectRatio: 2,
+                maintainAspectRatio: false,
                 plugins: {
-                    legend: { 
-                        position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            font: {
-                                size: 14
-                            }
-                        }
-                    },
+                    legend: { position: 'bottom' },
                     tooltip: {
                         callbacks: {
-                            label: function(context) {
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = total > 0 ? ((context.parsed * 100) / total).toFixed(1) : 0;
-                                return `${context.label}: ${context.parsed} (${percentage}%)`;
+                            label: (context) => {
+                                const total = context.dataset.data.reduce((sum, value) => sum + value, 0);
+                                const percent = total ? (context.parsed / total * 100).toFixed(1) : '0.0';
+                                return `${context.label}: ${context.parsed} (${percent}%)`;
                             }
                         }
                     }
-                },
-                animation: {
-                    animateRotate: true,
-                    duration: 1000
                 }
             }
         });
-    } else {
-        console.warn('Impossible de créer le graphique en secteurs');
-        if (satisfactionCtx) {
-            satisfactionCtx.parentElement.innerHTML = '<p class="text-muted text-center">Aucune donnée disponible</p>';
-        }
+    } else if (satisfactionCanvas) {
+        satisfactionCanvas.parentElement.innerHTML = '<p class="text-muted text-center py-5">Aucune donnée disponible</p>';
     }
 
-    // 2. Graphique par type de cours
-    const typeCoursCtx = document.getElementById('typeCoursChart');
-    if (typeCoursCtx && chartsData.type_cours_bar.labels.length > 0) {
-        console.log('Création du graphique par type de cours');
-        
-        new Chart(typeCoursCtx, {
+    const courseTypeCanvas = document.getElementById('courseTypeChart');
+    if (courseTypeCanvas) {
+        new Chart(courseTypeCanvas, {
             type: 'bar',
             data: {
-                labels: chartsData.type_cours_bar.labels.map(label => label.charAt(0).toUpperCase() + label.slice(1)),
-                datasets: [{
-                    label: 'Satisfaits',
-                    data: chartsData.type_cours_bar.satisfied,
-                    backgroundColor: colors.success,
-                    borderColor: colors.success,
-                    borderWidth: 1
-                }, {
-                    label: 'Non Satisfaits',
-                    data: chartsData.type_cours_bar.unsatisfied,
-                    backgroundColor: colors.danger,
-                    borderColor: colors.danger,
-                    borderWidth: 1
-                }]
+                labels: charts.course_types.labels,
+                datasets: [{ label: 'Taux satisfait prédit (%)', data: charts.course_types.rates }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: percentageScale } }
+        });
+    }
+
+    const levelCanvas = document.getElementById('levelChart');
+    if (levelCanvas) {
+        new Chart(levelCanvas, {
+            type: 'bar',
+            data: {
+                labels: charts.levels.labels,
+                datasets: [{ label: 'Taux satisfait prédit (%)', data: charts.levels.rates }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: percentageScale } }
+        });
+    }
+
+    const scoreCanvas = document.getElementById('scoreChart');
+    if (scoreCanvas) {
+        new Chart(scoreCanvas, {
+            type: 'line',
+            data: {
+                labels: charts.scores.labels,
+                datasets: [
+                    { label: 'Qualité', data: charts.scores.quality, tension: .25 },
+                    { label: 'Charge', data: charts.scores.workload, tension: .25 },
+                    { label: 'Interactivité', data: charts.scores.interactivity, tension: .25 }
+                ]
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: true,
-                aspectRatio: 2,
-                scales: {
-                    x: { 
-                        stacked: true,
-                        grid: {
-                            display: false
-                        }
-                    },
-                    y: { 
-                        stacked: true,
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
-                        }
-                    }
-                },
-                plugins: {
-                    legend: { 
-                        position: 'top',
-                        labels: {
-                            padding: 20
-                        }
-                    },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false
-                    }
-                },
-                animation: {
-                    duration: 1000,
-                    easing: 'easeOutQuart'
-                }
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                scales: { y: percentageScale }
             }
         });
-    } else {
-        console.warn('Impossible de créer le graphique par type de cours');
-        if (typeCoursCtx) {
-            typeCoursCtx.parentElement.innerHTML = '<p class="text-muted text-center">Aucune donnée disponible</p>';
-        }
     }
-
-    // 3. Graphique par niveau
-    const niveauCtx = document.getElementById('niveauChart');
-    if (niveauCtx && chartsData.niveau_bar.labels.length > 0) {
-        console.log('Création du graphique par niveau');
-        
-        new Chart(niveauCtx, {
-            type: 'bar',
-            data: {
-                labels: chartsData.niveau_bar.labels,
-                datasets: [{
-                    label: 'Taux de Satisfaction (%)',
-                    data: chartsData.niveau_bar.rates,
-                    backgroundColor: [
-                        colors.primary + '80', // Ajout de transparence
-                        colors.info + '80',
-                        colors.secondary + '80'
-                    ],
-                    borderColor: [
-                        colors.primary,
-                        colors.info,
-                        colors.secondary
-                    ],
-                    borderWidth: 2,
-                    borderRadius: 5
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                aspectRatio: 2,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        ticks: {
-                            callback: function(value) { 
-                                return value + '%'; 
-                            },
-                            stepSize: 20
-                        },
-                        grid: {
-                            color: '#e0e0e0'
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    }
-                },
-                plugins: {
-                    legend: { 
-                        display: false 
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `Taux: ${context.parsed.y.toFixed(1)}%`;
-                            }
-                        }
-                    }
-                },
-                animation: {
-                    duration: 1200,
-                    easing: 'easeOutBounce'
-                }
-            }
-        });
-    } else {
-        console.warn('Impossible de créer le graphique par niveau');
-        if (niveauCtx) {
-            niveauCtx.parentElement.innerHTML = '<p class="text-muted text-center">Aucune donnée disponible</p>';
-        }
-    }
-
-    console.log('Initialisation des graphiques terminée');
 });
 </script>
 {% endblock %}

@@ -2,7 +2,7 @@
 # Importation des modules nécessaires de Django pour l'administration
 from django.contrib import admin
 # Importation des modèles définis dans models.py
-from .models import StudentFeedback, ModelTraining
+from .models import StudentFeedback, ModelTraining, Notification
 
 # Enregistrement du modèle StudentFeedback dans l'admin avec une configuration personnalisée
 @admin.register(StudentFeedback)
@@ -111,3 +111,12 @@ class ModelTrainingAdmin(admin.ModelAdmin):
     # Ici, on utilise juste la requête par défaut de Django
     def get_queryset(self, request):
         return super().get_queryset(request)
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ["id", "user", "title", "level", "event_type", "is_read", "created_at"]
+    list_filter = ["level", "event_type", "is_read", "created_at"]
+    search_fields = ["user__username", "title", "message"]
+    readonly_fields = ["created_at"]
+    ordering = ["-created_at"]
+

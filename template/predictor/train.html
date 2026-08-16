@@ -87,7 +87,7 @@
                                 <tr>
                                     <td><code>niveau_etudiant</code></td>
                                     <td>Texte</td>
-                                    <td><code>L1</code>, <code>L2</code>, <code>L3</code></td>
+                                    <td><code>L1</code>, <code>L2</code>, <code>L3</code>, <code>M1</code>, <code>M2</code></td>
                                 </tr>
                                 <tr class="table-info">
                                     <td><strong><code>satisfaction</code></strong></td>
@@ -159,7 +159,7 @@
                                         </td>
                                         <td>
                                             <span class="badge {% if training.accuracy >= 0.9 %}bg-success{% elif training.accuracy >= 0.8 %}bg-info{% elif training.accuracy >= 0.7 %}bg-warning{% else %}bg-danger{% endif %}">
-                                                {{ training.accuracy|floatformat:2 }}%
+                                                {{ training.accuracy_percent|floatformat:2 }}%
                                             </span>
                                         </td>
                                         <td>{{ training.dataset_size }}</td>
@@ -193,7 +193,7 @@
                     <h4 class="mb-0">💡 Évolution de la Performance du Modèle</h4>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted">Ce graphique montre l'évolution de la précision du modèle à chaque nouvel entraînement. Il permet de visualiser si le modèle "apprend" et s'améliore avec le temps.</p>
+                    <p class="text-muted">Ce graphique compare la précision des entraînements successifs, du plus ancien au plus récent. Chaque point correspond à un entraînement distinct ; il ne s’agit pas d’un apprentissage continu.</p>
                     <div style="height: 350px;">
                         <canvas id="evolutionChart"></canvas>
                     </div>

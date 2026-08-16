@@ -4,186 +4,673 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Prédicteur de Satisfaction Étudiante{% endblock %}</title>
-    
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
+
     <style>
-        /* Styles existants */
-        body {
-            background-color: #f8f9fa;
+        :root {
+            --app-primary: #0056b3;
+            --app-primary-light: #007bff;
+            --app-surface: #ffffff;
+            --app-bg: #f8f9fa;
+            --app-nav: #333333;
         }
+
+        html, body { min-height: 100%; }
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--app-bg);
+        }
+
+        .main-content {
+            flex: 1 0 auto;
+            width: 100%;
+            padding: 24px 20px;
+        }
+
         .prediction-result { border-radius: 10px; padding: 20px; margin: 20px 0; }
         .satisfied { background: linear-gradient(135deg, #28a745, #20c997); color: white; }
         .unsatisfied { background: linear-gradient(135deg, #dc3545, #fd7e14); color: white; }
-        .card { transition: transform 0.2s; }
-        .card:hover { transform: translateY(-5px); }
-        .stats-card { background: linear-gradient(135deg, #007bff, #6f42c1); color: white; }
+        .stats-card { background: linear-gradient(135deg, var(--app-primary-light), #6f42c1); color: white; }
         .probability-bar { background: #e9ecef; border-radius: 10px; height: 20px; overflow: hidden; }
-        .probability-fill { height: 100%; transition: width 1s ease-in-out; border-radius: 10px; }
-        .main-content { padding: 20px; }
-        footer { background: #343a40; color: white; padding: 20px 0; margin-top: 50px; }
+        .probability-fill { height: 100%; transition: width .4s ease; border-radius: 10px; }
 
-        /* Header */
+        .card {
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+        .card:hover { transform: translateY(-3px); }
+
         .page-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 20px;
-            background-color: #fff;
+            gap: 16px;
+            padding: 12px 20px;
+            background-color: var(--app-surface);
             border-bottom: 1px solid #dee2e6;
         }
         .page-header .brand {
-            font-weight: bold;
-            font-size: 1.5rem;
-            color: #0056b3;
+            min-width: 0;
+            font-weight: 700;
+            font-size: clamp(1.05rem, 3.5vw, 1.5rem);
+            color: var(--app-primary);
             text-decoration: none;
         }
-        .page-header .user-info a {
-            text-decoration: none;
+        .page-header .user-info {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            min-width: 0;
         }
+        .page-header .user-info .navbar-text {
+            margin-right: 0 !important;
+            overflow-wrap: anywhere;
+        }
+        .logout-form { margin: 0; }
+        .logout-form .btn { white-space: nowrap; }
 
-        /* ============================================================
-           ✨ NAVBAR CORRIGÉE - Indicateur actif + Hover conservé
-           ============================================================ */
         .nav-container {
             display: flex;
             justify-content: center;
-            align-items: center;
-            padding: 20px 0;
+            padding: 16px 12px;
             background-color: #e9ecef;
         }
-        
+
         nav.animated-nav {
             position: relative;
-            width: 590px;
-            height: 50px;
-            background: #333;
-            border-radius: 9px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            isolation: isolate;
+            width: min(760px, 100%);
+            min-height: 52px;
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 0;
+            padding: 4px;
+            overflow: hidden;
+            background: var(--app-nav);
+            border-radius: 10px;
         }
-        
+
         nav.animated-nav a {
             position: relative;
-            display: inline-block;
-            font-size: 16px;
-            font-weight: 500;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+            min-height: 44px;
+            padding: 9px 8px;
             color: #dfdfdf;
+            font-size: 15px;
+            font-weight: 500;
+            line-height: 1.15;
+            text-align: center;
             text-decoration: none;
-            padding: 0 23px;
-            z-index: 1;
-            transition: color 0.3s ease;
+            border-radius: 7px;
+            transition: color .2s ease;
         }
-        
-        /* Lien actif en blanc */
-        nav.animated-nav a.active {
-            color: #ffffff;
-        }
-        
-        /* Le span bleu qui indique la page active */
-        nav.animated-nav span {
+        nav.animated-nav a.active { color: #fff; }
+
+        nav.animated-nav .nav-indicator {
             position: absolute;
+            z-index: 1;
             top: 0;
             left: 0;
-            height: 100%;
-            background: linear-gradient(46deg, #0056b3, #007bff);
-            border-radius: 9px;
-            transition: all 0.5s ease;
-            pointer-events: none; /* Ne bloque pas les clics */
+            width: 0;
+            height: 0;
+            pointer-events: none;
+            background: linear-gradient(46deg, var(--app-primary), var(--app-primary-light));
+            border-radius: 7px;
+            transition: transform .28s ease, width .28s ease, height .28s ease;
+            will-change: transform, width, height;
         }
-        
-        /* ✅ Positions initiales selon la page active (calculées en JS) */
-        nav.animated-nav.page-home span { left: 0px; width: 95px; }
-        nav.animated-nav.page-predict span { left: 95px; width: 115px; }
-        nav.animated-nav.page-train span { left: 215px; width: 135px; }
-        nav.animated-nav.page-data span { left: 359px; width: 100px; }
-        nav.animated-nav.page-stats span { left: 465px; width: 125px; }
-        
-        /* ✅ Hover - Le span bouge TEMPORAIREMENT au survol */
-        nav.animated-nav a:nth-child(1):hover ~ span { left: 0px !important; width: 95px !important; }
-        nav.animated-nav a:nth-child(2):hover ~ span { left: 95px !important; width: 115px !important; }
-        nav.animated-nav a:nth-child(3):hover ~ span { left: 215px !important; width: 135px !important; }
-        nav.animated-nav a:nth-child(4):hover ~ span { left: 359px !important; width: 100px !important; }
-        nav.animated-nav a:nth-child(5):hover ~ span { left: 465px !important; width: 125px !important; }
+
+        footer {
+            flex-shrink: 0;
+            padding: 24px 0;
+            margin-top: 32px;
+            background: #343a40;
+            color: white;
+        }
+
+
+        /* V6 — centre de notifications temps réel */
+        .notification-center { position: relative; flex: 0 0 auto; }
+        .notification-bell {
+            position: relative;
+            display: grid;
+            place-items: center;
+            width: 38px;
+            height: 38px;
+            padding: 0;
+            border: 1px solid #d9e0ea;
+            border-radius: 11px;
+            color: #344054;
+            background: #fff;
+            cursor: pointer;
+            transition: transform .18s ease, color .18s ease, background .18s ease, box-shadow .18s ease;
+        }
+        .notification-bell:hover, .notification-bell[aria-expanded="true"] {
+            color: var(--app-primary-light);
+            background: #f4f8ff;
+            box-shadow: 0 6px 18px rgba(16, 24, 40, .10);
+            transform: translateY(-1px);
+        }
+        .notification-bell .bi { font-size: 1.05rem; }
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -6px;
+            min-width: 19px;
+            height: 19px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+            border: 2px solid #fff;
+            border-radius: 999px;
+            color: #fff;
+            background: #e11d48;
+            font-size: .67rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+        .notification-panel {
+            position: absolute;
+            z-index: 1085;
+            top: calc(100% + 12px);
+            right: 0;
+            width: min(390px, calc(100vw - 24px));
+            max-height: min(590px, calc(100vh - 110px));
+            overflow: hidden;
+            border: 1px solid #e4e7ec;
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 24px 70px rgba(16, 24, 40, .22);
+        }
+        .notification-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 15px;
+            border-bottom: 1px solid #eaecf0;
+            background: linear-gradient(180deg, #fff, #fbfcfe);
+        }
+        .notification-panel-header strong { display: block; font-size: .95rem; }
+        .notification-panel-header small { display: block; margin-top: 2px; color: #98a2b3; font-size: .72rem; }
+        .notification-read-all {
+            border: 0;
+            padding: 6px 8px;
+            border-radius: 8px;
+            color: var(--app-primary-light);
+            background: transparent;
+            font-size: .76rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .notification-read-all:hover { background: #eff6ff; }
+        .notification-list { max-height: 480px; overflow-y: auto; overscroll-behavior: contain; }
+        .notification-item {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 34px minmax(0, 1fr) 8px;
+            gap: 10px;
+            align-items: start;
+            padding: 13px 14px;
+            border: 0;
+            border-bottom: 1px solid #f0f2f5;
+            text-align: left;
+            color: #344054;
+            background: #fff;
+            cursor: pointer;
+            transition: background .16s ease;
+        }
+        .notification-item:hover { background: #f8fafc; }
+        .notification-item.is-unread { background: #f5f9ff; }
+        .notification-item-icon {
+            display: grid;
+            place-items: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            color: #175cd3;
+            background: #eff8ff;
+        }
+        .notification-item.level-success .notification-item-icon { color: #067647; background: #ecfdf3; }
+        .notification-item.level-warning .notification-item-icon { color: #b54708; background: #fffaeb; }
+        .notification-item.level-error .notification-item-icon { color: #b42318; background: #fef3f2; }
+        .notification-item-title { display: block; color: #101828; font-size: .85rem; font-weight: 800; }
+        .notification-item-message { display: block; margin-top: 3px; color: #667085; font-size: .78rem; line-height: 1.4; }
+        .notification-item-time { display: block; margin-top: 6px; color: #98a2b3; font-size: .7rem; }
+        .notification-unread-dot { width: 7px; height: 7px; margin-top: 5px; border-radius: 50%; background: var(--app-primary-light); }
+        .notification-item:not(.is-unread) .notification-unread-dot { visibility: hidden; }
+        .notification-empty {
+            min-height: 170px;
+            display: grid;
+            place-items: center;
+            align-content: center;
+            gap: 10px;
+            padding: 24px;
+            color: #98a2b3;
+            text-align: center;
+            font-size: .82rem;
+        }
+        .notification-empty .bi { font-size: 1.6rem; }
+
+        .app-toast-region {
+            position: fixed;
+            z-index: 2000;
+            top: 74px;
+            right: 18px;
+            width: min(360px, calc(100vw - 28px));
+            display: grid;
+            gap: 10px;
+            pointer-events: none;
+        }
+        .app-toast {
+            display: grid;
+            grid-template-columns: 30px minmax(0, 1fr) 26px;
+            gap: 9px;
+            align-items: center;
+            padding: 12px 12px;
+            border: 1px solid #dbe4f0;
+            border-radius: 13px;
+            color: #344054;
+            background: rgba(255, 255, 255, .98);
+            box-shadow: 0 16px 44px rgba(16, 24, 40, .16);
+            pointer-events: auto;
+            animation: app-toast-in .24s ease both;
+        }
+        .app-toast-success { border-left: 4px solid #12b76a; }
+        .app-toast-warning { border-left: 4px solid #f79009; }
+        .app-toast-error, .app-toast-danger { border-left: 4px solid #f04438; }
+        .app-toast-info { border-left: 4px solid #2e90fa; }
+        .app-toast-icon { display: grid; place-items: center; color: var(--app-primary-light); }
+        .app-toast-content { font-size: .82rem; line-height: 1.4; }
+        .app-toast-close { border: 0; color: #98a2b3; background: transparent; font-size: 1.25rem; line-height: 1; cursor: pointer; }
+        .app-toast.is-leaving { animation: app-toast-out .2s ease both; }
+        @keyframes app-toast-in { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes app-toast-out { to { opacity: 0; transform: translateX(18px); } }
+
+        @media (max-width: 700px) {
+            .page-header {
+                align-items: flex-start;
+                flex-wrap: wrap;
+                padding: 12px 14px;
+            }
+            .page-header .user-info {
+                width: 100%;
+                justify-content: space-between;
+            }
+            .notification-panel {
+                position: fixed;
+                top: 72px;
+                right: 12px;
+                left: 12px;
+                width: auto;
+                max-height: calc(100vh - 88px);
+            }
+            nav.animated-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            nav.animated-nav a:nth-child(5) { grid-column: 1 / -1; }
+            .main-content { padding: 18px 12px; }
+        }
+
+        @media (max-width: 420px) {
+            nav.animated-nav { grid-template-columns: 1fr; }
+            nav.animated-nav a:nth-child(5) { grid-column: auto; }
+            .page-header .user-info { align-items: stretch; flex-direction: column; }
+            .page-header .user-info .btn { width: 100%; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                scroll-behavior: auto !important;
+                transition-duration: .01ms !important;
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+            }
+        }
     </style>
-    
+
     {% block extra_css %}{% endblock %}
 </head>
 <body>
     <header class="page-header">
-        <a class="brand" href="{% url 'home' %}">
-            🎓 Satisfaction Étudiante
-        </a>
+        <a class="brand" href="{% url 'home' %}">🎓 Satisfaction Étudiante</a>
         <div class="user-info">
             {% if user.is_authenticated %}
-                <span class="navbar-text me-3">
-                    Bonjour, <strong>{{ user.username }}</strong>
-                </span>
-                <a class="btn btn-outline-danger btn-sm" href="{% url 'logout' %}">Déconnexion</a>
+                <span class="navbar-text">Bonjour, <strong>{{ user.username }}</strong></span>
+
+                <div class="notification-center"
+                     data-notification-center
+                     data-feed-url="{% url 'notifications_feed' %}"
+                     data-mark-all-url="{% url 'notifications_mark_all_read' %}">
+                    <button type="button" class="notification-bell" data-notification-toggle
+                            aria-label="Ouvrir les notifications" aria-expanded="false">
+                        <i class="bi bi-bell" aria-hidden="true"></i>
+                        <span class="notification-badge" data-notification-badge hidden>0</span>
+                    </button>
+
+                    <section class="notification-panel" data-notification-panel hidden aria-label="Centre de notifications">
+                        <div class="notification-panel-header">
+                            <div>
+                                <strong>Notifications</strong>
+                                <small data-notification-status>Actualisation automatique</small>
+                            </div>
+                            <button type="button" class="notification-read-all" data-notification-read-all>
+                                <i class="bi bi-check2-all" aria-hidden="true"></i> Tout lire
+                            </button>
+                        </div>
+                        <div class="notification-list" data-notification-list>
+                            <div class="notification-empty">
+                                <i class="bi bi-bell-slash" aria-hidden="true"></i>
+                                <span>Aucune notification pour le moment.</span>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <form method="post" action="{% url 'logout' %}" class="logout-form">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger btn-sm">Déconnexion</button>
+                </form>
             {% endif %}
         </div>
     </header>
 
     <div class="nav-container">
-        <!-- ✅ Classe dynamique ajoutée pour identifier la page active -->
-        <nav class="animated-nav {% block nav_active %}page-home{% endblock %}">
+        <nav class="animated-nav {% block nav_active %}page-home{% endblock %}" data-animated-nav>
             <a href="{% url 'home' %}" class="{% block nav_home %}{% endblock %}">Accueil</a>
             <a href="{% url 'predict' %}" class="{% block nav_predict %}{% endblock %}">Prédiction</a>
             <a href="{% url 'train_model' %}" class="{% block nav_train %}{% endblock %}">Entraînement</a>
             <a href="{% url 'data_management' %}" class="{% block nav_data %}{% endblock %}">Données</a>
             <a href="{% url 'statistics' %}" class="{% block nav_stats %}{% endblock %}">Statistiques</a>
-            <span></span>
+            <span class="nav-indicator" aria-hidden="true"></span>
         </nav>
     </div>
 
-    {% if messages %}
-        <div class="container mt-3">
+    <div class="app-toast-region" data-toast-region aria-live="polite" aria-atomic="false">
+        {% if messages %}
             {% for message in messages %}
                 {% if "login_error" not in message.tags and "register_error" not in message.tags %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
+                    <div class="app-toast app-toast-{{ message.tags|default:'info' }}" data-server-toast role="status">
+                        <span class="app-toast-icon"><i class="bi bi-info-circle" aria-hidden="true"></i></span>
+                        <div class="app-toast-content">{{ message }}</div>
+                        <button type="button" class="app-toast-close" data-toast-close aria-label="Fermer">×</button>
+                    </div>
                 {% endif %}
             {% endfor %}
-        </div>
-    {% endif %}
+        {% endif %}
+    </div>
 
     <main class="main-content">
-        {% block content %}
-        {% endblock %}
+        {% block content %}{% endblock %}
     </main>
 
-    <footer class="bg-dark text-white">
+    <footer>
         <div class="container">
-            <div class="row">
+            <div class="row g-4">
                 <div class="col-md-6">
-                     <h5>Prédicteur de Satisfaction Étudiante</h5>
-                    <p>Un outil d'intelligence artificielle pour prédire la satisfaction des étudiants basé sur les caractéristiques des cours.</p>
+                    <h5>Prédicteur de Satisfaction Étudiante</h5>
+                    <p class="mb-0">Projet de classification par réseau de neurones MLP avec interface Django.</p>
                 </div>
                 <div class="col-md-6">
                     <h5>Fonctionnalités</h5>
-                     <ul class="list-unstyled">
-                        <li>• Prédiction en temps réel</li>
-                        <li>• Entraînement de modèles personnalisés</li>
-                        <li>• Analyse statistique des données</li>
-                        <li>• Export des données</li>
+                    <ul class="list-unstyled mb-0">
+                        <li>• Prédiction avec probabilités</li>
+                        <li>• Entraînement de modèles MLP</li>
+                        <li>• Analyse statistique des prédictions</li>
+                        <li>• Gestion et export des données</li>
                     </ul>
                 </div>
             </div>
             <hr>
-            <div class="text-center">
-                <p>&copy; 2025 - Projet de Classification ML</p>
-            </div>
+            <p class="text-center mb-0">&copy; 2026 - Projet de Classification ML</p>
         </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    
-    {% block scripts %}
-    {% endblock %}
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('[data-animated-nav]').forEach((nav) => {
+            const indicator = nav.querySelector('.nav-indicator');
+            const links = Array.from(nav.querySelectorAll('a'));
+            if (!indicator || links.length === 0) return;
+
+            const activeLink = links.find((link) => link.classList.contains('active')) || links[0];
+            activeLink.setAttribute('aria-current', 'page');
+
+            const moveIndicator = (link, animate = true) => {
+                if (!link) return;
+                if (!animate) indicator.style.transition = 'none';
+                indicator.style.width = `${link.offsetWidth}px`;
+                indicator.style.height = `${link.offsetHeight}px`;
+                indicator.style.transform = `translate(${link.offsetLeft}px, ${link.offsetTop}px)`;
+                if (!animate) {
+                    requestAnimationFrame(() => { indicator.style.transition = ''; });
+                }
+            };
+
+            links.forEach((link) => {
+                link.addEventListener('mouseenter', () => moveIndicator(link));
+                link.addEventListener('focus', () => moveIndicator(link));
+                link.addEventListener('blur', () => moveIndicator(activeLink));
+            });
+
+            nav.addEventListener('mouseleave', () => moveIndicator(activeLink));
+            window.addEventListener('resize', () => moveIndicator(activeLink, false));
+            moveIndicator(activeLink, false);
+        });
+    });
+    </script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const toastRegion = document.querySelector('[data-toast-region]');
+
+        const closeToast = (toast) => {
+            if (!toast || toast.classList.contains('is-leaving')) return;
+            toast.classList.add('is-leaving');
+            window.setTimeout(() => toast.remove(), 220);
+        };
+
+        const wireToast = (toast, timeout = 4800) => {
+            toast.querySelector('[data-toast-close]')?.addEventListener('click', () => closeToast(toast));
+            if (timeout) window.setTimeout(() => closeToast(toast), timeout);
+        };
+
+        document.querySelectorAll('[data-server-toast]').forEach((toast) => wireToast(toast, 5200));
+
+        const showToast = (title, message, level = 'info') => {
+            if (!toastRegion) return;
+            const toast = document.createElement('div');
+            toast.className = `app-toast app-toast-${level}`;
+            toast.setAttribute('role', 'status');
+            const icon = level === 'success' ? 'bi-check-circle' : level === 'warning' ? 'bi-exclamation-triangle' : level === 'error' ? 'bi-x-octagon' : 'bi-info-circle';
+            toast.innerHTML = `
+                <span class="app-toast-icon"><i class="bi ${icon}" aria-hidden="true"></i></span>
+                <div class="app-toast-content"><strong>${notificationEscapeHtml(title)}</strong><br>${notificationEscapeHtml(message)}</div>
+                <button type="button" class="app-toast-close" data-toast-close aria-label="Fermer">×</button>`;
+            toastRegion.appendChild(toast);
+            wireToast(toast, 5200);
+        };
+
+        const center = document.querySelector('[data-notification-center]');
+        if (!center) return;
+
+        const toggle = center.querySelector('[data-notification-toggle]');
+        const panel = center.querySelector('[data-notification-panel]');
+        const badge = center.querySelector('[data-notification-badge]');
+        const list = center.querySelector('[data-notification-list]');
+        const markAllButton = center.querySelector('[data-notification-read-all]');
+        const status = center.querySelector('[data-notification-status]');
+        const feedUrl = center.dataset.feedUrl;
+        const markAllUrl = center.dataset.markAllUrl;
+
+        let initialized = false;
+        let maxKnownId = 0;
+        let pollTimer = null;
+
+        const getCookie = (name) => {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            return parts.length === 2 ? parts.pop().split(';').shift() : '';
+        };
+
+        const postJson = async (url) => {
+            const response = await fetch(url, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response.json();
+        };
+
+        const relativeTime = (iso) => {
+            const date = new Date(iso);
+            const diffSeconds = Math.round((date.getTime() - Date.now()) / 1000);
+            const abs = Math.abs(diffSeconds);
+            const rtf = new Intl.RelativeTimeFormat('fr', { numeric: 'auto' });
+            if (abs < 60) return rtf.format(diffSeconds, 'second');
+            if (abs < 3600) return rtf.format(Math.round(diffSeconds / 60), 'minute');
+            if (abs < 86400) return rtf.format(Math.round(diffSeconds / 3600), 'hour');
+            if (abs < 604800) return rtf.format(Math.round(diffSeconds / 86400), 'day');
+            return date.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
+        };
+
+        const iconFor = (notification) => {
+            if (notification.event_type === 'prediction') return 'bi-magic';
+            if (notification.event_type === 'training') return 'bi-cpu';
+            if (notification.event_type === 'data') return 'bi-database';
+            if (notification.event_type === 'export') return 'bi-download';
+            if (notification.event_type === 'auth') return 'bi-person-check';
+            return notification.level === 'error' ? 'bi-x-octagon' : 'bi-info-circle';
+        };
+
+        const updateBadge = (count) => {
+            const value = Number(count) || 0;
+            badge.textContent = value > 99 ? '99+' : String(value);
+            badge.hidden = value === 0;
+            toggle.setAttribute('aria-label', value ? `Notifications — ${value} non lue(s)` : 'Notifications — aucune non lue');
+        };
+
+        const renderNotifications = (notifications) => {
+            if (!notifications.length) {
+                list.innerHTML = '<div class="notification-empty"><i class="bi bi-bell-slash" aria-hidden="true"></i><span>Aucune notification pour le moment.</span></div>';
+                return;
+            }
+
+            list.innerHTML = notifications.map((notification) => `
+                <button type="button"
+                        class="notification-item level-${notificationEscapeHtml(notification.level)} ${notification.is_read ? '' : 'is-unread'}"
+                        data-notification-id="${notification.id}"
+                        data-read-url="${notificationEscapeHtml(notification.mark_read_url)}"
+                        data-target-url="${notificationEscapeHtml(notification.target_url || '')}">
+                    <span class="notification-item-icon"><i class="bi ${iconFor(notification)}" aria-hidden="true"></i></span>
+                    <span>
+                        <span class="notification-item-title">${notificationEscapeHtml(notification.title)}</span>
+                        <span class="notification-item-message">${notificationEscapeHtml(notification.message)}</span>
+                        <span class="notification-item-time">${notificationEscapeHtml(relativeTime(notification.created_at))}</span>
+                    </span>
+                    <span class="notification-unread-dot" aria-hidden="true"></span>
+                </button>`).join('');
+        };
+
+        const fetchNotifications = async ({ toastNew = true } = {}) => {
+            try {
+                const response = await fetch(feedUrl, {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    cache: 'no-store',
+                });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                const notifications = Array.isArray(data.notifications) ? data.notifications : [];
+
+                renderNotifications(notifications);
+                updateBadge(data.unread_count);
+                if (status) status.textContent = 'Mis à jour à l’instant';
+
+                const currentMax = notifications.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0);
+                if (initialized && toastNew && currentMax > maxKnownId) {
+                    notifications
+                        .filter((item) => Number(item.id) > maxKnownId)
+                        .slice()
+                        .reverse()
+                        .forEach((item) => showToast(item.title, item.message, item.level));
+                }
+                maxKnownId = Math.max(maxKnownId, currentMax);
+                initialized = true;
+            } catch (error) {
+                if (status) status.textContent = 'Actualisation momentanément indisponible';
+                console.debug('Notifications:', error);
+            }
+        };
+
+        const setPanelOpen = (open) => {
+            panel.hidden = !open;
+            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            if (open) fetchNotifications({ toastNew: false });
+        };
+
+        toggle.addEventListener('click', (event) => {
+            event.stopPropagation();
+            setPanelOpen(panel.hidden);
+        });
+        panel.addEventListener('click', (event) => event.stopPropagation());
+        document.addEventListener('click', () => setPanelOpen(false));
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') setPanelOpen(false);
+        });
+
+        list.addEventListener('click', async (event) => {
+            const item = event.target.closest('[data-notification-id]');
+            if (!item) return;
+            const targetUrl = item.dataset.targetUrl;
+            try {
+                await postJson(item.dataset.readUrl);
+                item.classList.remove('is-unread');
+                await fetchNotifications({ toastNew: false });
+            } catch (error) {
+                console.debug('Lecture notification:', error);
+            }
+            if (targetUrl) window.location.href = targetUrl;
+        });
+
+        markAllButton.addEventListener('click', async () => {
+            try {
+                await postJson(markAllUrl);
+                await fetchNotifications({ toastNew: false });
+            } catch (error) {
+                showToast('Notifications', 'Impossible de tout marquer comme lu.', 'error');
+            }
+        });
+
+        fetchNotifications({ toastNew: false });
+        pollTimer = window.setInterval(() => fetchNotifications({ toastNew: true }), 5000);
+        window.addEventListener('beforeunload', () => window.clearInterval(pollTimer));
+    });
+
+    function notificationEscapeHtml(value) {
+        return String(value ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+    }
+    </script>
+
+    {% block scripts %}{% endblock %}
 </body>
 </html>

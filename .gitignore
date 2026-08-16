@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environnements virtuels
+.venv/
+venv/
+env/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Django local / généré
+db.sqlite3
+media/
+staticfiles/
+correctif_backups/
+
+# Modèles ML générés
+model_artifacts/
+student_satisfaction_model_*.joblib
+
+# Copies/audits locaux
+django_copie-complete.txt
+django_copie-*.txt
+
+# Variables sensibles
+.env
+.env.*
+!.env.example
+data_cleanup_backups/

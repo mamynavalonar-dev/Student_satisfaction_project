@@ -4,117 +4,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
     <title>Connexion & Inscription - Prédicteur de Satisfaction</title>
-
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <link rel="stylesheet" href="{% static 'auth/css/animate.min.css' %}">
-
-
     <link rel="stylesheet" href="{% static 'auth/st-inscr.css' %}">
 </head>
-<style>
-    body {
-        background: url("{% static 'auth/fond.jpg' %}") no-repeat center center fixed;
-        background-size: cover;
-    }
-</style>
+<body class="auth-page" style="--auth-background: url('{% static 'auth/fond.jpg' %}');">
+    <main class="auth-shell">
+        <section class="auth-card" data-auth-card data-panel="{{ active_panel|default:'login' }}">
+            <aside class="auth-intro" aria-label="Présentation du projet">
+                <div class="auth-brand">
+                    <span class="auth-brand-icon" aria-hidden="true">🎓</span>
+                    <span>Satisfaction Étudiante</span>
+                </div>
 
-<body>
+                <div class="auth-intro-copy" data-intro="login">
+                    <p class="auth-kicker">Projet IA · MLP + Django</p>
+                    <h1>Bon retour</h1>
+                    <p>Connectez-vous pour accéder aux prédictions, aux statistiques et aux outils d'entraînement.</p>
+                </div>
 
-    <div class="wrapper" style="border: 2px solid rgb(101, 101, 250);border-radius: 10px;box-shadow: 0 0 20px rgba(43,43,252,1);">
-        <span class="rotate-bg" style=" background: linear-gradient(90deg, rgba(43,43,252,1) 4%, rgba(0,212,255,1) 64%);"></span>
-        <span class="rotate-bg2" ></span>
+                <div class="auth-intro-copy" data-intro="register">
+                    <p class="auth-kicker">Projet IA · MLP + Django</p>
+                    <h1>Bienvenue</h1>
+                    <p>Créez votre compte pour commencer à manipuler le modèle de classification.</p>
+                </div>
 
-        <div class="form-box login">
-            <h2 class="title animation tlt" style="--i:0; --j:21">Connexion</h2>
+                <div class="auth-pills" aria-label="Fonctionnalités principales">
+                    <span>Prédiction</span>
+                    <span>MLP</span>
+                    <span>Statistiques</span>
+                </div>
+            </aside>
 
-            {% if messages %}
-                {% for message in messages %}
-                    {% if "login_error" in message.tags %}
-                        <div class="alert alert-danger" style="color: red; text-align: center; font-size: 14px; margin-bottom: 10px;">{{ message }}</div>
+            <div class="auth-content">
+                {% if messages %}
+                    <div class="auth-flash-stack" aria-live="polite">
+                        {% for message in messages %}
+                            <div class="auth-alert auth-alert-{{ message.tags|default:'info' }}" role="status" data-auth-flash>
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="auth-tabs" role="tablist" aria-label="Connexion ou inscription">
+                    <button type="button" class="auth-tab" data-auth-target="login" role="tab" aria-controls="login-panel">
+                        Connexion
+                    </button>
+                    <button type="button" class="auth-tab" data-auth-target="register" role="tab" aria-controls="register-panel">
+                        Inscription
+                    </button>
+                </div>
+
+                <section class="auth-panel" id="login-panel" data-auth-panel="login" role="tabpanel">
+                    <div class="auth-heading">
+                        <h2>Se connecter</h2>
+                        <p>Utilisez votre nom d'utilisateur et votre mot de passe.</p>
+                    </div>
+
+                    {% if login_form.non_field_errors %}
+                        <div class="auth-alert auth-alert-error" role="alert">
+                            {% for error in login_form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+                        </div>
                     {% endif %}
-                {% endfor %}
-            {% endif %}
 
-            <form action="{% url 'login_register' %}" method="post">
-                {% csrf_token %}
-                <input type="hidden" name="form_type" value="login">
+                    <form action="{% url 'login_register' %}" method="post" novalidate>
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="login">
+                        {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
 
-                <div class="input-box animation" style="--i:1; --j:22">
-                    <input type="text" name="username" required>
-                    <label>Nom d'utilisateur</label>
-                    <i class='bx bxs-user'></i>
-                </div>
+                        <div class="auth-field">
+                            <label for="{{ login_form.username.id_for_label }}">Nom d'utilisateur</label>
+                            <div class="auth-input-shell">
+                                {{ login_form.username }}
+                                <button type="button" class="auth-visibility-toggle"
+                                        data-visibility-target="{{ login_form.username.id_for_label }}"
+                                        aria-label="Masquer le nom d'utilisateur" title="Afficher / masquer">
+                                    <svg class="auth-eye auth-eye-open" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.2 12s3.4-6 9.8-6 9.8 6 9.8 6-3.4 6-9.8 6-9.8-6-9.8-6Z"></path><circle cx="12" cy="12" r="2.8"></circle></svg>
+                                    <svg class="auth-eye auth-eye-closed" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="m3 3 18 18"></path><path d="M10.6 6.2A10.8 10.8 0 0 1 12 6c6.4 0 9.8 6 9.8 6a17.1 17.1 0 0 1-3.1 3.8"></path><path d="M6.2 6.2C3.6 8 2.2 12 2.2 12s3.4 6 9.8 6a10.2 10.2 0 0 0 4.1-.8"></path></svg>
+                                </button>
+                            </div>
+                            {% for error in login_form.username.errors %}<div class="auth-field-error">{{ error }}</div>{% endfor %}
+                        </div>
 
-                <div class="input-box animation" style="--i:2; --j:23">
-                    <input type="password" name="password" required>
-                    <label>Mot de passe</label>
-                    <i class='bx bxs-lock-alt'></i>
-                </div>
+                        <div class="auth-field">
+                            <label for="{{ login_form.password.id_for_label }}">Mot de passe</label>
+                            <div class="auth-input-shell">
+                                {{ login_form.password }}
+                                <button type="button" class="auth-visibility-toggle"
+                                        data-visibility-target="{{ login_form.password.id_for_label }}"
+                                        aria-label="Afficher le mot de passe" title="Afficher / masquer">
+                                    <svg class="auth-eye auth-eye-open" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.2 12s3.4-6 9.8-6 9.8 6 9.8 6-3.4 6-9.8 6-9.8-6-9.8-6Z"></path><circle cx="12" cy="12" r="2.8"></circle></svg>
+                                    <svg class="auth-eye auth-eye-closed" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="m3 3 18 18"></path><path d="M10.6 6.2A10.8 10.8 0 0 1 12 6c6.4 0 9.8 6 9.8 6-3.4 6-9.8 6a10.2 10.2 0 0 1-4.1-.8"></path></svg>
+                                </button>
+                            </div>
+                            {% for error in login_form.password.errors %}<div class="auth-field-error">{{ error }}</div>{% endfor %}
+                        </div>
 
-                <button type="submit" class="btn animation" style="--i:3; --j:24">Se connecter</button>
+                        <button type="submit" class="auth-submit">Se connecter</button>
+                    </form>
+                </section>
 
-                <div class="linkTxt animation" style="--i:5; --j:25">
-                    <p>Pas encore de compte ? <a href="#" class="register-link">S'inscrire</a></p>
-                </div>
-            </form>
-        </div>
+                <section class="auth-panel" id="register-panel" data-auth-panel="register" role="tabpanel">
+                    <div class="auth-heading">
+                        <h2>Créer un compte</h2>
+                        <p>Le mot de passe est vérifié par les validateurs de sécurité Django.</p>
+                    </div>
 
-        <div class="info-text login">
-            <h2 class="animation" style="--i:0; --j:20">Bon Retour!</h2>
-            <p class="animation" style="--i:1; --j:21">Connectez-vous pour accéder à votre tableau de bord.</p>
-        </div>
-
-        <div class="form-box register" >
-            <h2 class="title animation" style="--i:17; --j:0">Inscription</h2>
-
-            {% if messages %}
-                {% for message in messages %}
-                    {% if "register_error" in message.tags %}
-                         <div class="alert alert-danger" style="color: red; text-align: center; font-size: 14px; margin-bottom: 10px;">{{ message }}</div>
+                    {% if register_form.non_field_errors %}
+                        <div class="auth-alert auth-alert-error" role="alert">
+                            {% for error in register_form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+                        </div>
                     {% endif %}
-                {% endfor %}
-            {% endif %}
 
-            <form action="{% url 'login_register' %}" method="post">
-                {% csrf_token %}
-                <input type="hidden" name="form_type" value="register">
+                    <form action="{% url 'login_register' %}" method="post" novalidate>
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="register">
 
-                <div class="input-box animation" style="--i:18; --j:1">
-                    <input type="text" name="username" required>
-                    <label>Nom d'utilisateur</label>
-                    <i class='bx bxs-user'></i>
-                </div>
+                        <div class="auth-field-grid">
+                            <div class="auth-field">
+                                <label for="{{ register_form.username.id_for_label }}">Nom d'utilisateur</label>
+                                {{ register_form.username }}
+                                {% for error in register_form.username.errors %}<div class="auth-field-error">{{ error }}</div>{% endfor %}
+                            </div>
 
-                <div class="input-box animation" style="--i:19; --j:2">
-                    <input type="email" name="email" required>
-                    <label>Email</label>
-                    <i class='bx bxs-envelope'></i>
-                </div>
+                            <div class="auth-field">
+                                <label for="{{ register_form.email.id_for_label }}">Adresse e-mail</label>
+                                {{ register_form.email }}
+                                {% for error in register_form.email.errors %}<div class="auth-field-error">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
 
-                <div class="input-box animation" style="--i:20; --j:3">
-                    <input type="password" name="password" required>
-                    <label>Mot de passe</label>
-                    <i class='bx bxs-lock-alt'></i>
-                </div>
+                        <div class="auth-field">
+                            <label for="{{ register_form.password1.id_for_label }}">Mot de passe</label>
+                            {{ register_form.password1 }}
+                            {% for error in register_form.password1.errors %}<div class="auth-field-error">{{ error }}</div>{% endfor %}
+                        </div>
 
-                <button type="submit" class="btn animation" style="--i:21; --j:4">S'inscrire</button>
+                        <div class="auth-field">
+                            <label for="{{ register_form.password2.id_for_label }}">Confirmer le mot de passe</label>
+                            {{ register_form.password2 }}
+                            {% for error in register_form.password2.errors %}<div class="auth-field-error">{{ error }}</div>{% endfor %}
+                        </div>
 
-                <div class="linkTxt animation" style="--i:22; --j:5">
-                    <p>Déjà un compte ? <a href="#" class="login-link">Se connecter</a></p>
-                </div>
-            </form>
-        </div>
+                        <p class="auth-password-hint">Utilisez un mot de passe suffisamment long, difficile à deviner et différent de vos informations personnelles.</p>
+                        <button type="submit" class="auth-submit">Créer mon compte</button>
+                    </form>
+                </section>
+            </div>
+        </section>
+    </main>
 
-        <div class="info-text register">
-            <h2 class="animation" style="--i:17; --j:0;">Bienvenue!</h2>
-            <p class="animation" style="--i:18; --j:1;">Créez un compte pour commencer à utiliser le prédicteur.</p>
-        </div>
-    </div>
-
-    <script src="{% static 'vendor/js/jquery-3.7.1.min.js' %}"></script>
-    <script src="{% static 'vendor/js/jquery.lettering.js' %}"></script>
-    <script src="{% static 'vendor/js/jquery.textillate.min.js' %}"></script>
     <script src="{% static 'auth/app.js' %}"></script>
 </body>
 </html>

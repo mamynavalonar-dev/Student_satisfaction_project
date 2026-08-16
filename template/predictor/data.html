@@ -1,448 +1,515 @@
 {% extends 'base.html' %}
 
-{% block nav_active %}page-data{% endblock %}
-{% block nav_data %}active{% endblock %}
+{% block title %}Gestion des Données - Prédicteur de Satisfaction{% endblock %}
 
-{% block title %}Gestion des Données - Avis Étudiants{% endblock %}
+{% block nav_data %}active{% endblock %}
+{% block nav_active %}page-data{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row">
-        <div class="col-12">
-            <h1 class="text-center mb-4">💾 Gestion des Données</h1>
-            <p class="text-center text-muted mb-5">Consultez et gérez tous les avis étudiants collectés</p>
-        </div>
-    </div>
-
-    <!-- Résumé des données -->
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card bg-primary text-white h-100">
-                <div class="card-body text-center">
-                    <h2 class="card-title">{{ total_count|default:0 }}</h2>
-                    <p class="card-text">Total des Avis</p>
-                </div>
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+                <h1 class="h3 mb-1">🗂️ Gestion des Données</h1>
+                <p class="text-muted mb-0">Consultez, filtrez, modifiez et exportez les prédictions enregistrées.</p>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card bg-success text-white h-100">
-                <div class="card-body text-center">
-                    <h2 class="card-title">{{ satisfied_count|default:0 }}</h2>
-                    <p class="card-text">Prédictions Positives</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card bg-info text-white h-100">
-                <div class="card-body text-center">
-                    <h2 class="card-title">
-                        {% if total_count > 0 %}
-                            {{ satisfied_count|default:0 }}/{{ total_count }}
-                        {% else %}
-                            0/0
-                        {% endif %}
-                    </h2>
-                    <p class="card-text">Ratio de Satisfaction</p>
-                </div>
+            <div class="d-flex gap-2">
+                <a class="btn btn-outline-success"
+                   href="{% url 'export_data' %}{% if query_string %}?{{ query_string }}{% endif %}">
+                    📥 Exporter le résultat
+                </a>
+                <a class="btn btn-primary" href="{% url 'predict' %}">➕ Nouvelle prédiction</a>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Actions rapides -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">⚡ Actions Rapides</h5>
-                        <div>
-                            <a href="{% url 'export_data' %}" class="btn btn-outline-success btn-sm me-2">
-                                📥 Exporter CSV
-                            </a>
-                            <a href="{% url 'predict' %}" class="btn btn-primary btn-sm">
-                                ➕ Nouvel Avis
-                            </a>
-                        </div>
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <div class="text-muted small">Total enregistré</div>
+                <div class="fs-3 fw-bold">{{ total_count }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <div class="text-muted small">Satisfaits prédits</div>
+                <div class="fs-3 fw-bold text-success">{{ satisfied_count }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <div class="text-muted small">Non satisfaits prédits</div>
+                <div class="fs-3 fw-bold text-danger">{{ unsatisfied_count }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <div class="text-muted small">Taux prédit satisfait</div>
+                <div class="fs-3 fw-bold text-info">{{ satisfaction_rate|floatformat:1 }}%</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4 shadow-sm">
+    <div class="card-header bg-white">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <h5 class="mb-0">🔎 Filtres</h5>
+            <a href="{% url 'data_management' %}" class="btn btn-sm btn-outline-secondary">Réinitialiser</a>
+        </div>
+    </div>
+    <div class="card-body">
+        <form method="get" id="filtersForm">
+            <input type="hidden" name="status" id="statusInput" value="{{ filters.status }}">
+
+            <div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Filtre de satisfaction">
+                <button type="button"
+                        class="btn {% if filters.status == 'all' %}btn-info{% else %}btn-outline-info{% endif %}"
+                        onclick="setStatusFilter('all')">Tous</button>
+                <button type="button"
+                        class="btn {% if filters.status == 'satisfied' %}btn-success{% else %}btn-outline-success{% endif %}"
+                        onclick="setStatusFilter('satisfied')">😊 Satisfaits</button>
+                <button type="button"
+                        class="btn {% if filters.status == 'unsatisfied' %}btn-danger{% else %}btn-outline-danger{% endif %}"
+                        onclick="setStatusFilter('unsatisfied')">😞 Non satisfaits</button>
+                <button type="button"
+                        class="btn {% if filters.status == 'recent' %}btn-warning{% else %}btn-outline-warning{% endif %}"
+                        onclick="setStatusFilter('recent')">🕒 7 derniers jours</button>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label for="filterType" class="form-label">Type de cours</label>
+                    <select class="form-select" id="filterType" name="type_cours" onchange="this.form.submit()">
+                        <option value="">Tous</option>
+                        <option value="présentiel" {% if filters.type_cours == 'présentiel' %}selected{% endif %}>Présentiel</option>
+                        <option value="distanciel" {% if filters.type_cours == 'distanciel' %}selected{% endif %}>Distanciel</option>
+                        <option value="hybride" {% if filters.type_cours == 'hybride' %}selected{% endif %}>Hybride</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label for="filterNiveau" class="form-label">Niveau étudiant</label>
+                    <select class="form-select" id="filterNiveau" name="niveau" onchange="this.form.submit()">
+                        <option value="">Tous</option>
+                        <option value="L1" {% if filters.niveau == 'L1' %}selected{% endif %}>L1</option>
+                        <option value="L2" {% if filters.niveau == 'L2' %}selected{% endif %}>L2</option>
+                        <option value="L3" {% if filters.niveau == 'L3' %}selected{% endif %}>L3</option>
+                        <option value="M1" {% if filters.niveau == 'M1' %}selected{% endif %}>M1</option>
+                        <option value="M2" {% if filters.niveau == 'M2' %}selected{% endif %}>M2</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label for="filterQualite" class="form-label">Qualité minimale</label>
+                    <select class="form-select" id="filterQualite" name="qualite_min" onchange="this.form.submit()">
+                        <option value="">Toutes</option>
+                        {% for value in "1234567" %}
+                            <option value="{{ value }}" {% if filters.qualite_min == value %}selected{% endif %}>
+                                {{ value }}/7 et plus
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label for="searchInput" class="form-label">Recherche</label>
+                    <div class="input-group">
+                        <input type="search"
+                               class="form-control"
+                               id="searchInput"
+                               name="q"
+                               value="{{ filters.q }}"
+                               placeholder="ID, type ou niveau">
+                        <button class="btn btn-outline-primary" type="submit">Rechercher</button>
                     </div>
                 </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <div class="d-grid">
-                                <button class="btn btn-outline-info" onclick="filterData('all')">
-                                    📊 Tous les Avis
-                                </button>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="d-grid">
-                                <button class="btn btn-outline-success" onclick="filterData('satisfied')">
-                                    😊 Satisfaits Uniquement
-                                </button>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="d-grid">
-                                <button class="btn btn-outline-danger" onclick="filterData('unsatisfied')">
-                                    😞 Non Satisfaits
-                                </button>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="d-grid">
-                                <button class="btn btn-outline-warning" onclick="filterData('recent')">
-                                    🕒 Récents (7 jours)
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-white">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <h5 class="mb-0">📋 Liste des Avis Étudiants</h5>
+            <span class="badge bg-secondary">
+                {{ result_count }} résultat{{ result_count|pluralize }}
+            </span>
+        </div>
+    </div>
+
+    <div class="card-body">
+        {% if feedbacks %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Date</th>
+                            <th>Qualité</th>
+                            <th>Charge</th>
+                            <th>Interactivité</th>
+                            <th>Type</th>
+                            <th>Niveau</th>
+                            <th>Prédiction</th>
+                            <th>Probabilité satisfait</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for feedback in feedbacks %}
+                        <tr>
+                            <td><span class="badge bg-light text-dark">#{{ feedback.id }}</span></td>
+                            <td><small>{{ feedback.created_at|date:"d/m/Y H:i" }}</small></td>
+
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <span class="me-2">{{ feedback.qualite_enseignement }}/7</span>
+                                    <div class="progress flex-shrink-0" style="width: 60px; height: 8px;">
+                                        <div class="progress-bar {% if feedback.qualite_enseignement >= 5 %}bg-success{% elif feedback.qualite_enseignement >= 3 %}bg-warning{% else %}bg-danger{% endif %}"
+                                             style="width: {{ feedback.qualite_percent }}%"></div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>
+                                <span class="badge {% if feedback.charge_travail <= 3 %}bg-success{% elif feedback.charge_travail <= 5 %}bg-warning{% else %}bg-danger{% endif %}">
+                                    {{ feedback.charge_travail }}/7
+                                </span>
+                            </td>
+
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <span class="me-2">{{ feedback.interactivite }}/7</span>
+                                    <div class="progress flex-shrink-0" style="width: 60px; height: 8px;">
+                                        <div class="progress-bar {% if feedback.interactivite >= 5 %}bg-success{% elif feedback.interactivite >= 3 %}bg-warning{% else %}bg-danger{% endif %}"
+                                             style="width: {{ feedback.interactivite_percent }}%"></div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>
+                                <span class="badge {% if feedback.type_cours == 'présentiel' %}bg-primary{% elif feedback.type_cours == 'hybride' %}bg-info text-dark{% else %}bg-secondary{% endif %}">
+                                    {{ feedback.type_cours|capfirst }}
+                                </span>
+                            </td>
+
+                            <td><span class="badge bg-dark">{{ feedback.niveau_etudiant }}</span></td>
+
+                            <td>
+                                {% if feedback.predicted_satisfaction == True %}
+                                    <span class="badge bg-success">😊 Satisfait</span>
+                                {% elif feedback.predicted_satisfaction == False %}
+                                    <span class="badge bg-danger">😞 Non satisfait</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">N/A</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if feedback.probability_satisfied != None %}
+                                    <div class="d-flex align-items-center">
+                                        <small class="me-2">{{ feedback.probability_satisfied|floatformat:1 }}%</small>
+                                        <div class="progress flex-shrink-0" style="width: 55px; height: 8px;">
+                                            <div class="progress-bar {% if feedback.probability_satisfied >= 70 %}bg-success{% elif feedback.probability_satisfied >= 50 %}bg-warning{% else %}bg-danger{% endif %}"
+                                                 style="width: {{ feedback.probability_satisfied|floatformat:0 }}%"></div>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <small class="text-muted">N/A</small>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <button type="button"
+                                            class="btn btn-outline-info"
+                                            data-detail-url="{% url 'feedback_detail' feedback.id %}"
+                                            onclick="viewDetails(this)"
+                                            title="Voir détails">👁️</button>
+
+                                    <button type="button"
+                                            class="btn btn-outline-warning"
+                                            data-detail-url="{% url 'feedback_detail' feedback.id %}"
+                                            data-edit-url="{% url 'feedback_update' feedback.id %}"
+                                            onclick="editFeedback(this)"
+                                            title="Modifier">✏️</button>
+
+                                    <form method="post"
+                                          action="{% url 'feedback_delete' feedback.id %}"
+                                          class="d-inline"
+                                          onsubmit="return confirm('Supprimer définitivement l\'avis #{{ feedback.id }} ?');">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ return_url }}">
+                                        <button type="submit" class="btn btn-outline-danger" title="Supprimer">🗑️</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4">
+                <small class="text-muted">
+                    {% if result_count %}
+                        Affichage {{ feedbacks.start_index }}–{{ feedbacks.end_index }} sur {{ result_count }}
+                    {% else %}
+                        Aucun résultat
+                    {% endif %}
+                </small>
+
+                {% if feedbacks.paginator.num_pages > 1 %}
+                <nav aria-label="Pagination des avis">
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item {% if not feedbacks.has_previous %}disabled{% endif %}">
+                            {% if feedbacks.has_previous %}
+                                <a class="page-link" href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ feedbacks.previous_page_number }}">Précédent</a>
+                            {% else %}
+                                <span class="page-link">Précédent</span>
+                            {% endif %}
+                        </li>
+
+                        {% for page_number in feedbacks.paginator.page_range %}
+                            {% if page_number == feedbacks.number %}
+                                <li class="page-item active"><span class="page-link">{{ page_number }}</span></li>
+                            {% elif page_number >= feedbacks.number|add:"-2" and page_number <= feedbacks.number|add:"2" %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_number }}">{{ page_number }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        <li class="page-item {% if not feedbacks.has_next %}disabled{% endif %}">
+                            {% if feedbacks.has_next %}
+                                <a class="page-link" href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ feedbacks.next_page_number }}">Suivant</a>
+                            {% else %}
+                                <span class="page-link">Suivant</span>
+                            {% endif %}
+                        </li>
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <div class="fs-1 mb-3">🔍</div>
+                <h5>Aucun avis ne correspond aux filtres.</h5>
+                <p class="text-muted">Modifiez les critères ou réinitialisez les filtres.</p>
+                <a class="btn btn-outline-primary" href="{% url 'data_management' %}">Réinitialiser les filtres</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Détails -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Détails de l'avis <span id="detailId"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body" id="detailContent">
+                <div class="text-center py-4">
+                    <div class="spinner-border" role="status"><span class="visually-hidden">Chargement...</span></div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Filtres de recherche -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">🔍 Filtres de Recherche</h5>
+<!-- Modification -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <form method="post" id="editForm">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ return_url }}">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Modifier l'avis <span id="editId"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
                 </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <label class="form-label">Type de Cours</label>
-                            <select class="form-control" id="filterTypeCours" onchange="applyFilters()">
-                                <option value="">Tous</option>
+
+                <div class="modal-body">
+                    <div class="alert alert-info py-2">
+                        La satisfaction et la probabilité seront recalculées automatiquement avec le modèle actif.
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="editQualite" class="form-label">Qualité d'enseignement</label>
+                            <select class="form-select" id="editQualite" name="qualite_enseignement" required>
+                                <option value="1">1 — Très insatisfait</option>
+                                <option value="2">2 — Insatisfait</option>
+                                <option value="3">3 — Plutôt insatisfait</option>
+                                <option value="4">4 — Neutre</option>
+                                <option value="5">5 — Plutôt satisfait</option>
+                                <option value="6">6 — Satisfait</option>
+                                <option value="7">7 — Très satisfait</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="editCharge" class="form-label">Charge de travail</label>
+                            <select class="form-select" id="editCharge" name="charge_travail" required>
+                                <option value="1">1 — Très léger</option>
+                                <option value="2">2 — Léger</option>
+                                <option value="3">3 — Plutôt léger</option>
+                                <option value="4">4 — Moyen / Modéré</option>
+                                <option value="5">5 — Plutôt lourd</option>
+                                <option value="6">6 — Lourd</option>
+                                <option value="7">7 — Très lourd</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="editInteractivite" class="form-label">Interactivité</label>
+                            <select class="form-select" id="editInteractivite" name="interactivite" required>
+                                <option value="1">1 — Très non interactif</option>
+                                <option value="2">2 — Non interactif</option>
+                                <option value="3">3 — Peu interactif</option>
+                                <option value="4">4 — Interaction moyenne</option>
+                                <option value="5">5 — Plutôt interactif</option>
+                                <option value="6">6 — Interactif</option>
+                                <option value="7">7 — Très interactif</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="editType" class="form-label">Type de cours</label>
+                            <select class="form-select" id="editType" name="type_cours" required>
                                 <option value="présentiel">Présentiel</option>
                                 <option value="distanciel">Distanciel</option>
                                 <option value="hybride">Hybride</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Niveau Étudiant</label>
-                            <select class="form-control" id="filterNiveau" onchange="applyFilters()">
-                                <option value="">Tous</option>
+
+                        <div class="col-md-6">
+                            <label for="editNiveau" class="form-label">Niveau étudiant</label>
+                            <select class="form-select" id="editNiveau" name="niveau_etudiant" required>
                                 <option value="L1">L1</option>
                                 <option value="L2">L2</option>
                                 <option value="L3">L3</option>
+                                <option value="M1">M1</option>
+                                <option value="M2">M2</option>
                             </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Qualité Min.</label>
-                            <select class="form-control" id="filterQualite" onchange="applyFilters()">
-                                <option value="">Toutes</option>
-                                <option value="1">1 et +</option>
-                                <option value="2">2 et +</option>
-                                <option value="3">3 et +</option>
-                                <option value="4">4 et +</option>
-                                <option value="5">5 uniquement</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Recherche</label>
-                            <input type="text" class="form-control" id="searchInput" placeholder="Rechercher..." onkeyup="applyFilters()">
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Tableau des données -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">📋 Liste des Avis Étudiants</h5>
-                        <span class="badge bg-secondary" id="resultCount">
-                            {{ total_count|default:0 }} résultat{{ total_count|default:0|pluralize }}
-                        </span>
-                    </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-warning">Enregistrer et recalculer</button>
                 </div>
-                <div class="card-body">
-                    {% if feedbacks and feedbacks|length > 0 %}
-                        <div class="table-responsive">
-                            <table class="table table-hover" id="dataTable">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Date</th>
-                                        <th>Qualité</th>
-                                        <th>Charge</th>
-                                        <th>Interactivité</th>
-                                        <th>Type Cours</th>
-                                        <th>Niveau</th>
-                                        <th>Prédiction</th>
-                                        <th>Probabilité</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for feedback in feedbacks %}
-                                    <tr data-type="{{ feedback.type_cours }}" 
-                                        data-niveau="{{ feedback.niveau_etudiant }}"
-                                        data-qualite="{{ feedback.qualite_enseignement }}"
-                                        data-satisfaction="{% if feedback.predicted_satisfaction %}satisfied{% else %}unsatisfied{% endif %}"
-                                        data-date="{{ feedback.created_at|date:'Y-m-d' }}">
-                                        <td><span class="badge bg-light text-dark">#{{ feedback.id }}</span></td>
-                                        <td><small>{{ feedback.created_at|date:"d/m/Y H:i" }}</small></td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <span class="me-2">{{ feedback.qualite_enseignement }}/7</span>
-                                                <div class="progress" style="width: 60px; height: 8px;">
-                                                    <div class="progress-bar {% if feedback.qualite_enseignement >= 5 %}bg-success{% elif feedback.qualite_enseignement >= 3 %}bg-warning{% else %}bg-danger{% endif %}" 
-                                                         style="width: {{ feedback.qualite_enseignement|add:0 }}0%"></div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="badge {% if feedback.charge_travail <= 3 %}bg-success{% elif feedback.charge_travail <= 5 %}bg-warning{% else %}bg-danger{% endif %}">
-                                                {{ feedback.charge_travail }}/7
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <span class="me-2">{{ feedback.interactivite }}/7</span>
-                                                <div class="progress" style="width: 60px; height: 8px;">
-                                                    <div class="progress-bar {% if feedback.interactivite >= 5 %}bg-success{% elif feedback.interactivite >= 3 %}bg-warning{% else %}bg-danger{% endif %}" 
-                                                         style="width: {{ feedback.interactivite|add:0 }}0%"></div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="badge 
-                                                {% if feedback.type_cours == 'présentiel' %}bg-primary
-                                                {% elif feedback.type_cours == 'hybride' %}bg-info
-                                                {% else %}bg-secondary{% endif %}">
-                                                {{ feedback.type_cours|capfirst }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-dark">{{ feedback.niveau_etudiant }}</span>
-                                        </td>
-                                        <td>
-                                            {% if feedback.predicted_satisfaction %}
-                                                <span class="badge bg-success">😊 Satisfait</span>
-                                            {% else %}
-                                                <span class="badge bg-danger">😞 Non Satisfait</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if feedback.probability_satisfied %}
-                                                <div class="d-flex align-items-center">
-                                                    <small class="me-2">{{ feedback.probability_satisfied|floatformat:1 }}%</small>
-                                                    <div class="progress" style="width: 50px; height: 8px;">
-                                                        <div class="progress-bar {% if feedback.probability_satisfied >= 70 %}bg-success{% elif feedback.probability_satisfied >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
-                                                             style="width: {{ feedback.probability_satisfied }}%"></div>
-                                                    </div>
-                                                </div>
-                                            {% else %}
-                                                <small class="text-muted">N/A</small>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <div class="btn-group btn-group-sm">
-                                                <button class="btn btn-outline-info btn-sm" onclick="viewDetails({{ feedback.id }})" title="Voir détails">👁️</button>
-                                                <button class="btn btn-outline-warning btn-sm" onclick="editFeedback({{ feedback.id }})" title="Modifier">✏️</button>
-                                                <button class="btn btn-outline-danger btn-sm" onclick="deleteFeedback({{ feedback.id }})" title="Supprimer">🗑️</button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Pagination -->
-                        <div class="d-flex justify-content-between align-items-center mt-4">
-                            <div>
-                                <small class="text-muted">
-                                    Affichage de <span id="showingCount">{{ feedbacks|length }}</span> résultat{{ feedbacks|length|pluralize }}
-                                </small>
-                            </div>
-                            <nav>
-                                <ul class="pagination pagination-sm mb-0">
-                                    {% if feedbacks.has_previous %}
-                                        <li class="page-item">
-                                            <a class="page-link" href="?page={{ feedbacks.previous_page_number }}">Précédent</a>
-                                        </li>
-                                    {% else %}
-                                        <li class="page-item disabled">
-                                            <span class="page-link">Précédent</span>
-                                        </li>
-                                    {% endif %}
-                                    
-                                    <li class="page-item active">
-                                        <span class="page-link">{{ feedbacks.number }}</span>
-                                    </li>
-                                    
-                                    {% if feedbacks.has_next %}
-                                        <li class="page-item">
-                                            <a class="page-link" href="?page={{ feedbacks.next_page_number }}">Suivant</a>
-                                        </li>
-                                    {% else %}
-                                        <li class="page-item disabled">
-                                            <span class="page-link">Suivant</span>
-                                        </li>
-                                    {% endif %}
-                                </ul>
-                            </nav>
-                        </div>
-                    {% else %}
-                        <div class="text-center py-5">
-                            <div class="mb-4">
-                                <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i>
-                            </div>
-                            <h4 class="text-muted">Aucun Avis Disponible</h4>
-                            <p class="text-muted">Commencez par faire des prédictions pour collecter des données.</p>
-                            <a href="{% url 'predict' %}" class="btn btn-primary">Faire une Prédiction</a>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
+            </form>
         </div>
     </div>
 </div>
 
-<!-- Modal pour détails -->
-<div class="modal fade" id="detailsModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Détails de l'Avis #<span id="detailId"></span></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div id="detailContent"></div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<style>
-.table th { border-top: none; font-weight: 600; }
-.table td { vertical-align: middle; }
-.progress { background-color: #e9ecef; }
-.btn-group-sm .btn { font-size: 0.8rem; }
-.badge { font-size: 0.75em; }
-.table-responsive { max-height: 600px; }
-.card { transition: box-shadow 0.15s ease-in-out; }
-.card:hover { box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15); }
-</style>
-{% endblock %}
-
-{% block scripts %}
 <script>
-let currentFilter = 'all';
-
-document.addEventListener('DOMContentLoaded', function() {
-    updateActiveButton('all');
-});
-
-function filterData(type) {
-    currentFilter = type;
-    applyFilters();
-    updateActiveButton(type);
+function setStatusFilter(status) {
+    document.getElementById('statusInput').value = status;
+    document.getElementById('filtersForm').submit();
 }
 
-function applyFilters() {
-    const typeCours = document.getElementById('filterTypeCours').value;
-    const niveau = document.getElementById('filterNiveau').value;
-    const qualite = document.getElementById('filterQualite').value;
-    const search = document.getElementById('searchInput').value.toLowerCase();
-
-    const tbody = document.querySelector('#dataTable tbody');
-    if (!tbody) return;
-    
-    const rows = tbody.querySelectorAll('tr');
-    let visibleCount = 0;
-
-    rows.forEach(row => {
-        let show = true;
-        
-        // Filtres de base
-        if (typeCours && row.dataset.type !== typeCours) show = false;
-        if (niveau && row.dataset.niveau !== niveau) show = false;
-        if (qualite && parseInt(row.dataset.qualite) < parseInt(qualite)) show = false;
-        if (search && !row.textContent.toLowerCase().includes(search)) show = false;
-
-        // Filtre principal
-        if (currentFilter === 'satisfied' && row.dataset.satisfaction !== 'satisfied') show = false;
-        else if (currentFilter === 'unsatisfied' && row.dataset.satisfaction !== 'unsatisfied') show = false;
-        else if (currentFilter === 'recent') {
-            const rowDate = new Date(row.dataset.date);
-            const sevenDaysAgo = new Date();
-            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-            if (rowDate < sevenDaysAgo) show = false;
-        }
-
-        row.style.display = show ? '' : 'none';
-        if (show) visibleCount++;
+async function fetchFeedback(url) {
+    const response = await fetch(url, {
+        method: 'GET',
+        credentials: 'same-origin',
+        headers: {'X-Requested-With': 'XMLHttpRequest'}
     });
 
-    updateResultCount(visibleCount);
-}
-
-function updateResultCount(count) {
-    const resultCount = document.getElementById('resultCount');
-    const showingCount = document.getElementById('showingCount');
-    
-    if (resultCount) resultCount.textContent = `${count} résultat${count !== 1 ? 's' : ''}`;
-    if (showingCount) showingCount.textContent = count;
-}
-
-function updateActiveButton(activeType) {
-    const buttons = document.querySelectorAll('[onclick^="filterData"]');
-    buttons.forEach(btn => {
-        btn.classList.remove('btn-info', 'btn-outline-info');
-        btn.classList.add('btn-outline-info');
-        
-        if (btn.onclick.toString().includes(`'${activeType}'`)) {
-            btn.classList.remove('btn-outline-info');
-            btn.classList.add('btn-info');
-        }
-    });
-}
-
-function viewDetails(id) {
-    document.getElementById('detailId').textContent = id;
-    const detailContent = `
-        <div class="row">
-            <div class="col-md-6">
-                <h6>Caractéristiques du Cours:</h6>
-                <ul>
-                    <li>ID: #${id}</li>
-                    <li>Qualité d'enseignement: X/7</li>
-                    <li>Charge de travail: X/7</li>
-                    <li>Interactivité: X/7</li>
-                    <li>Type de cours: X</li>
-                    <li>Niveau étudiant: X</li>
-                </ul>
-            </div>
-            <div class="col-md-6">
-                <h6>Résultat de Prédiction:</h6>
-                <ul>
-                    <li>Prédiction: Satisfait/Non Satisfait</li>
-                    <li>Probabilité: X%</li>
-                    <li>Date: XX/XX/XXXX</li>
-                </ul>
-            </div>
-        </div>
-    `;
-    document.getElementById('detailContent').innerHTML = detailContent;
-    new bootstrap.Modal(document.getElementById('detailsModal')).show();
-}
-
-function editFeedback(id) { 
-    alert(`Édition de l'avis #${id} (à implémenter)`); 
-}
-
-function deleteFeedback(id) { 
-    if (confirm(`Êtes-vous sûr de vouloir supprimer l'avis #${id} ?`)) {
-        alert(`Suppression de l'avis #${id} (à implémenter)`);
+    if (!response.ok) {
+        throw new Error(`Erreur HTTP ${response.status}`);
     }
+
+    return response.json();
+}
+
+async function viewDetails(button) {
+    const modalElement = document.getElementById('detailsModal');
+    const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+    const content = document.getElementById('detailContent');
+
+    document.getElementById('detailId').textContent = '';
+    content.innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border" role="status"><span class="visually-hidden">Chargement...</span></div>
+        </div>`;
+    modal.show();
+
+    try {
+        const data = await fetchFeedback(button.dataset.detailUrl);
+        document.getElementById('detailId').textContent = `#${data.id}`;
+
+        const probability = data.probability_satisfied === null
+            ? 'N/A'
+            : `${Number(data.probability_satisfied).toFixed(1)}%`;
+
+        content.innerHTML = `
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <h6>Caractéristiques du cours</h6>
+                    <dl class="row mb-0">
+                        <dt class="col-7">Qualité</dt><dd class="col-5">${data.qualite_enseignement}/7</dd>
+                        <dt class="col-7">Charge</dt><dd class="col-5">${data.charge_travail}/7</dd>
+                        <dt class="col-7">Interactivité</dt><dd class="col-5">${data.interactivite}/7</dd>
+                        <dt class="col-7">Type</dt><dd class="col-5">${escapeHtml(data.type_cours)}</dd>
+                        <dt class="col-7">Niveau</dt><dd class="col-5">${escapeHtml(data.niveau_etudiant)}</dd>
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    <h6>Résultat de prédiction</h6>
+                    <dl class="row mb-0">
+                        <dt class="col-7">Prédiction</dt><dd class="col-5">${escapeHtml(data.prediction_label)}</dd>
+                        <dt class="col-7">Probabilité satisfait</dt><dd class="col-5">${probability}</dd>
+                        <dt class="col-7">Créé le</dt><dd class="col-5">${escapeHtml(data.created_at)}</dd>
+                        <dt class="col-7">Mis à jour le</dt><dd class="col-5">${escapeHtml(data.updated_at)}</dd>
+                    </dl>
+                </div>
+            </div>`;
+    } catch (error) {
+        content.innerHTML = `<div class="alert alert-danger mb-0">Impossible de charger les détails : ${escapeHtml(error.message)}</div>`;
+    }
+}
+
+async function editFeedback(button) {
+    try {
+        const data = await fetchFeedback(button.dataset.detailUrl);
+
+        document.getElementById('editId').textContent = `#${data.id}`;
+        document.getElementById('editForm').action = button.dataset.editUrl;
+        document.getElementById('editQualite').value = String(data.qualite_enseignement);
+        document.getElementById('editCharge').value = String(data.charge_travail);
+        document.getElementById('editInteractivite').value = String(data.interactivite);
+        document.getElementById('editType').value = data.type_cours;
+        document.getElementById('editNiveau').value = data.niveau_etudiant;
+
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('editModal')).show();
+    } catch (error) {
+        alert(`Impossible de charger l'avis : ${error.message}`);
+    }
+}
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
 }
 </script>
 {% endblock %}
