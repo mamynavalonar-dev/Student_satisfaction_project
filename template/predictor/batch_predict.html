@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+
+{% block nav_active %}page-predict{% endblock %}
+{% block nav_predict %}active{% endblock %}
+
+{% block title %}Prédiction par lot - Satisfaction Étudiante{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="text-center mb-3">📦 Prédiction par lot</h1>
+            <p class="text-center text-muted mb-3">
+                Importez un CSV contenant plusieurs cours et obtenez toutes les prédictions en une seule opération.
+            </p>
+            <div class="text-center mb-4">
+                <a href="{% url 'predict' %}" class="btn btn-outline-primary btn-sm">
+                    ← Revenir à la prédiction individuelle
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 align-items-start">
+        <div class="col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Importer le fichier CSV</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" id="batchPredictionForm">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="batchCsvFile" class="form-label">Fichier CSV</label>
+                            <input
+                                class="form-control"
+                                type="file"
+                                id="batchCsvFile"
+                                name="csv_file"
+                                accept=".csv,text/csv"
+                                required
+                            >
+                            <div class="form-text">
+                                Maximum : 5 Mo et 5 000 lignes. Le fichier ne doit pas contenir la colonne <code>satisfaction</code>.
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100" id="batchPredictBtn">
+                            <span class="spinner-border spinner-border-sm d-none" id="batchSpinner" aria-hidden="true"></span>
+                            Lancer la prédiction par lot
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Format attendu</h5>
+                </div>
+                <div class="card-body small">
+                    <p class="mb-2">Le CSV doit contenir exactement ces cinq colonnes :</p>
+                    <ol class="mb-3">
+                        <li><code>qualite_enseignement</code> — entier 1 à 7</li>
+                        <li><code>charge_travail</code> — entier 1 à 7</li>
+                        <li><code>interactivite</code> — entier 1 à 7</li>
+                        <li><code>type_cours</code> — présentiel, distanciel ou hybride</li>
+                        <li><code>niveau_etudiant</code> — L1, L2, L3, M1 ou M2</li>
+                    </ol>
+                    <p class="text-muted mb-0">
+                        Les lignes sont prédites dans leur ordre d'origine. Elles ne sont pas ajoutées automatiquement à l'historique des prédictions individuelles.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            {% if batch_result %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div>
+                        <h4 class="mb-1">Résultat du lot</h4>
+                        <small class="text-muted">{{ batch_result.source_filename }}</small>
+                    </div>
+                    <a
+                        href="{% url 'batch_predict_download' batch_result.download_token %}"
+                        class="btn btn-success"
+                    >
+                        ⬇ Télécharger le CSV résultat
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 text-center">
+                        <div class="col-6 col-xl-3">
+                            <div class="border rounded p-3 h-100">
+                                <div class="fs-3 fw-bold text-primary">{{ batch_result.summary.total }}</div>
+                                <div class="small text-muted">Lignes traitées</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-xl-3">
+                            <div class="border rounded p-3 h-100">
+                                <div class="fs-3 fw-bold text-success">{{ batch_result.summary.satisfied }}</div>
+                                <div class="small text-muted">Satisfaits prédits</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-xl-3">
+                            <div class="border rounded p-3 h-100">
+                                <div class="fs-3 fw-bold text-danger">{{ batch_result.summary.unsatisfied }}</div>
+                                <div class="small text-muted">Non satisfaits</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-xl-3">
+                            <div class="border rounded p-3 h-100">
+                                <div class="fs-3 fw-bold text-info">{{ batch_result.summary.satisfaction_rate|floatformat:1 }}%</div>
+                                <div class="small text-muted">Taux prédit satisfait</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-light border mt-3 mb-0">
+                        Confiance moyenne de la classe prédite :
+                        <strong>{{ batch_result.summary.average_confidence|floatformat:1 }}%</strong> ·
+                        Probabilité moyenne d'être satisfait :
+                        <strong>{{ batch_result.summary.average_probability_satisfied|floatformat:1 }}%</strong>.
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-1">Aperçu des résultats</h5>
+                    <small class="text-muted">Les 10 premières lignes au maximum sont affichées ici.</small>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Qualité</th>
+                                    <th>Charge</th>
+                                    <th>Interactivité</th>
+                                    <th>Type</th>
+                                    <th>Niveau</th>
+                                    <th>Prédiction</th>
+                                    <th>P(satisfait)</th>
+                                    <th>Confiance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in batch_result.preview %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ row.qualite_enseignement }}/7</td>
+                                    <td>{{ row.charge_travail }}/7</td>
+                                    <td>{{ row.interactivite }}/7</td>
+                                    <td>{{ row.type_cours|capfirst }}</td>
+                                    <td>{{ row.niveau_etudiant }}</td>
+                                    <td>
+                                        <span class="badge {% if row.predicted_satisfaction == 1 %}bg-success{% else %}bg-danger{% endif %}">
+                                            {{ row.prediction_label }}
+                                        </span>
+                                    </td>
+                                    <td>{{ row.probability_satisfied|floatformat:1 }}%</td>
+                                    <td>{{ row.confidence|floatformat:1 }}%</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card shadow-sm">
+                <div class="card-body p-5 text-center">
+                    <div class="display-5 mb-3">🧠</div>
+                    <h4>Prêt pour une prédiction multiple</h4>
+                    <p class="text-muted mb-0">
+                        Sélectionnez un CSV valide. Le modèle MLP actif calculera les prédictions et probabilités de toutes les lignes de façon vectorisée.
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('batchPredictionForm');
+    const button = document.getElementById('batchPredictBtn');
+    const spinner = document.getElementById('batchSpinner');
+    if (!form || !button || !spinner) return;
+
+    form.addEventListener('submit', () => {
+        button.disabled = true;
+        spinner.classList.remove('d-none');
+    });
+});
+</script>
+{% endblock %}

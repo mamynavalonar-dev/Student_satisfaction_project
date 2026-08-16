@@ -10,6 +10,12 @@ urlpatterns = [
     path("logout/", views.logout_view, name="logout"),
 
     path("predict/", views.predict, name="predict"),
+    path("predict/batch/", views.batch_predict, name="batch_predict"),
+    path(
+        "predict/batch/download/<uuid:token>/",
+        views.batch_predict_download,
+        name="batch_predict_download",
+    ),
     path("train/", views.train_model_view, name="train_model"),
     path("statistics/", views.statistics, name="statistics"),
 

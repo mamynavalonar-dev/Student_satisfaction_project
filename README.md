@@ -101,3 +101,26 @@ Comme le problème ne comporte que cinq caractéristiques, les `2^5 = 32` coalit
 Les nouveaux entraînements enregistrent dans l'artefact joblib un petit `explanation_background` issu du train et le hold-out `explanation_reference` issu du test. Pour les artefacts V8 déjà existants, l'application utilise automatiquement le dataset synthétique V8 local comme référence de secours.
 
 Ces explications décrivent le comportement prédictif du modèle et ne doivent pas être interprétées comme des effets causaux.
+
+## Prédiction par lot
+
+La page **Prédiction par lot** permet d'importer un CSV contenant uniquement les cinq caractéristiques du modèle :
+
+- `qualite_enseignement` (1 à 7) ;
+- `charge_travail` (1 à 7) ;
+- `interactivite` (1 à 7) ;
+- `type_cours` (`présentiel`, `distanciel`, `hybride`) ;
+- `niveau_etudiant` (`L1`, `L2`, `L3`, `M1`, `M2`).
+
+Le fichier ne doit pas contenir la cible `satisfaction`. La validation est indépendante de celle du CSV d'entraînement : aucune colonne factice n'est ajoutée.
+
+Le traitement est vectorisé avec le modèle actif et produit :
+
+- la classe prédite `0/1` et son libellé ;
+- `probability_satisfied` ;
+- `probability_unsatisfied` ;
+- la confiance de la classe prédite.
+
+L'interface affiche un récapitulatif, les dix premières lignes et un bouton de téléchargement du CSV complet. Les exports temporaires sont isolés par utilisateur/session et les fichiers de plus de 24 heures sont nettoyés automatiquement. Un lot est limité à **5 Mo** et **5 000 lignes**.
+
+Les prédictions par lot ne sont pas enregistrées automatiquement dans `StudentFeedback`, afin de ne pas mélanger une analyse de masse avec l'historique des prédictions individuelles utilisé par le tableau de bord et la page Statistiques.

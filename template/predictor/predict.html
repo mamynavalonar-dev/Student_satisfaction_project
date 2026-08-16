@@ -10,7 +10,12 @@
     <div class="row">
         <div class="col-12">
             <h1 class="text-center mb-4">🔮 Prédiction de Satisfaction</h1>
-            <p class="text-center text-muted mb-5">Saisissez les caractéristiques du cours pour prédire la satisfaction de l'étudiant</p>
+            <p class="text-center text-muted mb-3">Saisissez les caractéristiques du cours pour prédire la satisfaction de l'étudiant</p>
+            <div class="text-center mb-5">
+                <a href="{% url 'batch_predict' %}" class="btn btn-outline-primary btn-sm">
+                    📦 Prédire plusieurs lignes depuis un CSV
+                </a>
+            </div>
         </div>
     </div>
 

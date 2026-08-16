@@ -967,3 +967,197 @@ class InterpretabilityTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["model_importance"], importance)
         self.assertContains(response, "Importance globale du modèle")
+
+class BatchPredictionTests(TestCase):
+    @staticmethod
+    def _valid_batch_frame():
+        import pandas as pd
+
+        return pd.DataFrame(
+            [
+                {
+                    "qualite_enseignement": 7,
+                    "charge_travail": 4,
+                    "interactivite": 7,
+                    "type_cours": "presentiel",
+                    "niveau_etudiant": "m1",
+                },
+                {
+                    "qualite_enseignement": 1,
+                    "charge_travail": 7,
+                    "interactivite": 1,
+                    "type_cours": "distanciel",
+                    "niveau_etudiant": "M2",
+                },
+            ]
+        )
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="batch-user",
+            password="mot-de-passe-batch",
+        )
+        self.client.force_login(self.user)
+
+    def test_validate_prediction_dataframe_accepts_m1_m2_and_normalizes_values(self):
+        from .neural_network_model import validate_prediction_dataframe
+
+        validated = validate_prediction_dataframe(self._valid_batch_frame())
+
+        self.assertEqual(list(validated.columns), [
+            "qualite_enseignement",
+            "charge_travail",
+            "interactivite",
+            "type_cours",
+            "niveau_etudiant",
+        ])
+        self.assertEqual(validated.loc[0, "type_cours"], "présentiel")
+        self.assertEqual(validated.loc[0, "niveau_etudiant"], "M1")
+        self.assertEqual(validated.loc[1, "niveau_etudiant"], "M2")
+
+    def test_validate_prediction_dataframe_rejects_target_column(self):
+        from .neural_network_model import validate_prediction_dataframe
+
+        frame = self._valid_batch_frame()
+        frame["satisfaction"] = [1, 0]
+
+        with self.assertRaisesRegex(ValueError, "Colonnes supplémentaires"):
+            validate_prediction_dataframe(frame)
+
+    def test_validate_prediction_dataframe_rejects_more_than_5000_rows(self):
+        import pandas as pd
+
+        from .neural_network_model import validate_prediction_dataframe
+
+        row = self._valid_batch_frame().iloc[0].to_dict()
+        frame = pd.DataFrame([row] * 5001)
+
+        with self.assertRaisesRegex(ValueError, "limite est de 5000"):
+            validate_prediction_dataframe(frame)
+
+    def test_predict_satisfaction_batch_is_vectorized_and_returns_expected_columns(self):
+        import numpy as np
+
+        from .neural_network_model import predict_satisfaction_batch
+
+        class FakePipeline:
+            classes_ = np.array([0, 1])
+
+            def predict(self, frame):
+                return np.array([1 if value >= 4 else 0 for value in frame["qualite_enseignement"]])
+
+            def predict_proba(self, frame):
+                satisfied = np.array([0.8 if value >= 4 else 0.2 for value in frame["qualite_enseignement"]])
+                return np.column_stack([1.0 - satisfied, satisfied])
+
+        result = predict_satisfaction_batch(
+            {"pipeline": FakePipeline()},
+            self._valid_batch_frame(),
+        )
+
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result.loc[0, "predicted_satisfaction"], 1)
+        self.assertEqual(result.loc[1, "predicted_satisfaction"], 0)
+        self.assertEqual(result.loc[0, "probability_satisfied"], 80.0)
+        self.assertEqual(result.loc[1, "confidence"], 80.0)
+
+    def test_batch_page_is_accessible(self):
+        response = self.client.get(reverse("batch_predict"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Prédiction par lot")
+        self.assertContains(response, "Lancer la prédiction par lot")
+
+    def test_batch_upload_redirects_to_summary_and_creates_download(self):
+        import tempfile
+
+        import pandas as pd
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from django.test import override_settings
+
+        predicted = pd.DataFrame(
+            [
+                {
+                    "qualite_enseignement": 7,
+                    "charge_travail": 4,
+                    "interactivite": 7,
+                    "type_cours": "présentiel",
+                    "niveau_etudiant": "M1",
+                    "predicted_satisfaction": 1,
+                    "prediction_label": "Satisfait",
+                    "probability_satisfied": 87.2,
+                    "probability_unsatisfied": 12.8,
+                    "confidence": 87.2,
+                },
+                {
+                    "qualite_enseignement": 1,
+                    "charge_travail": 7,
+                    "interactivite": 1,
+                    "type_cours": "distanciel",
+                    "niveau_etudiant": "M2",
+                    "predicted_satisfaction": 0,
+                    "prediction_label": "Non satisfait",
+                    "probability_satisfied": 1.7,
+                    "probability_unsatisfied": 98.3,
+                    "confidence": 98.3,
+                },
+            ]
+        )
+
+        csv_payload = (
+            "qualite_enseignement,charge_travail,interactivite,type_cours,niveau_etudiant\n"
+            "7,4,7,présentiel,M1\n"
+            "1,7,1,distanciel,M2\n"
+        ).encode("utf-8")
+
+        with tempfile.TemporaryDirectory() as media_root:
+            with (
+                override_settings(MEDIA_ROOT=media_root),
+                patch("predictor.views.load_current_model", return_value={"pipeline": object()}),
+                patch("predictor.views.predict_satisfaction_batch", return_value=predicted),
+            ):
+                response = self.client.post(
+                    reverse("batch_predict"),
+                    {
+                        "csv_file": SimpleUploadedFile(
+                            "lot.csv",
+                            csv_payload,
+                            content_type="text/csv",
+                        )
+                    },
+                    follow=True,
+                )
+
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, "2 lignes traitées")
+                self.assertContains(response, "87,2%")
+                batch_result = self.client.session["batch_prediction_result"]
+                self.assertEqual(batch_result["summary"]["satisfied"], 1)
+                self.assertEqual(batch_result["summary"]["unsatisfied"], 1)
+
+                download = self.client.get(
+                    reverse(
+                        "batch_predict_download",
+                        args=[batch_result["download_token"]],
+                    )
+                )
+                self.assertEqual(download.status_code, 200)
+                self.assertIn("text/csv", download["Content-Type"])
+                self.assertIn(b"predicted_satisfaction", download.content)
+
+    def test_batch_download_rejects_unknown_token(self):
+        import uuid
+
+        response = self.client.get(
+            reverse("batch_predict_download", args=[uuid.uuid4()]),
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        rendered_messages = [str(message) for message in response.context["messages"]]
+        self.assertTrue(
+            any(
+                "n'est pas disponible pour cette session" in message
+                for message in rendered_messages
+            )
+        )

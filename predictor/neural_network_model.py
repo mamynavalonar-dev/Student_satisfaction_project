@@ -43,6 +43,7 @@ NUMERIC_COLUMNS = ["qualite_enseignement", "charge_travail", "interactivite"]
 CATEGORICAL_COLUMNS = ["type_cours", "niveau_etudiant"]
 ALLOWED_TYPES = {"présentiel", "distanciel", "hybride"}
 ALLOWED_LEVELS = {"L1", "L2", "L3", "M1", "M2"}
+MAX_BATCH_ROWS = 5000
 
 
 def _ascii_key(value: object) -> str:
@@ -343,6 +344,140 @@ def _validate_prediction_input(input_data: dict) -> pd.DataFrame:
 
     return pd.DataFrame([row], columns=FEATURE_COLUMNS)
 
+
+
+def validate_prediction_dataframe(df: pd.DataFrame, *, max_rows: int = MAX_BATCH_ROWS) -> pd.DataFrame:
+    """Valide un lot de prédictions sans exiger de colonne cible satisfaction."""
+    if df is None or df.empty:
+        raise ValueError("Le fichier CSV est vide.")
+
+    data = df.copy()
+    data.columns = [str(column).strip() for column in data.columns]
+
+    missing = [column for column in FEATURE_COLUMNS if column not in data.columns]
+    extra = [column for column in data.columns if column not in FEATURE_COLUMNS]
+
+    if missing:
+        raise ValueError("Colonnes manquantes : " + ", ".join(missing))
+    if extra:
+        raise ValueError(
+            "Colonnes supplémentaires non autorisées : " + ", ".join(extra)
+        )
+
+    data = data[FEATURE_COLUMNS].copy()
+
+    if len(data) > max_rows:
+        raise ValueError(
+            f"Le CSV contient {len(data)} lignes ; la limite est de {max_rows} lignes par lot."
+        )
+
+    for column in NUMERIC_COLUMNS:
+        values = pd.to_numeric(data[column], errors="coerce")
+        if values.isna().any():
+            raise ValueError(
+                f"La colonne '{column}' contient des valeurs non numériques ou vides."
+            )
+        if not np.isfinite(values.to_numpy(dtype=float)).all():
+            raise ValueError(f"La colonne '{column}' contient une valeur infinie.")
+        if not ((values >= 1) & (values <= 7)).all():
+            raise ValueError(
+                f"La colonne '{column}' doit contenir uniquement des valeurs de 1 à 7."
+            )
+        if not np.equal(values, np.floor(values)).all():
+            raise ValueError(
+                f"La colonne '{column}' doit contenir uniquement des entiers."
+            )
+        data[column] = values.astype(int)
+
+    data["type_cours"] = data["type_cours"].map(_normalize_type)
+    invalid_types = sorted(set(data["type_cours"]) - ALLOWED_TYPES)
+    if invalid_types:
+        raise ValueError(
+            "Valeurs invalides dans 'type_cours' : " + ", ".join(invalid_types)
+        )
+
+    data["niveau_etudiant"] = (
+        data["niveau_etudiant"].astype(str).str.strip().str.upper()
+    )
+    invalid_levels = sorted(set(data["niveau_etudiant"]) - ALLOWED_LEVELS)
+    if invalid_levels:
+        raise ValueError(
+            "Valeurs invalides dans 'niveau_etudiant' : " + ", ".join(invalid_levels)
+        )
+
+    return data.reset_index(drop=True)
+
+
+def predict_satisfaction_batch(model_data, df: pd.DataFrame) -> pd.DataFrame:
+    """Prédit un DataFrame complet en une seule opération vectorisée."""
+    data = validate_prediction_dataframe(df)
+
+    try:
+        if "pipeline" in model_data:
+            pipeline = model_data["pipeline"]
+            predictions = np.asarray(pipeline.predict(data), dtype=int)
+            probability_matrix = np.asarray(pipeline.predict_proba(data), dtype=float)
+            classes = getattr(pipeline, "classes_", None)
+            if classes is None:
+                classes = pipeline.named_steps["classifier"].classes_
+        else:
+            model = model_data["model"]
+            scaler = model_data["scaler"]
+            label_encoders = model_data["label_encoders"]
+            legacy_df = data.copy()
+
+            for column, encoder in label_encoders.items():
+                values = legacy_df[column].tolist()
+                known_values = set(encoder.classes_)
+                unknown_values = sorted({value for value in values if value not in known_values})
+                if unknown_values:
+                    raise ValueError(
+                        f"La valeur '{unknown_values[0]}' n'existait pas dans les données utilisées "
+                        "par cet ancien modèle. Réentraînez le modèle avec un CSV à jour."
+                    )
+                legacy_df[column] = encoder.transform(values)
+
+            if "feature_names" in model_data:
+                legacy_df = legacy_df[model_data["feature_names"]]
+
+            scaled = scaler.transform(legacy_df)
+            predictions = np.asarray(model.predict(scaled), dtype=int)
+            probability_matrix = np.asarray(model.predict_proba(scaled), dtype=float)
+            classes = model.classes_
+
+        class_values = [int(value) for value in classes]
+        if 0 not in class_values or 1 not in class_values:
+            raise ValueError("Le modèle actif ne contient pas les deux classes 0 et 1.")
+
+        satisfied_index = class_values.index(1)
+        unsatisfied_index = class_values.index(0)
+        probability_satisfied = probability_matrix[:, satisfied_index] * 100.0
+        probability_unsatisfied = probability_matrix[:, unsatisfied_index] * 100.0
+        confidence = np.where(
+            predictions == 1,
+            probability_satisfied,
+            probability_unsatisfied,
+        )
+
+        result = data.copy()
+        result["predicted_satisfaction"] = predictions.astype(int)
+        result["prediction_label"] = np.where(
+            predictions == 1,
+            "Satisfait",
+            "Non satisfait",
+        )
+        result["probability_satisfied"] = np.round(probability_satisfied, 2)
+        result["probability_unsatisfied"] = np.round(probability_unsatisfied, 2)
+        result["confidence"] = np.round(confidence, 2)
+        return result
+
+    except ValueError:
+        raise
+    except Exception as exc:
+        logger.exception("Échec de la prédiction par lot")
+        raise RuntimeError(
+            "Une erreur interne est survenue pendant la prédiction par lot."
+        ) from exc
 
 def _format_prediction(prediction: int, probabilities: dict[int, float]):
     probability_satisfied = float(probabilities.get(1, 0.0))

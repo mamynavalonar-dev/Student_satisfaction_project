@@ -3,9 +3,13 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 from datetime import timedelta
+from pathlib import Path
+from uuid import uuid4
 
 import pandas as pd
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
@@ -32,11 +36,17 @@ from .utils_explain import get_global_importance, get_local_explanation
 from .neural_network_model import (
     load_current_model,
     predict_satisfaction,
+    predict_satisfaction_batch,
     train_model,
+    validate_prediction_dataframe,
     validate_training_dataframe,
 )
 
 logger = logging.getLogger(__name__)
+
+BATCH_MAX_FILE_SIZE = 5 * 1024 * 1024
+BATCH_EXPORT_MAX_AGE_SECONDS = 24 * 60 * 60
+BATCH_SESSION_KEY = "batch_prediction_result"
 
 
 def login_register_view(request):
@@ -342,6 +352,183 @@ def predict(request):
 
     return render(request, "predictor/predict.html", {"form": form})
 
+
+
+def _batch_export_directory() -> Path:
+    directory = Path(settings.MEDIA_ROOT) / "batch_exports"
+    directory.mkdir(parents=True, exist_ok=True)
+    return directory
+
+
+def _batch_export_path(user_id: int, token: str) -> Path:
+    return _batch_export_directory() / f"batch_user_{user_id}_{token}.csv"
+
+
+def _cleanup_stale_batch_exports():
+    directory = Path(settings.MEDIA_ROOT) / "batch_exports"
+    if not directory.is_dir():
+        return
+
+    cutoff = time.time() - BATCH_EXPORT_MAX_AGE_SECONDS
+    for path in directory.glob("batch_user_*.csv"):
+        try:
+            if path.stat().st_mtime < cutoff:
+                path.unlink()
+        except OSError:
+            logger.warning("Impossible de nettoyer l'export batch temporaire : %s", path)
+
+
+def _remove_previous_batch_export(request):
+    previous = request.session.get(BATCH_SESSION_KEY)
+    if not isinstance(previous, dict):
+        return
+
+    token = str(previous.get("download_token") or "")
+    if not token:
+        return
+
+    path = _batch_export_path(request.user.pk, token)
+    try:
+        path.unlink(missing_ok=True)
+    except OSError:
+        logger.warning("Impossible de supprimer l'ancien export batch : %s", path)
+
+
+def _batch_summary(result_df: pd.DataFrame) -> dict:
+    total = int(len(result_df))
+    satisfied = int((result_df["predicted_satisfaction"] == 1).sum())
+    unsatisfied = total - satisfied
+    return {
+        "total": total,
+        "satisfied": satisfied,
+        "unsatisfied": unsatisfied,
+        "satisfaction_rate": (satisfied / total * 100.0) if total else 0.0,
+        "average_confidence": float(result_df["confidence"].mean()) if total else 0.0,
+        "average_probability_satisfied": (
+            float(result_df["probability_satisfied"].mean()) if total else 0.0
+        ),
+    }
+
+
+@login_required(login_url="login_register")
+def batch_predict(request):
+    if request.method == "POST":
+        csv_file = request.FILES.get("csv_file")
+
+        if csv_file is None:
+            messages.error(request, "Sélectionnez un fichier CSV à traiter.")
+            return redirect("batch_predict")
+
+        if not csv_file.name.lower().endswith(".csv"):
+            messages.error(request, "Le fichier doit être au format CSV (.csv).")
+            return redirect("batch_predict")
+
+        if csv_file.size > BATCH_MAX_FILE_SIZE:
+            messages.error(request, "Le fichier dépasse la taille maximale autorisée de 5 Mo.")
+            return redirect("batch_predict")
+
+        model_data = load_current_model()
+        if model_data is None:
+            messages.error(
+                request,
+                "Aucun modèle actif n'est disponible. Entraînez d'abord un modèle.",
+            )
+            return redirect("batch_predict")
+
+        try:
+            source_df = pd.read_csv(csv_file, encoding="utf-8-sig")
+            validated_df = validate_prediction_dataframe(source_df)
+            result_df = predict_satisfaction_batch(model_data, validated_df)
+
+            _cleanup_stale_batch_exports()
+            _remove_previous_batch_export(request)
+
+            token = str(uuid4())
+            export_path = _batch_export_path(request.user.pk, token)
+            result_df.to_csv(export_path, index=False, encoding="utf-8-sig")
+
+            preview = json.loads(
+                result_df.head(10).to_json(orient="records", force_ascii=False)
+            )
+            summary = _batch_summary(result_df)
+            download_filename = f"predictions_lot_{timezone.now():%Y%m%d_%H%M%S}.csv"
+
+            request.session[BATCH_SESSION_KEY] = {
+                "source_filename": Path(csv_file.name).name,
+                "download_token": token,
+                "download_filename": download_filename,
+                "summary": summary,
+                "preview": preview,
+            }
+            request.session.modified = True
+
+            notify_user(
+                request.user,
+                "Prédiction par lot terminée",
+                f"{summary['total']} lignes traitées : {summary['satisfied']} satisfaites et "
+                f"{summary['unsatisfied']} non satisfaites.",
+                level="success",
+                event_type="prediction",
+                target_url=reverse("batch_predict"),
+            )
+
+            messages.success(
+                request,
+                f"Prédiction par lot terminée : {summary['total']} lignes traitées.",
+            )
+            return redirect("batch_predict")
+
+        except (ValueError, UnicodeDecodeError, pd.errors.ParserError, pd.errors.EmptyDataError) as exc:
+            messages.error(request, f"CSV de prédiction invalide : {exc}")
+            return redirect("batch_predict")
+        except RuntimeError:
+            logger.exception("Erreur interne pendant la prédiction par lot")
+            messages.error(
+                request,
+                "Une erreur interne est survenue pendant la prédiction par lot. Consultez le journal serveur.",
+            )
+            return redirect("batch_predict")
+        except Exception:
+            logger.exception("Erreur inattendue pendant la prédiction par lot")
+            messages.error(
+                request,
+                "La prédiction par lot n'a pas pu être effectuée. Vérifiez le fichier et réessayez.",
+            )
+            return redirect("batch_predict")
+
+    return render(
+        request,
+        "predictor/batch_predict.html",
+        {"batch_result": request.session.get(BATCH_SESSION_KEY)},
+    )
+
+
+@login_required(login_url="login_register")
+def batch_predict_download(request, token):
+    batch_result = request.session.get(BATCH_SESSION_KEY)
+    token_text = str(token)
+
+    if not isinstance(batch_result, dict) or str(batch_result.get("download_token")) != token_text:
+        messages.error(request, "Cet export de prédiction par lot n'est pas disponible pour cette session.")
+        return redirect("batch_predict")
+
+    export_path = _batch_export_path(request.user.pk, token_text)
+    if not export_path.is_file():
+        messages.error(request, "Le fichier de résultat a expiré. Relancez la prédiction par lot.")
+        return redirect("batch_predict")
+
+    try:
+        payload = export_path.read_bytes()
+    except OSError:
+        logger.exception("Impossible de lire l'export batch %s", export_path)
+        messages.error(request, "Le fichier de résultat ne peut pas être téléchargé actuellement.")
+        return redirect("batch_predict")
+
+    response = HttpResponse(payload, content_type="text/csv; charset=utf-8")
+    filename = batch_result.get("download_filename") or "predictions_lot.csv"
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    response["Cache-Control"] = "no-store"
+    return response
 
 @login_required(login_url="login_register")
 def train_model_view(request):
