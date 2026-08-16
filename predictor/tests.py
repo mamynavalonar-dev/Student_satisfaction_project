@@ -797,6 +797,11 @@ class ComplianceV8Tests(TestCase):
             self.assertIn("pipeline", artifact)
             self.assertIn("preprocessor", artifact["pipeline"].named_steps)
             self.assertIn("classifier", artifact["pipeline"].named_steps)
+            self.assertIn("explanation_background", artifact)
+            self.assertEqual(len(artifact["explanation_background"]), 40)
+            self.assertIn("explanation_reference", artifact)
+            self.assertEqual(len(artifact["explanation_reference"]["features"]), metrics["test_size"])
+            self.assertEqual(len(artifact["explanation_reference"]["target"]), metrics["test_size"])
 
             self.assertGreaterEqual(accuracy, 0.0)
             self.assertLessEqual(accuracy, 1.0)
@@ -852,3 +857,113 @@ class ComplianceV8Tests(TestCase):
                 with transaction.atomic():
                     StudentFeedback.objects.create(**payload)
 
+class InterpretabilityTests(TestCase):
+    class SimpleProbabilityPipeline:
+        classes_ = [0, 1]
+
+        def predict_proba(self, frame):
+            import numpy as np
+
+            quality = frame["qualite_enseignement"].astype(float).to_numpy()
+            workload = frame["charge_travail"].astype(float).to_numpy()
+            interactivity = frame["interactivite"].astype(float).to_numpy()
+            course = frame["type_cours"].map({"présentiel": 0.20, "hybride": 0.10, "distanciel": -0.15}).astype(float).to_numpy()
+            level = frame["niveau_etudiant"].map({"L1": -0.10, "L2": -0.05, "L3": 0.0, "M1": 0.05, "M2": 0.10}).astype(float).to_numpy()
+            score = 0.45 * (quality - 4) - 0.18 * abs(workload - 4) + 0.38 * (interactivity - 4) + course + level
+            satisfied = 1.0 / (1.0 + np.exp(-score))
+            return np.column_stack([1.0 - satisfied, satisfied])
+
+    @staticmethod
+    def _background_records():
+        return [
+            {"qualite_enseignement": 2, "charge_travail": 6, "interactivite": 2, "type_cours": "distanciel", "niveau_etudiant": "L1"},
+            {"qualite_enseignement": 4, "charge_travail": 4, "interactivite": 4, "type_cours": "hybride", "niveau_etudiant": "L3"},
+            {"qualite_enseignement": 6, "charge_travail": 3, "interactivite": 6, "type_cours": "présentiel", "niveau_etudiant": "M1"},
+            {"qualite_enseignement": 7, "charge_travail": 4, "interactivite": 7, "type_cours": "présentiel", "niveau_etudiant": "M2"},
+        ]
+
+    def test_exact_shapley_explanation_is_additive_and_has_five_features(self):
+        from .utils_explain import get_local_explanation
+
+        model_data = {"pipeline": self.SimpleProbabilityPipeline(), "explanation_background": self._background_records()}
+        input_data = {"qualite_enseignement": 7, "charge_travail": 4, "interactivite": 7, "type_cours": "présentiel", "niveau_etudiant": "M2"}
+        explanation = get_local_explanation(model_data, input_data)
+
+        self.assertTrue(explanation["available"])
+        self.assertEqual(len(explanation["items"]), 5)
+        contribution_sum = sum(item["contribution"] for item in explanation["items"])
+        expected_delta = explanation["predicted_probability"] - explanation["baseline_probability"]
+        self.assertAlmostEqual(contribution_sum, expected_delta, places=2)
+        self.assertLess(explanation["additivity_error"], 1e-6)
+
+    def test_global_importance_keeps_exactly_the_five_business_features(self):
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        import numpy as np
+        from .utils_explain import get_global_importance
+
+        model_data = {
+            "training_date": "test-importance-unique",
+            "pipeline": self.SimpleProbabilityPipeline(),
+            "explanation_reference": {"features": self._background_records(), "target": [0, 0, 1, 1]},
+        }
+        fake_result = SimpleNamespace(
+            importances_mean=np.array([0.20, 0.05, 0.15, 0.02, 0.01]),
+            importances_std=np.array([0.02, 0.01, 0.03, 0.01, 0.005]),
+        )
+        with patch("predictor.utils_explain.permutation_importance", return_value=fake_result):
+            result = get_global_importance(model_data)
+
+        self.assertTrue(result["available"])
+        self.assertEqual(len(result["items"]), 5)
+        self.assertEqual(result["items"][0]["feature"], "qualite_enseignement")
+
+    def test_predict_view_exposes_local_explanation_without_breaking_prediction(self):
+        from django.contrib.auth.models import User
+        from django.urls import reverse
+        from unittest.mock import patch
+
+        user = User.objects.create_user(username="explain-predict", password="ProjetIA-2026!Solide")
+        self.client.force_login(user)
+        prediction = {"prediction": 1, "probability_satisfied": 82.0, "probability_unsatisfied": 18.0, "satisfaction_text": "Satisfait", "prediction_probability": 82.0}
+        explanation = {"available": True, "items": [], "baseline_probability": 50.0, "predicted_probability": 82.0, "method": "test", "reference_source": "test"}
+
+        with (
+            patch("predictor.views.load_current_model", return_value={"pipeline": object()}),
+            patch("predictor.views.predict_satisfaction", return_value=prediction),
+            patch("predictor.views.get_local_explanation", return_value=explanation),
+        ):
+            response = self.client.post(
+                reverse("predict"),
+                {"qualite_enseignement": "7", "charge_travail": "4", "interactivite": "7", "type_cours": "présentiel", "niveau_etudiant": "M1"},
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["prediction_explanation"], explanation)
+        self.assertContains(response, "Pourquoi cette prédiction ?")
+
+    def test_statistics_exposes_model_importance(self):
+        from django.contrib.auth.models import User
+        from django.urls import reverse
+        from unittest.mock import patch
+
+        user = User.objects.create_user(username="explain-stats", password="ProjetIA-2026!Solide")
+        self.client.force_login(user)
+        importance = {
+            "available": True,
+            "items": [{"label": "Qualité de l'enseignement", "importance_points": 12.5, "std_points": 1.0, "width": 100.0}],
+            "method": "Importance par permutation",
+            "metric": "F1-score",
+            "sample_size": 100,
+            "n_repeats": 8,
+            "reference_source": "test",
+        }
+        with (
+            patch("predictor.views.load_current_model", return_value={"pipeline": object()}),
+            patch("predictor.views.get_global_importance", return_value=importance),
+        ):
+            response = self.client.get(reverse("statistics"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["model_importance"], importance)
+        self.assertContains(response, "Importance globale du modèle")

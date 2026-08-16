@@ -88,3 +88,16 @@ Les valeurs 1–7, les types de cours, les niveaux `L1/L2/L3/M1/M2` et la probab
 python manage.py check
 python manage.py test
 ```
+
+## Interprétabilité du modèle
+
+Le projet fournit deux niveaux d'explication du MLP actif :
+
+- **importance globale par permutation** : mesure la baisse moyenne du F1-score lorsque chacune des cinq caractéristiques métier est mélangée ;
+- **explication locale par valeurs de Shapley exactes** : pour une prédiction individuelle, répartit la différence entre la probabilité de référence et `P(satisfait)` entre `qualite_enseignement`, `charge_travail`, `interactivite`, `type_cours` et `niveau_etudiant`.
+
+Comme le problème ne comporte que cinq caractéristiques, les `2^5 = 32` coalitions peuvent être évaluées directement. Cette implémentation ne dépend donc pas du paquet externe `shap` et travaille sur les variables métier brutes du pipeline scikit-learn.
+
+Les nouveaux entraînements enregistrent dans l'artefact joblib un petit `explanation_background` issu du train et le hold-out `explanation_reference` issu du test. Pour les artefacts V8 déjà existants, l'application utilise automatiquement le dataset synthétique V8 local comme référence de secours.
+
+Ces explications décrivent le comportement prédictif du modèle et ne doivent pas être interprétées comme des effets causaux.

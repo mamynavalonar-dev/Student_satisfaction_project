@@ -254,6 +254,14 @@ def train_model(df: pd.DataFrame):
             "training_date": datetime.now(),
             "feature_names": FEATURE_COLUMNS,
             "target_name": "satisfaction",
+            "explanation_background": X_train.sample(
+                n=min(40, len(X_train)),
+                random_state=42,
+            ).to_dict(orient="records"),
+            "explanation_reference": {
+                "features": X_test.to_dict(orient="records"),
+                "target": [int(value) for value in y_test.tolist()],
+            },
         }
 
         joblib.dump(model_data, temp_path, compress=3)

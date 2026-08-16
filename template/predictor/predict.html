@@ -87,6 +87,44 @@
                         </div>
                     </div>
 
+
+                    {% if prediction_explanation and prediction_explanation.available %}
+                    <div class="card mt-4 border-0 shadow-sm">
+                        <div class="card-header bg-white">
+                            <h6 class="mb-1">🧭 Pourquoi cette prédiction ?</h6>
+                            <p class="small text-muted mb-0">Contribution de chaque caractéristique à la probabilité d'être satisfait.</p>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-light border small">
+                                Référence : {{ prediction_explanation.baseline_probability|floatformat:1 }}% satisfait ·
+                                Prédiction : {{ prediction_explanation.predicted_probability|floatformat:1 }}% satisfait.
+                                Une contribution positive augmente cette probabilité ; une contribution négative la diminue.
+                            </div>
+                            {% for item in prediction_explanation.items %}
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between gap-3 mb-1">
+                                    <span><strong>{{ item.label }}</strong> <small class="text-muted">({{ item.value }})</small></span>
+                                    <strong class="{% if item.direction == 'positive' %}text-success{% else %}text-danger{% endif %}">
+                                        {% if item.direction == 'positive' %}+{% endif %}{{ item.contribution|floatformat:2 }} pts
+                                    </strong>
+                                </div>
+                                <div class="position-relative bg-light rounded" style="height:18px;overflow:hidden;">
+                                    <span style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:#6c757d;z-index:2;"></span>
+                                    <span class="{% if item.direction == 'positive' %}bg-success{% else %}bg-danger{% endif %}"
+                                          style="position:absolute;top:2px;bottom:2px;left:{{ item.bar_left }}%;width:{{ item.bar_width }}%;border-radius:4px;"></span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            <p class="small text-muted mb-0">
+                                Méthode : {{ prediction_explanation.method }} · Référence : {{ prediction_explanation.reference_source }}.
+                                Ces contributions expliquent le comportement prédictif du modèle ; elles ne prouvent pas une relation causale.
+                            </p>
+                        </div>
+                    </div>
+                    {% elif prediction_explanation and not prediction_explanation.available %}
+                    <div class="alert alert-secondary mt-4 small">Explication indisponible : {{ prediction_explanation.reason }}</div>
+                    {% endif %}
+
                     <div class="mt-4">
                         <h6>💡 Recommandations:</h6>
                         {% if prediction_result.prediction == 0 %}

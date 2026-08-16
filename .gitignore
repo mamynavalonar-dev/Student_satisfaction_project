@@ -37,3 +37,6 @@ django_copie-*.txt
 .env.*
 !.env.example
 data_cleanup_backups/
+
+# Scripts locaux d'amélioration
+amelioration_*.py

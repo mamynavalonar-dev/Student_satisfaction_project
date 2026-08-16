@@ -98,6 +98,41 @@
         </div>
     </div>
 
+
+    {% if model_importance and model_importance.available %}
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-1">🧠 Importance globale du modèle</h5>
+            <p class="small text-muted mb-0">Baisse moyenne du F1-score lorsque chaque caractéristique est mélangée.</p>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-light border small">
+                Cette mesure décrit ce que le <strong>MLP actif utilise pour prédire</strong>. Elle est différente des « Associations observées » et ne constitue pas une preuve de causalité.
+            </div>
+            {% for item in model_importance.items %}
+            <div class="mb-3">
+                <div class="d-flex justify-content-between gap-3 mb-1">
+                    <span>{{ item.label }}</span>
+                    <strong>{{ item.importance_points|floatformat:2 }} pts F1</strong>
+                </div>
+                <div class="progress" style="height:10px;">
+                    <div class="progress-bar" role="progressbar" style="width:{{ item.width }}%;"
+                         aria-valuenow="{{ item.width }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <small class="text-muted">Écart-type : {{ item.std_points|floatformat:2 }} pts</small>
+            </div>
+            {% endfor %}
+            <p class="small text-muted mb-0">
+                Méthode : {{ model_importance.method }} · {{ model_importance.metric }} ·
+                {{ model_importance.sample_size }} observations · {{ model_importance.n_repeats }} permutations ·
+                Référence : {{ model_importance.reference_source }}.
+            </p>
+        </div>
+    </div>
+    {% elif model_importance and not model_importance.available %}
+    <div class="alert alert-secondary mb-4 small">Importance globale indisponible : {{ model_importance.reason }}</div>
+    {% endif %}
+
     <div class="row g-4 mb-4">
         <div class="col-lg-7">
             <div class="card h-100 border-0 shadow-sm">

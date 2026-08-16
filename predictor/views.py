@@ -28,6 +28,7 @@ from .forms import (
 )
 from .models import ModelTraining, Notification, StudentFeedback
 from .notifications import notify_user
+from .utils_explain import get_global_importance, get_local_explanation
 from .neural_network_model import (
     load_current_model,
     predict_satisfaction,
@@ -286,6 +287,18 @@ def predict(request):
                     messages.error(request, "Aucun modèle n'est chargé. Entraînez d'abord un modèle.")
                 else:
                     prediction_result = predict_satisfaction(model_data, input_data)
+
+                    prediction_explanation = None
+                    try:
+                        prediction_explanation = get_local_explanation(
+                            model_data,
+                            input_data,
+                        )
+                    except Exception:
+                        logger.exception(
+                            "Impossible de calculer l'explication locale de la prédiction"
+                        )
+
                     feedback = StudentFeedback.objects.create(
                         qualite_enseignement=input_data["qualite_enseignement"],
                         charge_travail=input_data["charge_travail"],
@@ -315,6 +328,7 @@ def predict(request):
                             "form": form,
                             "prediction_result": prediction_result,
                             "input_data": input_data,
+                            "prediction_explanation": prediction_explanation,
                         },
                     )
             except Exception:
@@ -547,6 +561,13 @@ def statistics(request):
 
     model_data = load_current_model()
 
+    model_importance = None
+    if model_data is not None:
+        try:
+            model_importance = get_global_importance(model_data)
+        except Exception:
+            logger.exception("Impossible de calculer l'importance globale du modèle")
+
     return render(
         request,
         "predictor/statistics.html",
@@ -558,6 +579,7 @@ def statistics(request):
             "charts_data": charts_data,
             "active_model": _active_model_summary(model_data),
             "model_loaded": model_data is not None,
+            "model_importance": model_importance,
         },
     )
 
