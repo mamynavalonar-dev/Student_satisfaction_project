@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gérer {{ target_user.username }} - Satisfaction Étudiante{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'accounts/account.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container account-page account-page-narrow">
+    <div class="account-heading-row">
+        <div>
+            <span class="account-eyebrow">Administration</span>
+            <h1>Gérer {{ target_user.username }}</h1>
+            <p>
+                Rôle actuel :
+                <strong>{{ target_role }}</strong>
+            </p>
+        </div>
+        <a class="btn btn-outline-secondary" href="{% url 'accounts:user_list' %}">
+            Retour
+        </a>
+    </div>
+
+    <form method="post" class="card account-card account-form-card" novalidate>
+        {% csrf_token %}
+        <div class="card-body">
+            <dl class="account-details mb-4">
+                <div>
+                    <dt>Nom d’utilisateur</dt>
+                    <dd>{{ target_user.username }}</dd>
+                </div>
+                <div>
+                    <dt>Adresse e-mail</dt>
+                    <dd>{{ target_user.email|default:"Non renseignée" }}</dd>
+                </div>
+            </dl>
+
+            <div class="mb-3">
+                <label class="form-label" for="{{ form.role.id_for_label }}">
+                    {{ form.role.label }}
+                </label>
+                {{ form.role }}
+                {% for error in form.role.errors %}
+                    <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="form-check mb-3">
+                {{ form.is_active }}
+                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                    {{ form.is_active.label }}
+                </label>
+            </div>
+
+            <div class="alert alert-warning">
+                Le changement de rôle modifie immédiatement les accès applicatifs de ce compte.
+            </div>
+
+            <div class="account-form-actions">
+                <a class="btn btn-outline-secondary" href="{% url 'accounts:user_list' %}">
+                    Annuler
+                </a>
+                <button class="btn btn-primary" type="submit">
+                    Enregistrer le rôle
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

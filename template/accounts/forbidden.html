@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Accès refusé - Satisfaction Étudiante{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'accounts/account.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container account-page account-page-narrow">
+    <div class="card account-card account-state-card">
+        <div class="card-body text-center">
+            <div class="account-state-icon account-state-icon-danger">
+                <i class="bi bi-shield-x" aria-hidden="true"></i>
+            </div>
+            <span class="account-eyebrow">Autorisation requise</span>
+            <h1>Accès refusé</h1>
+            <p>
+                Votre rôle <strong>{{ current_role_label }}</strong> ne permet pas
+                d’accéder à cette fonctionnalité.
+            </p>
+            <a class="btn btn-primary" href="{% url 'home' %}">
+                Retour à l’accueil
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

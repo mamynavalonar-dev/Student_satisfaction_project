@@ -7,10 +7,16 @@ import pandas as pd
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status
 from rest_framework.exceptions import APIException, ValidationError
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
+
+from accounts.api_permissions import (
+    CanUseBatchPrediction,
+    CanViewFeedbackData,
+    CanViewModelManagement,
+)
 
 from predictor.models import ModelTraining, StudentFeedback
 from predictor.neural_network_model import (
@@ -126,7 +132,7 @@ class PredictAPIView(APIView):
 
 
 class BatchPredictAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CanUseBatchPrediction]
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "batch_prediction"
 
@@ -205,7 +211,7 @@ class BatchPredictAPIView(APIView):
 
 
 class ModelListAPIView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAuthenticated, CanViewModelManagement]
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "api_readonly"
 
@@ -253,7 +259,7 @@ class ModelListAPIView(APIView):
 
 class FeedbackListAPIView(generics.ListAPIView):
     serializer_class = StudentFeedbackSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAuthenticated, CanViewFeedbackData]
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "api_readonly"
 

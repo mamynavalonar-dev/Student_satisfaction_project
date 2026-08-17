@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestion des utilisateurs - Satisfaction Étudiante{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'accounts/account.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container account-page">
+    <div class="account-heading-row">
+        <div>
+            <span class="account-eyebrow">Administration</span>
+            <h1>Gestion des utilisateurs</h1>
+            <p>Créez les comptes, attribuez les rôles et contrôlez leur activation.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            {% if user.is_staff %}
+                <a class="btn btn-outline-secondary" href="/admin/">
+                    <i class="bi bi-gear me-1" aria-hidden="true"></i>
+                    Django Admin
+                </a>
+            {% endif %}
+            <a class="btn btn-primary" href="{% url 'accounts:user_create' %}">
+                <i class="bi bi-person-plus me-1" aria-hidden="true"></i>
+                Nouveau compte
+            </a>
+        </div>
+    </div>
+
+    <section class="card account-card">
+        <div class="card-body">
+            <div class="rbac-toolbar">
+                <form method="get" class="rbac-search" role="search">
+                    <label class="visually-hidden" for="user-search">Rechercher un utilisateur</label>
+                    <input
+                        id="user-search"
+                        class="form-control"
+                        type="search"
+                        name="q"
+                        value="{{ query }}"
+                        placeholder="Nom, e-mail, prénom…"
+                    >
+                    <button class="btn btn-outline-primary" type="submit">
+                        Rechercher
+                    </button>
+                </form>
+                <span class="badge bg-secondary">{{ total_users }} compte{{ total_users|pluralize }}</span>
+            </div>
+
+            <div class="rbac-role-legend" aria-label="Rôles disponibles">
+                <span class="badge bg-danger">Super Administrateur</span>
+                <span class="badge bg-primary">Administrateur</span>
+                <span class="badge bg-info text-dark">Responsable ML</span>
+                <span class="badge bg-success">Analyste</span>
+                <span class="badge bg-secondary">Utilisateur</span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table align-middle rbac-table">
+                    <thead>
+                        <tr>
+                            <th>Utilisateur</th>
+                            <th>Rôle</th>
+                            <th>État</th>
+                            <th>Dernière connexion</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in rows %}
+                            <tr>
+                                <td>
+                                    <strong>{{ row.user.username }}</strong>
+                                    <div class="small text-muted">
+                                        {{ row.user.get_full_name|default:"Nom non renseigné" }}
+                                    </div>
+                                    <div class="small text-muted">
+                                        {{ row.user.email|default:"E-mail non renseigné" }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge {{ row.role_badge_class }}">
+                                        {{ row.role }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if row.user.is_active %}
+                                        <span class="badge bg-success">Actif</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Désactivé</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if row.user.last_login %}
+                                        {{ row.user.last_login|date:"d/m/Y H:i" }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if row.can_edit %}
+                                        <a
+                                            class="btn btn-outline-primary btn-sm"
+                                            href="{% url 'accounts:user_role_edit' row.user.pk %}"
+                                        >
+                                            Gérer
+                                        </a>
+                                    {% elif row.user.is_superuser %}
+                                        <span class="small text-muted">Protégé</span>
+                                    {% elif row.user.pk == user.pk %}
+                                        <span class="small text-muted">Votre compte</span>
+                                    {% else %}
+                                        <span class="small text-muted">Non modifiable</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    Aucun utilisateur trouvé.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if page_obj.paginator.num_pages > 1 %}
+                <nav aria-label="Pagination des utilisateurs" class="mt-3">
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?q={{ query|urlencode }}&page={{ page_obj.previous_page_number }}">
+                                    Précédent
+                                </a>
+                            </li>
+                        {% endif %}
+                        <li class="page-item disabled">
+                            <span class="page-link">
+                                Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?q={{ query|urlencode }}&page={{ page_obj.next_page_number }}">
+                                    Suivant
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        </div>
+    </section>
+</div>
+{% endblock %}

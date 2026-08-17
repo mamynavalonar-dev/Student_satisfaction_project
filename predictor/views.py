@@ -23,6 +23,7 @@ from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
+from accounts.rbac import ROLE_USER, assign_role
 from .forms import (
     LoginForm,
     PredictionForm,
@@ -92,6 +93,7 @@ def login_register_view(request):
             register_form = RegistrationForm(request.POST, prefix="register")
             if register_form.is_valid():
                 user = register_form.save()
+                assign_role(user, ROLE_USER)
                 login(request, user)
 
                 notify_user(

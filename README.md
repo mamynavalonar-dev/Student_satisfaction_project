@@ -175,3 +175,37 @@ L'API est disponible sous `/api/v1/`.
 - `GET /api/v1/docs/` — Swagger UI.
 
 Les prédictions API ne sont pas automatiquement enregistrées dans `StudentFeedback`. Les endpoints réutilisent le moteur et le validateur de l'application web.
+
+## UX et accessibilité — V14A
+
+L'interface authentifiée propose maintenant trois préférences d'apparence : **Automatique**, **Clair** et **Sombre**. Le choix est conservé dans `localStorage` et le mode Automatique suit `prefers-color-scheme`.
+
+V14A ajoute aussi un lien d'évitement vers le contenu principal, des styles `:focus-visible`, des cibles d'au moins 44 px pour les contrôles d'icône principaux, le respect de `prefers-reduced-motion`, un thème sombre pour les composants Bootstrap courants et un favicon servi également via `/favicon.ico`.
+
+Cette étape améliore les fondations WCAG, mais ne prétend pas remplacer un audit navigateur complet avec axe/Lighthouse. Le profil utilisateur et la sécurité du compte sont traités en V14B, puis l'internationalisation FR/EN en V14C.
+
+## Profil et sécurité du compte — V14B
+
+V14B ajoute une section **Mon profil** basée sur l'utilisateur Django existant, sans nouveau modèle ni migration. L'utilisateur peut modifier son prénom, son nom et son adresse e-mail. Une modification de l'e-mail nécessite le mot de passe actuel et l'application refuse les doublons d'e-mail sans tenir compte de la casse.
+
+Le changement de mot de passe utilise `PasswordChangeView` et `PasswordChangeForm` de Django. La session courante reste active après un changement réussi.
+
+Le flux « Mot de passe oublié » utilise les vues de réinitialisation de Django avec lien à usage unique. En développement, si aucune configuration e-mail n'existe déjà, les messages sont écrits dans la console avec `console.EmailBackend`. En production, définir `EMAIL_BACKEND` et `DEFAULT_FROM_EMAIL` via l'environnement.
+
+Le flux de réinitialisation conserve une réponse générique pour ne pas révéler si une adresse e-mail est enregistrée.
+
+## RBAC — rôles et permissions V14B.1
+
+L'application utilise désormais un contrôle d'accès basé sur les rôles :
+
+- **Super Administrateur** : compte Django `is_superuser=True`, accès absolu ;
+- **Administrateur** : gestion des comptes, données, modèles, statistiques et accès staff ;
+- **Responsable ML** : entraînement, activation/comparaison des modèles, données et statistiques ;
+- **Analyste** : prédiction individuelle et par lot, données, exports et statistiques ;
+- **Utilisateur** : prédiction individuelle, notifications et profil personnel.
+
+Les quatre rôles métier sont des groupes Django et reçoivent des permissions explicites. Les routes sensibles sont aussi contrôlées côté serveur par middleware ou permissions DRF ; masquer un bouton n'est donc pas considéré comme une protection.
+
+La commande `python manage.py setup_roles` recrée de façon idempotente les groupes et permissions. L'option `--promote-superuser <username>` permet de confirmer explicitement un Super Administrateur sans modifier son mot de passe.
+
+Les Super Administrateurs sont protégés contre les modifications de rôle depuis l'interface métier. Pour créer ou modifier un superuser, utiliser `createsuperuser`, la CLI Django ou l'administration Django avec un compte superuser.

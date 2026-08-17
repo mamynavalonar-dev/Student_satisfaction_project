@@ -8,11 +8,20 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from accounts.rbac import (
+    ROLE_ADMIN,
+    ROLE_ANALYST,
+    ROLE_USER,
+    assign_role,
+    ensure_roles_and_permissions,
+)
+
 from predictor.models import ModelTraining, StudentFeedback
 
 
 class RestApiTests(APITestCase):
     def setUp(self):
+        ensure_roles_and_permissions()
         User = get_user_model()
         self.password = "ApiProjet2026!Solide"
         self.user = User.objects.create_user(
@@ -26,6 +35,8 @@ class RestApiTests(APITestCase):
             password=self.password,
             is_staff=True,
         )
+        assign_role(self.user, ROLE_USER)
+        assign_role(self.staff, ROLE_ADMIN)
         self.training = ModelTraining.objects.create(
             accuracy=0.7075,
             dataset_size=2000,
@@ -119,6 +130,7 @@ class RestApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
 
     def test_batch_prediction_returns_summary_and_results(self):
+        assign_role(self.user, ROLE_ANALYST)
         self.client.force_authenticate(user=self.user)
         predicted = pd.DataFrame(
             [

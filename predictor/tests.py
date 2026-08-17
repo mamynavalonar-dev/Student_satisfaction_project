@@ -1468,3 +1468,69 @@ class ModelVersionCompatibilityTests(TestCase):
                 "Version scikit-learn incompatible",
             ):
                 load_model_artifact("legacy.joblib")
+
+
+class UxAccessibilityV14ATests(TestCase):
+    def setUp(self):
+        from django.contrib.auth import get_user_model
+
+        self.user = get_user_model().objects.create_user(
+            username="ux-v14a-user",
+            email="ux-v14a@example.com",
+            password="UxV14A-2026!Solide",
+        )
+        self.client.force_login(self.user)
+
+    def test_base_exposes_skip_link_main_target_and_primary_nav_label(self):
+        from django.urls import reverse
+
+        response = self.client.get(reverse("home"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'class="skip-link"')
+        self.assertContains(response, 'href="#main-content"')
+        self.assertContains(response, 'id="main-content"')
+        self.assertContains(response, 'tabindex="-1"')
+        self.assertContains(response, 'aria-label="Navigation principale"')
+
+    def test_theme_control_is_accessible_and_assets_are_linked(self):
+        from django.urls import reverse
+
+        response = self.client.get(reverse("home"))
+
+        self.assertContains(response, "data-theme-toggle")
+        self.assertContains(response, "Changer le thème")
+        self.assertContains(response, "ux/theme_accessibility.css")
+        self.assertContains(response, "ux/theme_accessibility.js")
+        self.assertContains(response, "ux/favicon.svg")
+        self.assertContains(response, 'name="color-scheme"')
+
+    def test_favicon_root_route_no_longer_returns_404(self):
+        response = self.client.get("/favicon.ico")
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], "/static/ux/favicon.svg")
+
+    def test_theme_script_supports_persistence_auto_mode_and_system_theme(self):
+        from pathlib import Path
+        from django.conf import settings
+
+        path = Path(settings.BASE_DIR) / "static" / "ux" / "theme_accessibility.js"
+        content = path.read_text(encoding="utf-8")
+
+        self.assertIn("student-satisfaction-theme", content)
+        self.assertIn("prefers-color-scheme: dark", content)
+        self.assertIn("localStorage.setItem", content)
+        self.assertIn("app-theme-change", content)
+
+    def test_accessibility_styles_include_focus_and_reduced_motion(self):
+        from pathlib import Path
+        from django.conf import settings
+
+        path = Path(settings.BASE_DIR) / "static" / "ux" / "theme_accessibility.css"
+        content = path.read_text(encoding="utf-8")
+
+        self.assertIn(":focus-visible", content)
+        self.assertIn(".skip-link", content)
+        self.assertIn("prefers-reduced-motion: reduce", content)
+        self.assertIn('html[data-app-theme="dark"]', content)

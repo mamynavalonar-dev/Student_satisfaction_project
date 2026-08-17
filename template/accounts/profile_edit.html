@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Modifier mon profil - Satisfaction Étudiante{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'accounts/account.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container account-page account-page-narrow">
+    <div class="account-heading-row">
+        <div>
+            <span class="account-eyebrow">Compte utilisateur</span>
+            <h1>Modifier mon profil</h1>
+            <p>Mettez à jour votre identité et votre adresse e-mail.</p>
+        </div>
+        <a class="btn btn-outline-secondary" href="{% url 'accounts:profile' %}">
+            Retour au profil
+        </a>
+    </div>
+
+    <form method="post" class="card account-card account-form-card" novalidate>
+        {% csrf_token %}
+        <div class="card-body">
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <div class="mb-3">
+                <label class="form-label">Nom d’utilisateur</label>
+                <input class="form-control" value="{{ user.username }}" disabled>
+                <div class="form-text">Le nom d’utilisateur n’est pas modifié depuis cette page.</div>
+            </div>
+
+            {% for field in form %}
+                <div class="mb-3">
+                    <label class="form-label" for="{{ field.id_for_label }}">
+                        {{ field.label }}
+                    </label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <div class="form-text">{{ field.help_text }}</div>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+
+            <div class="account-form-actions">
+                <a class="btn btn-outline-secondary" href="{% url 'accounts:profile' %}">
+                    Annuler
+                </a>
+                <button class="btn btn-primary" type="submit">
+                    Enregistrer les modifications
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
