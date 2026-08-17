@@ -33,13 +33,10 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'student_satisfaction_project.i18n_statistics_lastmile.StatisticsEnglishLastMileMiddleware',
-    'student_satisfaction_project.i18n_final_artifact_middleware.FinalEnglishArtifactWarningMiddleware',
+    'student_satisfaction_project.i18n_middleware.UnifiedEnglishI18nMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     "django.middleware.locale.LocaleMiddleware",
-    "student_satisfaction_project.i18n_training_lastmile.TrainingEnglishLastMileMiddleware",
-    "student_satisfaction_project.i18n_residual_middleware.EnglishResidualTranslationMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
