@@ -10,6 +10,7 @@ from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.generic import FormView, TemplateView
+from django.utils.translation import gettext as _
 
 from .forms import (
     BootstrapPasswordChangeForm,
@@ -42,7 +43,7 @@ class CapabilityRequiredMixin(LoginRequiredMixin):
             return super().dispatch(request, *args, **kwargs)
         if not user_can(request.user, self.capability):
             return HttpResponseForbidden(
-                "Votre rôle ne permet pas d’accéder à cette page."
+                _("Votre rôle ne permet pas d’accéder à cette page.")
             )
         return super().dispatch(request, *args, **kwargs)
 
@@ -67,7 +68,7 @@ class ProfileUpdateView(LoginRequiredMixin, FormView):
         form.save()
         messages.success(
             self.request,
-            "Votre profil a été mis à jour avec succès.",
+            _("Votre profil a été mis à jour avec succès."),
         )
         return super().form_valid(form)
 
@@ -84,7 +85,7 @@ class AccountPasswordChangeView(
     def form_valid(self, form):
         messages.success(
             self.request,
-            "Votre mot de passe a été modifié. Votre session actuelle reste active.",
+            _("Votre mot de passe a été modifié. Votre session actuelle reste active."),
         )
         return super().form_valid(form)
 
@@ -143,6 +144,7 @@ class UserManagementView(CapabilityRequiredMixin, TemplateView):
                 {
                     "user": user,
                     "role": role,
+                    "role_label": _(role),
                     "role_badge_class": role_badge_class(role),
                     "can_edit": can_manage_target(self.request.user, user),
                 }
@@ -198,7 +200,7 @@ class UserRoleUpdateView(CapabilityRequiredMixin, FormView):
             elif self.target_user.pk == request.user.pk:
                 messages.error(
                     request,
-                    "Vous ne pouvez pas modifier votre propre rôle depuis cette interface.",
+                    _("Vous ne pouvez pas modifier votre propre rôle depuis cette interface."),
                 )
             return redirect("accounts:user_list")
 
@@ -223,6 +225,7 @@ class UserRoleUpdateView(CapabilityRequiredMixin, FormView):
         context = super().get_context_data(**kwargs)
         context["target_user"] = self.target_user
         context["target_role"] = get_user_role(self.target_user)
+        context["target_role_label"] = _(context["target_role"])
         return context
 
     def form_valid(self, form):

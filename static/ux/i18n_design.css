@@ -1,0 +1,130 @@
+/* V14C.1 — Internationalisation + direction "Academic Control Room" */
+
+:root {
+    --academic-ink: #172033;
+    --academic-cobalt: #0b63ce;
+    --academic-rule: rgba(23, 32, 51, .12);
+    --academic-paper: #fbfcfe;
+    --academic-serif: Georgia, "Times New Roman", serif;
+    --academic-sans: "Segoe UI", Aptos, system-ui, -apple-system, sans-serif;
+}
+
+body {
+    font-family: var(--academic-sans);
+}
+
+.page-header h1,
+.account-hero h1,
+.account-heading-row h1,
+.account-state-card h1 {
+    font-family: var(--academic-serif);
+    font-weight: 600;
+    letter-spacing: -.025em;
+}
+
+.app-locale-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 3px;
+    min-height: 42px;
+    border: 1px solid var(--ux-border, #d0d5dd);
+    border-radius: 12px;
+    background: var(--ux-surface, #fff);
+}
+
+.app-locale-switch::before {
+    content: "";
+    width: 3px;
+    height: 22px;
+    margin: 0 4px 0 2px;
+    border-radius: 99px;
+    background: var(--academic-cobalt);
+    opacity: .78;
+}
+
+.app-locale-switch button {
+    min-width: 42px;
+    height: 34px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 8px;
+    color: var(--ux-muted, #667085);
+    background: transparent;
+    font: 800 .74rem/1 var(--academic-sans);
+    letter-spacing: .08em;
+    cursor: pointer;
+    transition:
+        color .16s ease,
+        background-color .16s ease,
+        box-shadow .16s ease,
+        transform .16s ease;
+}
+
+.app-locale-switch button:hover {
+    color: var(--academic-cobalt);
+    background: color-mix(in srgb, var(--academic-cobalt) 8%, transparent);
+}
+
+.app-locale-switch button[aria-pressed="true"] {
+    color: #fff;
+    background: var(--academic-cobalt);
+    box-shadow: 0 5px 14px rgba(11, 99, 206, .22);
+}
+
+.app-locale-switch button:active {
+    transform: translateY(1px);
+}
+
+.app-locale-label {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+    clip: rect(0 0 0 0) !important;
+    white-space: nowrap !important;
+}
+
+.account-eyebrow,
+.page-eyebrow {
+    letter-spacing: .11em;
+}
+
+.account-card,
+.page-card {
+    box-shadow:
+        0 1px 0 rgba(23, 32, 51, .025),
+        0 18px 46px rgba(23, 32, 51, .055);
+}
+
+html[data-app-theme="dark"] {
+    --academic-ink: #eef4ff;
+    --academic-rule: rgba(222, 232, 245, .15);
+    --academic-paper: #182231;
+}
+
+html[data-app-theme="dark"] .app-locale-switch {
+    background: var(--ux-surface);
+    border-color: var(--ux-border);
+}
+
+html[data-app-theme="dark"] .app-locale-switch button:hover {
+    color: #a8d0ff;
+}
+
+@media (max-width: 820px) {
+    .app-locale-switch {
+        min-height: 40px;
+    }
+
+    .app-locale-switch button {
+        min-width: 38px;
+        padding-inline: 8px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .app-locale-switch button {
+        transition: none !important;
+    }
+}

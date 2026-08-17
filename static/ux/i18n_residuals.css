@@ -1,0 +1,78 @@
+/* V14C.2.7 — residual i18n + file-input refinement */
+.i18n-file-native {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+.i18n-file-control {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    min-height: 42px;
+    padding: 6px;
+    border: 1px solid var(--ux-border, #d0d5dd);
+    border-radius: 9px;
+    background: var(--ux-surface, #fff);
+}
+
+.i18n-file-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+    margin: 0;
+    padding: 6px 12px;
+    border-radius: 7px;
+    background: var(--academic-cobalt, #0b63ce);
+    color: #fff;
+    font-size: .82rem;
+    font-weight: 750;
+    cursor: pointer;
+}
+
+.i18n-file-button:hover {
+    filter: brightness(.96);
+}
+
+.i18n-file-native:focus-visible + .i18n-file-control {
+    outline: 3px solid rgba(11, 99, 206, .26);
+    outline-offset: 2px;
+}
+
+.i18n-file-name {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--ux-muted, #667085);
+    font-size: .82rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+html[data-app-theme="dark"] .i18n-file-control {
+    background: var(--ux-surface);
+    border-color: var(--ux-border);
+}
+
+@media (max-width: 560px) {
+    .i18n-file-control {
+        grid-template-columns: 1fr;
+    }
+
+    .i18n-file-button {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .i18n-file-button {
+        transition: none !important;
+    }
+}

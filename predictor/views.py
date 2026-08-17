@@ -44,6 +44,36 @@ from .neural_network_model import (
     validate_prediction_dataframe,
     validate_training_dataframe,
 )
+from django.utils.translation import gettext as _
+
+# V14C225_TRAINING_CHART_DATETIME
+def _format_training_chart_datetime(value, language_code):
+    """Display-only date formatting for the Training history chart."""
+    from django.utils import timezone
+
+    current = value
+
+    try:
+        if timezone.is_aware(current):
+            current = timezone.localtime(current)
+    except (TypeError, ValueError):
+        pass
+
+    language = str(language_code or "").lower()
+
+    if language.startswith("en"):
+        hour = current.hour
+        suffix = "AM" if hour < 12 else "PM"
+        display_hour = hour % 12 or 12
+
+        return (
+            f"{current.strftime('%b')} "
+            f"{current.day}, {current.year}, "
+            f"{display_hour}:{current.minute:02d} {suffix}"
+        )
+
+    return current.strftime("%Y-%m-%d %H:%M")
+
 
 logger = logging.getLogger(__name__)
 
@@ -645,7 +675,7 @@ def train_model_view(request):
 
     training_history = {
         "dates": [
-            training.training_date.strftime("%Y-%m-%d %H:%M")
+            _format_training_chart_datetime(training.training_date, request.LANGUAGE_CODE)
             for training in history_trainings
         ],
         "accuracies": [

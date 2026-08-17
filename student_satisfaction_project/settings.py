@@ -33,8 +33,13 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'student_satisfaction_project.i18n_statistics_lastmile.StatisticsEnglishLastMileMiddleware',
+    'student_satisfaction_project.i18n_final_artifact_middleware.FinalEnglishArtifactWarningMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    "django.middleware.locale.LocaleMiddleware",
+    "student_satisfaction_project.i18n_training_lastmile.TrainingEnglishLastMileMiddleware",
+    "student_satisfaction_project.i18n_residual_middleware.EnglishResidualTranslationMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -86,7 +91,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-LANGUAGE_CODE = 'fr-fr'
 TIME_ZONE = 'Europe/Paris'
 USE_I18N = True
 USE_TZ = True
@@ -174,3 +178,14 @@ DEFAULT_FROM_EMAIL = os.environ.get(
     "DEFAULT_FROM_EMAIL",
     "noreply@student-satisfaction.local",
 )
+
+# V14C — internationalisation FR / EN
+LANGUAGE_CODE = "fr"
+LANGUAGES = (
+    ("fr", "Français"),
+    ("en", "English"),
+)
+LOCALE_PATHS = [
+    BASE_DIR / "locale",
+]
+USE_I18N = True

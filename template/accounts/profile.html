@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
+{% load i18n %}
 
-{% block title %}Mon profil - Satisfaction Étudiante{% endblock %}
+{% block title %}{% trans "Mon profil" %} - Satisfaction Étudiante{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'accounts/account.css' %}">
@@ -11,9 +12,9 @@
 <div class="container account-page">
     <div class="account-hero">
         <div>
-            <span class="account-eyebrow">Compte utilisateur</span>
-            <h1>Mon profil</h1>
-            <p>Consultez vos informations personnelles et gérez la sécurité de votre compte.</p>
+            <span class="account-eyebrow">{% trans "Compte utilisateur" %}</span>
+            <h1>{% trans "Mon profil" %}</h1>
+            <p>{% trans "Consultez vos informations personnelles et gérez la sécurité de votre compte." %}</p>
         </div>
         <div class="account-avatar" aria-hidden="true">
             {{ user.username|first|upper }}
@@ -26,35 +27,35 @@
                 <div class="card-body">
                     <div class="account-section-heading">
                         <div>
-                            <h2 id="profile-info-title">Informations personnelles</h2>
-                            <p>Les informations utilisées pour identifier votre compte.</p>
+                            <h2 id="profile-info-title">{% trans "Informations personnelles" %}</h2>
+                            <p>{% trans "Les informations utilisées pour identifier votre compte." %}</p>
                         </div>
                         <a class="btn btn-primary" href="{% url 'accounts:profile_edit' %}">
                             <i class="bi bi-pencil-square me-1" aria-hidden="true"></i>
-                            Modifier
+                            {% trans "Modifier" %}
                         </a>
                     </div>
 
                     <dl class="account-details">
                         <div>
-                            <dt>Nom d’utilisateur</dt>
+                            <dt>{% trans "Nom d’utilisateur" %}</dt>
                             <dd>{{ user.username }}</dd>
                         </div>
                         <div>
-                            <dt>Prénom</dt>
-                            <dd>{{ user.first_name|default:"Non renseigné" }}</dd>
+                            <dt>{% trans "Prénom" %}</dt>
+                            <dd>{% if user.first_name %}{{ user.first_name }}{% else %}{% trans "Non renseigné" %}{% endif %}</dd>
                         </div>
                         <div>
-                            <dt>Nom</dt>
-                            <dd>{{ user.last_name|default:"Non renseigné" }}</dd>
+                            <dt>{% trans "Nom" %}</dt>
+                            <dd>{% if user.last_name %}{{ user.last_name }}{% else %}{% trans "Non renseigné" %}{% endif %}</dd>
                         </div>
                         <div>
-                            <dt>Rôle</dt>
+                            <dt>{% trans "Rôle" %}</dt>
                             <dd><span class="badge {{ current_role_badge_class }}">{{ current_role_label }}</span></dd>
                         </div>
                         <div>
-                            <dt>Adresse e-mail</dt>
-                            <dd>{{ user.email|default:"Non renseignée" }}</dd>
+                            <dt>{% trans "Adresse e-mail" %}</dt>
+                            <dd>{% if user.email %}{{ user.email }}{% else %}{% trans "Non renseignée" %}{% endif %}</dd>
                         </div>
                     </dl>
                 </div>
@@ -64,8 +65,8 @@
         <div class="col-lg-5">
             <section class="card account-card h-100" aria-labelledby="security-title">
                 <div class="card-body">
-                    <h2 id="security-title">Sécurité</h2>
-                    <p class="text-muted">Protégez l’accès à votre compte.</p>
+                    <h2 id="security-title">{% trans "Sécurité" %}</h2>
+                    <p class="text-muted">{% trans "Protégez l’accès à votre compte." %}</p>
 
                     <div class="account-security-list">
                         <a href="{% url 'accounts:password_change' %}" class="account-security-action">
@@ -73,24 +74,24 @@
                                 <i class="bi bi-shield-lock" aria-hidden="true"></i>
                             </span>
                             <span>
-                                <strong>Changer le mot de passe</strong>
-                                <small>Le mot de passe actuel sera demandé.</small>
+                                <strong>{% trans "Changer le mot de passe" %}</strong>
+                                <small>{% trans "Le mot de passe actuel sera demandé." %}</small>
                             </span>
                             <i class="bi bi-chevron-right ms-auto" aria-hidden="true"></i>
                         </a>
                     </div>
 
                     <div class="account-meta">
-                        <span>Compte créé</span>
+                        <span>{% trans "Compte créé" %}</span>
                         <strong>{{ user.date_joined|date:"d/m/Y" }}</strong>
                     </div>
                     <div class="account-meta">
-                        <span>Dernière connexion</span>
+                        <span>{% trans "Dernière connexion" %}</span>
                         <strong>
                             {% if user.last_login %}
                                 {{ user.last_login|date:"d/m/Y H:i" }}
                             {% else %}
-                                Non disponible
+                                {% trans "Non disponible" %}
                             {% endif %}
                         </strong>
                     </div>

@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load i18n %}
 
-{% block title %}Modifier mon profil - Satisfaction Étudiante{% endblock %}
+{% block title %}{% trans "Modifier mon profil" %} - Satisfaction Étudiante{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'accounts/account.css' %}">
@@ -11,12 +12,12 @@
 <div class="container account-page account-page-narrow">
     <div class="account-heading-row">
         <div>
-            <span class="account-eyebrow">Compte utilisateur</span>
-            <h1>Modifier mon profil</h1>
-            <p>Mettez à jour votre identité et votre adresse e-mail.</p>
+            <span class="account-eyebrow">{% trans "Compte utilisateur" %}</span>
+            <h1>{% trans "Modifier mon profil" %}</h1>
+            <p>{% trans "Mettez à jour votre identité et votre adresse e-mail." %}</p>
         </div>
         <a class="btn btn-outline-secondary" href="{% url 'accounts:profile' %}">
-            Retour au profil
+            {% trans "Retour au profil" %}
         </a>
     </div>
 
@@ -30,9 +31,9 @@
             {% endif %}
 
             <div class="mb-3">
-                <label class="form-label">Nom d’utilisateur</label>
+                <label class="form-label">{% trans "Nom d’utilisateur" %}</label>
                 <input class="form-control" value="{{ user.username }}" disabled>
-                <div class="form-text">Le nom d’utilisateur n’est pas modifié depuis cette page.</div>
+                <div class="form-text">{% trans "Le nom d’utilisateur n’est pas modifié depuis cette page." %}</div>
             </div>
 
             {% for field in form %}
@@ -52,10 +53,10 @@
 
             <div class="account-form-actions">
                 <a class="btn btn-outline-secondary" href="{% url 'accounts:profile' %}">
-                    Annuler
+                    {% trans "Annuler" %}
                 </a>
                 <button class="btn btn-primary" type="submit">
-                    Enregistrer les modifications
+                    {% trans "Enregistrer les modifications" %}
                 </button>
             </div>
         </div>

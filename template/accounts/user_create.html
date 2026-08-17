@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load i18n %}
 
-{% block title %}Créer un compte - Satisfaction Étudiante{% endblock %}
+{% block title %}{% trans "Créer un compte" %} - Satisfaction Étudiante{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'accounts/account.css' %}">
@@ -12,11 +13,11 @@
     <div class="account-heading-row">
         <div>
             <span class="account-eyebrow">Administration</span>
-            <h1>Créer un compte</h1>
-            <p>Créez un utilisateur et attribuez-lui immédiatement son rôle.</p>
+            <h1>{% trans "Créer un compte" %}</h1>
+            <p>{% trans "Créez un utilisateur et attribuez-lui immédiatement son rôle." %}</p>
         </div>
         <a class="btn btn-outline-secondary" href="{% url 'accounts:user_list' %}">
-            Retour
+            {% trans "Retour" %}
         </a>
     </div>
 
@@ -51,16 +52,16 @@
             {% endfor %}
 
             <div class="alert alert-info">
-                Les comptes Super Administrateur ne sont pas créés ici. Utilisez
+                Les comptes {% trans "Super Administrateur" %} ne sont pas créés ici. Utilisez
                 <code>python manage.py createsuperuser</code> ou l’administration Django.
             </div>
 
             <div class="account-form-actions">
                 <a class="btn btn-outline-secondary" href="{% url 'accounts:user_list' %}">
-                    Annuler
+                    {% trans "Annuler" %}
                 </a>
                 <button class="btn btn-primary" type="submit">
-                    Créer le compte
+                    {% trans "Créer le compte" %}
                 </button>
             </div>
         </div>

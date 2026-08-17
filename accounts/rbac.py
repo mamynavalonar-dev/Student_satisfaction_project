@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
+from django.utils.translation import gettext_lazy as _
 
 from predictor.models import ModelTraining, StudentFeedback
 
@@ -24,10 +25,10 @@ MANAGED_ROLES = (
 )
 
 ROLE_CHOICES = (
-    (ROLE_ADMIN, "Administrateur"),
-    (ROLE_ML_MANAGER, "Responsable ML"),
-    (ROLE_ANALYST, "Analyste"),
-    (ROLE_USER, "Utilisateur"),
+    (ROLE_ADMIN, _("Administrateur")),
+    (ROLE_ML_MANAGER, _("Responsable ML")),
+    (ROLE_ANALYST, _("Analyste")),
+    (ROLE_USER, _("Utilisateur")),
 )
 
 ROLE_PRIORITY = (

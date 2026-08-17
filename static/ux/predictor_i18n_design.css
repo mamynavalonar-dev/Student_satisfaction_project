@@ -1,0 +1,94 @@
+/* V14C.2 — Predictor workspace refinement
+   Direction: Academic Control Room — dense, legible, deliberate. */
+
+.main-content {
+    --workspace-rule: rgba(23, 32, 51, .11);
+    --workspace-soft: rgba(11, 99, 206, .045);
+}
+
+.main-content h1,
+.main-content .page-title {
+    font-family: var(--academic-serif, Georgia, "Times New Roman", serif);
+    letter-spacing: -.025em;
+}
+
+.main-content .card {
+    border-color: var(--ux-border, #d0d5dd);
+    box-shadow:
+        0 1px 0 rgba(23, 32, 51, .025),
+        0 14px 36px rgba(23, 32, 51, .045);
+}
+
+.main-content .card-header:not(.bg-primary):not(.bg-success):not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-dark) {
+    border-bottom-color: var(--workspace-rule);
+    background:
+        linear-gradient(
+            90deg,
+            var(--workspace-soft),
+            transparent 52%
+        );
+}
+
+.main-content .card-header h2,
+.main-content .card-header h3,
+.main-content .card-header h4 {
+    letter-spacing: -.01em;
+}
+
+.main-content .form-label {
+    font-weight: 700;
+    color: var(--ux-text, #1f2937);
+}
+
+.main-content .form-control,
+.main-content .form-select {
+    min-height: 42px;
+}
+
+.main-content .table thead th {
+    border-bottom-width: 1px;
+    font-size: .76rem;
+    font-weight: 800;
+    letter-spacing: .045em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.main-content .table tbody td {
+    border-color: var(--workspace-rule);
+}
+
+.main-content .btn {
+    font-weight: 650;
+}
+
+.main-content .alert {
+    border-radius: 12px;
+}
+
+.main-content .progress {
+    overflow: hidden;
+    border-radius: 999px;
+}
+
+html[data-app-theme="dark"] .main-content {
+    --workspace-rule: rgba(222, 232, 245, .13);
+    --workspace-soft: rgba(125, 181, 255, .055);
+}
+
+html[data-app-theme="dark"] .main-content .form-label {
+    color: var(--ux-text);
+}
+
+@media (max-width: 760px) {
+    .main-content .table thead th {
+        font-size: .72rem;
+        letter-spacing: .025em;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .main-content * {
+        scroll-behavior: auto !important;
+    }
+}

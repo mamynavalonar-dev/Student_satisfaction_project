@@ -1,16 +1,17 @@
 {% extends 'base.html' %}
+{% load i18n predictor_i18n %}
 
 {% block nav_active %}page-train{% endblock %}
 {% block nav_train %}active{% endblock %}
 
-{% block title %}Entraînement - Modèle IA{% endblock %}
+{% block title %}{% trans "Entraînement" %} - Modèle IA{% endblock %}
 
 {% block content %}
 <div class="container">
     <div class="row">
         <div class="col-12">
-            <h1 class="text-center mb-4">🧠 Entraînement du Modèle</h1>
-            <p class="text-center text-muted mb-5">Uploadez vos données pour entraîner un nouveau modèle de prédiction</p>
+            <h1 class="text-center mb-4">🧠 {% trans "Entraînement du Modèle" %}</h1>
+            <p class="text-center text-muted mb-5">{% trans "Uploadez vos données pour entraîner un nouveau modèle de prédiction" %}</p>
         </div>
     </div>
 
@@ -18,7 +19,7 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header bg-success text-white">
-                    <h4 class="mb-0">📤 Nouveau Entraînement</h4>
+                    <h4 class="mb-0">📤 {% trans "Nouveau Entraînement" %}</h4>
                 </div>
                 <div class="card-body">
                     <form method="post" enctype="multipart/form-data" id="trainingForm">
@@ -26,7 +27,7 @@
                         
                         <div class="mb-4">
                             <label for="{{ form.csv_file.id_for_label }}" class="form-label">
-                                {{ form.csv_file.label }}
+                                {{ form.csv_file.label|localized_display }}
                             </label>
                             {{ form.csv_file }}
                             <div class="form-text">
@@ -36,20 +37,20 @@
 
                         <div class="mb-4">
                             <label for="{{ form.notes.id_for_label }}" class="form-label">
-                                {{ form.notes.label }}
+                                {{ form.notes.label|localized_display }}
                             </label>
                             {{ form.notes }}
                         </div>
 
                         <div class="alert alert-info small">
-                            <strong>Sélection automatique :</strong> le CSV est d'abord séparé en train 80 % / test final 20 %.
+                            <strong>{% trans "Sélection automatique :" %}</strong> le CSV est d'abord séparé en train 80 % / test final 20 %.
                             Le grid-search compare 4 configurations du MLP par validation croisée stratifiée à 3 plis
-                            uniquement sur le train, puis le meilleur modèle est évalué une seule fois sur le test final.
+                            uniquement {% trans "sur" %} le train, puis le meilleur modèle est évalué une seule fois {% trans "sur" %} le test final.
                         </div>
 
                         <button type="submit" class="btn btn-success btn-lg w-100" id="trainBtn">
                             <span class="spinner-border spinner-border-sm d-none" id="trainSpinner"></span>
-                            Entraîner + sélectionner le meilleur MLP
+                            {% trans "Entraîner + sélectionner le meilleur MLP" %}
                         </button>
                     </form>
                 </div>
@@ -57,38 +58,49 @@
 
             <div class="card mt-4">
                 <div class="card-header">
-                    <h5 class="mb-0">📋 Format des Données Requis</h5>
+                    <h5 class="mb-0">📋 {% trans "Format des Données Requis" %}</h5>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-sm table-bordered">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Colonne</th>
-                                    <th>Type</th>
-                                    <th>Valeurs Attendues</th>
+                                    <th>{% trans "Colonne" %}</th>
+                                    <th>{% trans "Type" %}</th>
+                                    <th>{% trans "Valeurs Attendues" %}</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
                                     <td><code>qualite_enseignement</code></td>
                                     <td>Entier</td>
-                                    <td>1-7 (1=Très insatisfait, 7=Très satisfait)</td>
+                                    <td>1-7 (1={% trans "Très insatisfait" %}, 7={% trans "Très satisfait" %})</td>
                                 </tr>
                                 <tr>
                                     <td><code>charge_travail</code></td>
                                     <td>Entier</td>
-                                    <td>1-7 (1=Très léger, 7=Très lourd)</td>
+                                    <td>1-7 (1={% trans "Très léger" %}, 7={% trans "Très lourd" %})</td>
                                 </tr>
                                 <tr>
                                     <td><code>interactivite</code></td>
                                     <td>Entier</td>
-                                    <td>1-7 (1=Très non interactif, 7=Très interactif)</td>
+                                    <td>1-7 (1={% trans "Très non interactif" %}, 7={% trans "Très interactif" %})</td>
                                 </tr>
                                 <tr>
                                     <td><code>type_cours</code></td>
                                     <td>Texte</td>
-                                    <td><code>présentiel</code>, <code>distanciel</code>, <code>hybride</code></td>
+                                    <td>
+    {# V14C227_REQUIRED_COURSE_TYPES #}
+    {% if request.LANGUAGE_CODE == "en" %}
+        <code data-csv-value="présentiel">In person</code>,
+        <code data-csv-value="distanciel">Online</code>,
+        <code data-csv-value="hybride">Hybrid</code>
+    {% else %}
+        <code>présentiel</code>,
+        <code>distanciel</code>,
+        <code>hybride</code>
+    {% endif %}
+</td>
                                 </tr>
                                 <tr>
                                     <td><code>niveau_etudiant</code></td>
@@ -110,45 +122,45 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
-                    <h4 class="mb-0">🤖 État Actuel du Modèle</h4>
+                    <h4 class="mb-0">🤖 {% trans "État Actuel du Modèle" %}</h4>
                 </div>
                 <div class="card-body">
                     {% if model_loaded %}
                         <div class="alert alert-success">
-                            <h5 class="alert-heading">✅ Modèle Actif</h5>
-                            <p class="mb-0">Un modèle est actuellement chargé et prêt pour les prédictions.</p>
+                            <h5 class="alert-heading">✅ {% trans "Modèle Actif" %}</h5>
+                            <p class="mb-0">{% trans "Un modèle est actuellement chargé et prêt pour les prédictions." %}</p>
                         </div>
                     {% else %}
                         <div class="alert alert-warning">
                              <h5 class="alert-heading">⚠️ Aucun Modèle Chargé</h5>
-                            <p class="mb-0">Aucun modèle n'est actuellement chargé. Veuillez en entraîner un pour activer la fonctionnalité de prédiction.</p>
+                            <p class="mb-0">{% trans "Aucun modèle" %} n'est actuellement chargé. Veuillez en entraîner un pour activer la fonctionnalité de prédiction.</p>
                         </div>
                     {% endif %}
 
                     <div class="card bg-light mt-3">
                         <div class="card-body">
-                            <h6>⚙️ Configuration du Réseau de Neurones :</h6>
+                            <h6>⚙️ {% trans "Configuration du Réseau de Neurones :" %}</h6>
                             <ul class="list-unstyled small mb-0">
-                                <li><strong>Architecture :</strong> MLP (Multi-Layer Perceptron)</li>
+                                <li><strong>{% trans "Architecture :" %}</strong> MLP (Multi-Layer Perceptron)</li>
                                 {% if active_training_config %}
-                                <li><strong>Format :</strong> {{ active_training_config.format_label }}</li>
-                                <li><strong>Couches cachées :</strong> {{ active_training_config.layers_display }} neurones</li>
+                                <li><strong>{% trans "Format :" %}</strong> {{ active_training_config.format_label|localized_display }}</li>
+                                <li><strong>{% trans "Couches cachées :" %}</strong> {{ active_training_config.layers_display }} neurones</li>
                                 {% if active_training_config.alpha != None %}
-                                <li><strong>Régularisation :</strong> L2 (alpha={{ active_training_config.alpha }})</li>
+                                <li><strong>{% trans "Régularisation :" %}</strong> L2 (alpha={{ active_training_config.alpha }})</li>
                                 {% endif %}
                                 {% if active_training_config.tuned %}
-                                <li><strong>Sélection :</strong> Grid-search de {{ active_training_config.candidate_count }} configurations</li>
-                                <li><strong>Validation croisée :</strong> {{ active_training_config.cv_folds }} plis stratifiés</li>
+                                <li><strong>{% trans "Sélection :" %}</strong> Grid-search de {{ active_training_config.candidate_count }} configurations</li>
+                                <li><strong>{% trans "Validation croisée :" %}</strong> {{ active_training_config.cv_folds }} plis stratifiés</li>
                                 <li><strong>F1 CV :</strong> {{ active_training_config.cv_f1_percent|floatformat:2 }}% ± {{ active_training_config.cv_f1_std_percent|floatformat:2 }}%</li>
                                 {% else %}
-                                <li><strong>Sélection :</strong> artefact antérieur sans métriques CV enregistrées</li>
+                                <li><strong>{% trans "Sélection :" %}</strong> artefact antérieur sans métriques CV enregistrées</li>
                                 {% endif %}
                                 {% else %}
                                 <li><strong>Couches candidates :</strong> (64, 32) ou (128, 64, 32)</li>
                                 <li><strong>Alpha candidat :</strong> 0.0001 ou 0.001</li>
                                 {% endif %}
-                                <li><strong>Fonction d'activation :</strong> ReLU</li>
-                                <li><strong>Optimiseur :</strong> Adam</li>
+                                <li><strong>{% trans "Fonction d'activation :" %}</strong> ReLU</li>
+                                <li><strong>{% trans "Optimiseur :" %}</strong> Adam</li>
                                 <li><strong>Early Stopping :</strong> Activé</li>
                             </ul>
                         </div>
@@ -158,7 +170,7 @@
 
             <div class="card mt-4">
                 <div class="card-header">
-                    <h4 class="mb-0">📈 Historique des Entraînements</h4>
+                    <h4 class="mb-0">📈 {% trans "Historique des Entraînements" %}</h4>
                 </div>
                 <div class="card-body">
                     {% if trainings %}
@@ -166,10 +178,10 @@
                             <table class="table table-hover">
                                 <thead>
                                     <tr>
-                                        <th>Date</th>
-                                        <th>Précision</th>
-                                        <th>Échantillons</th>
-                                        <th>État</th>
+                                        <th>{% trans "Date" %}</th>
+                                        <th>{% trans "Précision" %}</th>
+                                        <th>{% trans "Échantillons" %}</th>
+                                        <th>{% trans "État" %}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -186,7 +198,7 @@
                                         <td>{{ training.dataset_size }}</td>
                                         <td>
                                             {% if training.is_active %}
-                                                <span class="badge bg-primary">Actif</span>
+                                                <span class="badge bg-primary">{% trans "Actif" %}</span>
                                             {% else %}
                                                 <span class="badge bg-secondary">Archivé</span>
                                             {% endif %}
@@ -214,7 +226,7 @@
                 <div class="card-header bg-white">
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
                         <div>
-                            <h4 class="mb-1">🗂️ Gestion et comparaison des modèles</h4>
+                            <h4 class="mb-1">🗂️ {% trans "Gestion et comparaison des modèles" %}</h4>
                             <small class="text-muted">
                                 Activation possible uniquement si le fichier .joblib existe et si son format est compatible.
                             </small>
@@ -234,15 +246,15 @@
                         <table class="table table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Entraînement</th>
+                                    <th>{% trans "Entraînement" %}</th>
                                     <th>Accuracy</th>
                                     <th>Precision</th>
                                     <th>Recall</th>
                                     <th>F1</th>
-                                    <th>Échantillons</th>
-                                    <th>Artefact</th>
-                                    <th>État</th>
-                                    <th class="text-end">Action</th>
+                                    <th>{% trans "Échantillons" %}</th>
+                                    <th>{% trans "Artefact" %}</th>
+                                    <th>{% trans "État" %}</th>
+                                    <th class="text-end">{% trans "Action" %}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -280,13 +292,13 @@
                                     </td>
                                     <td>
                                         {% if row.available and row.compatible %}
-                                            <span class="badge bg-success">Disponible</span>
+                                            <span class="badge bg-success">{% trans "Disponible" %}</span>
                                         {% elif row.available %}
-                                            <span class="badge bg-warning text-dark">Incompatible</span>
+                                            <span class="badge bg-warning text-dark">{% trans "Incompatible" %}</span>
                                         {% else %}
-                                            <span class="badge bg-danger">Fichier absent</span>
+                                            <span class="badge bg-danger">{% trans "Fichier absent" %}</span>
                                         {% endif %}
-                                        <div class="small mt-1">{{ row.format_label }}</div>
+                                        <div class="small mt-1">{{ row.format_label|localized_display }}</div>
                                         {% if row.selected_layers_display %}
                                         <div class="small text-primary">
                                             {{ row.selected_layers_display }} · alpha={{ row.selected_alpha }} · {{ row.candidate_count|floatformat:0 }} configs
@@ -300,9 +312,9 @@
                                     </td>
                                     <td>
                                         {% if row.training.is_active %}
-                                            <span class="badge bg-primary">Actif</span>
+                                            <span class="badge bg-primary">{% trans "Actif" %}</span>
                                         {% else %}
-                                            <span class="badge bg-secondary">Inactif</span>
+                                            <span class="badge bg-secondary">{% trans "Inactif" %}</span>
                                         {% endif %}
                                     </td>
                                     <td class="text-end">
@@ -311,7 +323,7 @@
                                             {% csrf_token %}
                                             <button type="submit" class="btn btn-outline-danger btn-sm"
                                                     onclick="return confirm('Désactiver le modèle actif #{{ row.training.id }} ?');">
-                                                Désactiver
+                                                {% trans "Désactiver" %}
                                             </button>
                                         </form>
                                         {% elif row.can_activate %}
@@ -319,11 +331,11 @@
                                             {% csrf_token %}
                                             <button type="submit" class="btn btn-outline-success btn-sm"
                                                     onclick="return confirm('Activer le modèle #{{ row.training.id }} ? Le modèle actif actuel sera désactivé.');">
-                                                Activer
+                                                {% trans "Activer" %}
                                             </button>
                                         </form>
                                         {% else %}
-                                            <button type="button" class="btn btn-outline-secondary btn-sm" disabled>Indisponible</button>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm" disabled>{% trans "Indisponible" %}</button>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -348,7 +360,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h4 class="mb-0">💡 Évolution de la Performance du Modèle</h4>
+                    <h4 class="mb-0">💡 {% trans "Évolution de la Performance du Modèle" %}</h4>
                 </div>
                 <div class="card-body">
                     <p class="text-muted">Ce graphique compare la précision des entraînements successifs, du plus ancien au plus récent. Chaque point correspond à un entraînement distinct ; il ne s’agit pas d’un apprentissage continu.</p>
@@ -374,7 +386,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             btn.disabled = true;
             spinner.classList.remove('d-none');
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Entraînement en cours...';
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> {% trans "Entraînement" %} en cours...';
             
             const alertDiv = document.createElement('div');
             alertDiv.className = 'alert alert-info mt-3';
@@ -414,7 +426,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 data: {
                     labels: historyData.dates,
                     datasets: [{
-                        label: 'Précision du Modèle (%)',
+                        label: '{% trans "Précision" %} du Modèle (%)',
                         data: historyData.accuracies,
                         borderColor: '#007bff',
                         backgroundColor: 'rgba(0, 123, 255, 0.1)',
@@ -453,7 +465,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return ` Précision: ${context.parsed.y.toFixed(2)}%`;
+                                    return ` {% trans "Précision" %}: ${context.parsed.y.toFixed(2)}%`;
                                 }
                             }
                         }
@@ -465,7 +477,7 @@ document.addEventListener('DOMContentLoaded', function() {
             evolutionCtx.parentElement.innerHTML = '<p class="text-muted text-center">Aucune donnée d\'évolution disponible</p>';
         }
     } catch (e) {
-        console.error("Erreur lors de l'analyse des données de l'historique:", e);
+        console.error("{% trans "Erreur" %} lors de l'analyse des données de l'historique:", e);
     }
 });
 </script>

@@ -1,0 +1,1029 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: student-satisfaction 2026\n"
+"Language: en\n"
+"Language-Team: English\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "7 derniers jours"
+msgstr "Last 7 days"
+
+msgid "Accueil"
+msgstr "Home"
+
+msgid "Accès refusé"
+msgstr "Access denied"
+
+msgid "Actif"
+msgstr "Active"
+
+msgid "Action"
+msgstr "Action"
+
+msgid "Actions"
+msgstr "Actions"
+
+msgid "Actions rapides"
+msgstr "Quick actions"
+
+msgid "Activation possible uniquement si le fichier joblib existe et si son format est compatible."
+msgstr "Activation is only possible when the joblib file exists and its format is compatible."
+
+msgid "Activer"
+msgstr "Activate"
+
+msgid "Actualisation automatique"
+msgstr "Automatic refresh"
+
+msgid "Actualisation momentanément indisponible"
+msgstr "Refresh temporarily unavailable"
+
+msgid "Administrateur"
+msgstr "Administrator"
+
+msgid "Administration"
+msgstr "Administration"
+
+msgid "Adresse e-mail"
+msgstr "Email address"
+
+msgid "Adresse e-mail est obligatoire."
+msgstr "Email address is required."
+
+msgid "Affichage"
+msgstr "Showing"
+
+msgid "Aller au contenu principal"
+msgstr "Skip to main content"
+
+msgid "Analyse Statistique"
+msgstr "Statistical Analysis"
+
+msgid "Analyse descriptive des prédictions enregistrées par l'application."
+msgstr "Descriptive analysis of predictions recorded by the application."
+
+msgid "Analyse statistique des prédictions"
+msgstr "Statistical analysis of predictions"
+
+msgid "Analyste"
+msgstr "Analyst"
+
+msgid "Ancien format"
+msgstr "Legacy format"
+
+msgid "Anglais"
+msgstr "English"
+
+msgid "Annuler"
+msgstr "Cancel"
+
+msgid "Architecture :"
+msgstr "Architecture:"
+
+msgid "Artefact"
+msgstr "Artifact"
+
+msgid "Associations observées"
+msgstr "Observed Associations"
+
+msgid "Aucun entraînement disponible"
+msgstr "No training run available"
+
+msgid "Aucun modèle"
+msgstr "No model"
+
+msgid "Aucun modèle actif"
+msgstr "No active model"
+
+msgid "Aucun résultat"
+msgstr "No result"
+
+msgid "Aucun utilisateur trouvé."
+msgstr "No users found."
+
+msgid "Aucune donnée disponible"
+msgstr "No data available"
+
+msgid "Aucune notification"
+msgstr "No notifications"
+
+msgid "Aucune notification pour le moment."
+msgstr "No notifications yet."
+
+msgid "Aucune prédiction n'est encore enregistrée. Effectuez une prédiction pour alimenter les statistiques."
+msgstr "No prediction has been recorded yet. Make a prediction to populate the statistics."
+
+msgid "Automatique"
+msgstr "Automatic"
+
+msgid "Autorisation requise"
+msgstr "Authorization required"
+
+msgid "Avertissement"
+msgstr "Warning"
+
+msgid "Baisse moyenne du F1-score lorsque chaque caractéristique est mélangée."
+msgstr "Average F1-score drop when each feature is permuted."
+
+msgid "Bonjour,"
+msgstr "Hello,"
+
+msgid "Caractéristiques du Cours"
+msgstr "Course Characteristics"
+
+msgid "Ce graphique compare la précision des entraînements successifs, du plus ancien au plus récent. Chaque point correspond à un entraînement distinct ; il ne s'agit pas d'un apprentissage continu."
+msgstr "This chart compares successive training accuracies from oldest to newest. Each point is a distinct training run; this is not continuous learning."
+
+msgid "Ce prédicteur utilise un réseau de neurones MLP (Multi-Layer Perceptron) entraîné sur des données d'avis étudiants."
+msgstr "This predictor uses an MLP (Multi-Layer Perceptron) neural network trained on student feedback data."
+
+msgid "Centre de notifications"
+msgstr "Notification center"
+
+msgid "Ces valeurs sont calculées sur les prédictions enregistrées. Elles décrivent une association et ne constituent ni une causalité ni une importance interne des poids du MLP."
+msgstr "These values are calculated from recorded predictions. They describe an association and are neither causal evidence nor an internal importance measure of MLP weights."
+
+msgid "Cette adresse e-mail est déjà utilisée par un autre compte."
+msgstr "This email address is already used by another account."
+
+msgid "Cette mesure décrit ce que le MLP actif utilise pour prédire. Elle est différente des « Associations observées » et ne constitue pas une preuve de causalité."
+msgstr "This measure describes what the active MLP uses for prediction. It differs from “Observed Associations” and is not evidence of causality."
+
+msgid "Changer le mot de passe"
+msgstr "Change password"
+
+msgid "Changer le thème"
+msgstr "Change theme"
+
+msgid "Charge"
+msgstr "Workload"
+
+msgid "Charge de travail"
+msgstr "Workload"
+
+msgid "Chargement..."
+msgstr "Loading..."
+
+msgid "Choisissez le niveau académique"
+msgstr "Choose the academic level"
+
+msgid "Choisissez un nouveau mot de passe robuste et différent de l’ancien."
+msgstr "Choose a strong new password that differs from the previous one."
+
+msgid "Choisissez une valeur"
+msgstr "Choose a value"
+
+msgid "Clair"
+msgstr "Light"
+
+msgid "Classification binaire de la satisfaction avec un réseau de neurones MLP"
+msgstr "Binary student-satisfaction classification with an MLP neural network"
+
+msgid "Colonne"
+msgstr "Column"
+
+msgid "Comment utiliser ce prédicteur:"
+msgstr "How to use this predictor:"
+
+msgid "Compte actif"
+msgstr "Active account"
+
+msgid "Compte créé"
+msgstr "Account created"
+
+msgid "Compte utilisateur"
+msgstr "User account"
+
+msgid "Confiance"
+msgstr "Confidence"
+
+msgid "Confiance moyenne"
+msgstr "Average confidence"
+
+msgid "Configuration du Réseau de Neurones :"
+msgstr "Neural Network Configuration:"
+
+msgid "Confirmer la suppression"
+msgstr "Confirm Deletion"
+
+msgid "Consultez vos informations personnelles et gérez la sécurité de votre compte."
+msgstr "Review your personal information and manage your account security."
+
+msgid "Consultez, filtrez, modifiez et exportez les prédictions enregistrées."
+msgstr "Review, filter, edit, and export recorded predictions."
+
+msgid "Contribution des caractéristiques"
+msgstr "Feature contributions"
+
+msgid "Couches cachées :"
+msgstr "Hidden layers:"
+
+msgid "Créer le compte"
+msgstr "Create account"
+
+msgid "Créer un compte"
+msgstr "Create account"
+
+msgid "Créez les comptes, attribuez les rôles et contrôlez leur activation."
+msgstr "Create accounts, assign roles, and control account activation."
+
+msgid "Créez un utilisateur et attribuez-lui immédiatement son rôle."
+msgstr "Create a user and assign a role immediately."
+
+msgid "Date"
+msgstr "Date"
+
+msgid "Demandez un nouveau lien de réinitialisation."
+msgstr "Request a new reset link."
+
+msgid "Dernière connexion"
+msgstr "Last sign-in"
+
+msgid "Disponible"
+msgstr "Available"
+
+msgid "Distanciel"
+msgstr "Online"
+
+msgid "Django Admin"
+msgstr "Django Admin"
+
+msgid "Données"
+msgstr "Data"
+
+msgid "Déconnexion"
+msgstr "Sign out"
+
+msgid "Définir un nouveau mot de passe"
+msgstr "Set a new password"
+
+msgid "Désactiver"
+msgstr "Deactivate"
+
+msgid "Désactivé"
+msgstr "Disabled"
+
+msgid "Détail de la prédiction"
+msgstr "Prediction Details"
+
+msgid "Détail par niveau"
+msgstr "Breakdown by Level"
+
+msgid "Détail par type de cours"
+msgstr "Breakdown by Course Type"
+
+msgid "E-mail non renseigné"
+msgstr "Email not provided"
+
+msgid "Early Stopping : Actif"
+msgstr "Early Stopping: Active"
+
+msgid "Enregistrer le nouveau mot de passe"
+msgstr "Save new password"
+
+msgid "Enregistrer le rôle"
+msgstr "Save role"
+
+msgid "Enregistrer les modifications"
+msgstr "Save changes"
+
+msgid "Entraînement"
+msgstr "Training"
+
+msgid "Entraînement de modèles MLP"
+msgstr "MLP model training"
+
+msgid "Entraînement du Modèle"
+msgstr "Model Training"
+
+msgid "Entraîner + sélectionner le meilleur MLP"
+msgstr "Train + select the best MLP"
+
+msgid "Entraîner le MLP"
+msgstr "Train the MLP"
+
+msgid "Entraîner le modèle"
+msgstr "Train the model"
+
+msgid "Entraîner un modèle"
+msgstr "Train a model"
+
+msgid "Envoyer le lien"
+msgstr "Send link"
+
+msgid "Erreur"
+msgstr "Error"
+
+msgid "Explication locale"
+msgstr "Local explanation"
+
+msgid "Exporter le résultat"
+msgstr "Export results"
+
+msgid "Faire une prédiction"
+msgstr "Make a prediction"
+
+msgid "Fermer"
+msgstr "Close"
+
+msgid "Fichier CSV"
+msgstr "CSV file"
+
+msgid "Fichier CSV de données"
+msgstr "Dataset CSV file"
+
+msgid "Fichier absent"
+msgstr "Missing file"
+
+msgid "Fichier joblib introuvable."
+msgstr "Joblib file not found."
+
+msgid "Filtres"
+msgstr "Filters"
+
+msgid "Fonction d'activation :"
+msgstr "Activation function:"
+
+msgid "Fonctionnalités"
+msgstr "Features"
+
+msgid "Fonctionnement du projet"
+msgstr "How the project works"
+
+msgid "Format :"
+msgstr "Format:"
+
+msgid "Format attendu"
+msgstr "Expected format"
+
+msgid "Format des Données Requis"
+msgstr "Required Data Format"
+
+msgid "Français"
+msgstr "French"
+
+msgid "Gestion des Données"
+msgstr "Data Management"
+
+msgid "Gestion des utilisateurs"
+msgstr "User management"
+
+msgid "Gestion et comparaison des modèles"
+msgstr "Model Management and Comparison"
+
+msgid "Gestion et export des données"
+msgstr "Data management and export"
+
+msgid "Gérer"
+msgstr "Manage"
+
+msgid "Gérer les données"
+msgstr "Manage data"
+
+msgid "Gérer les utilisateurs"
+msgstr "Manage users"
+
+msgid "Historique des Entraînements"
+msgstr "Training History"
+
+msgid "Hybride"
+msgstr "Hybrid"
+
+msgid "ID, type ou niveau"
+msgstr "ID, type, or level"
+
+msgid "Importance globale du modèle"
+msgstr "Global Model Importance"
+
+msgid "Importer et prédire"
+msgstr "Upload and predict"
+
+msgid "Impossible de tout marquer comme lu."
+msgstr "Unable to mark all as read."
+
+msgid "Inactif"
+msgstr "Inactive"
+
+msgid "Incompatible"
+msgstr "Incompatible"
+
+msgid "Indiquez de 1 (très léger) à 7 (très lourd)"
+msgstr "Rate from 1 (very light) to 7 (very heavy)"
+
+msgid "Indisponible"
+msgstr "Unavailable"
+
+msgid "Influence négative"
+msgstr "Negative influence"
+
+msgid "Influence positive"
+msgstr "Positive influence"
+
+msgid "Information"
+msgstr "Information"
+
+msgid "Informations personnelles"
+msgstr "Personal information"
+
+msgid "Instructions"
+msgstr "Instructions"
+
+msgid "Interactivité"
+msgstr "Interactivity"
+
+msgid "Interactivité du cours"
+msgstr "Course interactivity"
+
+msgid "Jeu utilisé"
+msgstr "Dataset size"
+
+msgid "L'interface Django affiche la classe prédite et sa probabilité."
+msgstr "The Django interface displays the predicted class and its probability."
+
+msgid "Langue"
+msgstr "Language"
+
+msgid "Le CSV est d'abord séparé en train 80 % / test final 20 %. Le grid-search compare 4 configurations du MLP par validation croisée stratifiée 3 plis uniquement sur le train, puis le meilleur modèle est évalué une seule fois sur le test final."
+msgstr "The CSV is first split into 80% train / 20% final test. Grid search compares 4 MLP configurations using 3-fold stratified cross-validation on the training set only, then the best model is evaluated once on the final test set."
+
+msgid "Le changement de rôle modifie immédiatement les accès applicatifs de ce compte."
+msgstr "Changing the role immediately changes this account's application access."
+
+msgid "Le lien est valide. Choisissez votre nouveau mot de passe."
+msgstr "The link is valid. Choose your new password."
+
+msgid "Le mot de passe actuel est incorrect."
+msgstr "The current password is incorrect."
+
+msgid "Le mot de passe actuel sera demandé."
+msgstr "Your current password will be required."
+
+msgid "Le nom d’utilisateur n’est pas modifié depuis cette page."
+msgstr "The username cannot be changed from this page."
+
+msgid "Le réseau (128, 64, 32) apprend à distinguer satisfait et non satisfait."
+msgstr "The (128, 64, 32) network learns to distinguish satisfied from dissatisfied students."
+
+msgid "Les caractéristiques du cours et la satisfaction binaire alimentent le jeu d'entraînement."
+msgstr "Course characteristics and binary satisfaction feed the training dataset."
+
+msgid "Les comptes Super Administrateur ne sont pas créés ici. Utilisez"
+msgstr "Super Administrator accounts are not created here. Use"
+
+msgid "Les informations utilisées pour identifier votre compte."
+msgstr "Information used to identify your account."
+
+msgid "Lien invalide ou expiré"
+msgstr "Invalid or expired link"
+
+msgid "Lignes traitées"
+msgstr "Rows processed"
+
+msgid "Liste des Avis Étudiants"
+msgstr "Student Feedback List"
+
+msgid "Maximum 5000 lignes"
+msgstr "Maximum 5,000 rows"
+
+msgid "Mettez à jour votre identité et votre adresse e-mail."
+msgstr "Update your identity and email address."
+
+msgid "Mis à jour à l’instant"
+msgstr "Updated just now"
+
+msgid "Modifier"
+msgstr "Edit"
+
+msgid "Modifier la prédiction"
+msgstr "Edit Prediction"
+
+msgid "Modifier le mot de passe"
+msgstr "Change password"
+
+msgid "Modifier mon profil"
+msgstr "Edit my profile"
+
+msgid "Modèle Actif"
+msgstr "Active Model"
+
+msgid "Modèle actif"
+msgstr "Active model"
+
+msgid "Mon profil"
+msgstr "My profile"
+
+msgid "Mot de passe actuel"
+msgstr "Current password"
+
+msgid "Mot de passe oublié"
+msgstr "Forgot password"
+
+msgid "Mot de passe réinitialisé"
+msgstr "Password reset complete"
+
+msgid "Méthode : Importance par permutation"
+msgstr "Method: Permutation importance"
+
+msgid "Navigation principale"
+msgstr "Main navigation"
+
+msgid "Niveau"
+msgstr "Level"
+
+msgid "Niveau étudiant"
+msgstr "Student level"
+
+msgid "Nom"
+msgstr "Last name"
+
+msgid "Nom d’utilisateur"
+msgstr "Username"
+
+msgid "Nom non renseigné"
+msgstr "Name not provided"
+
+msgid "Nom, e-mail, prénom…"
+msgstr "Name, email, first name…"
+
+msgid "Non disponible"
+msgstr "Not available"
+
+msgid "Non modifiable"
+msgstr "Not editable"
+
+msgid "Non renseigné"
+msgstr "Not provided"
+
+msgid "Non renseignée"
+msgstr "Not provided"
+
+msgid "Non satisfait"
+msgstr "Dissatisfied"
+
+msgid "Non satisfaits"
+msgstr "Dissatisfied"
+
+msgid "Non satisfaits prédits"
+msgstr "Predicted dissatisfied"
+
+msgid "Notes optionnelles sur cet entraînement..."
+msgstr "Optional notes about this training run..."
+
+msgid "Notes sur l'entraînement"
+msgstr "Training notes"
+
+msgid "Notez de 1 (très insatisfait) à 7 (très satisfait)"
+msgstr "Rate from 1 (very dissatisfied) to 7 (very satisfied)"
+
+msgid "Notifications"
+msgstr "Notifications"
+
+msgid "Notifications — aucune non lue"
+msgstr "Notifications — none unread"
+
+msgid "Nouveau Entraînement"
+msgstr "New Training"
+
+msgid "Nouveau compte"
+msgstr "New account"
+
+msgid "Nouvelle demande"
+msgstr "New request"
+
+msgid "Nouvelle prédiction"
+msgstr "New prediction"
+
+msgid "Optimiseur :"
+msgstr "Optimizer:"
+
+msgid "Ouvrir les notifications"
+msgstr "Open notifications"
+
+msgid "Ouvrir mon profil"
+msgstr "Open my profile"
+
+msgid "Performance du modèle actif"
+msgstr "Active Model Performance"
+
+msgid "Pour protéger le compte, le mot de passe actuel est demandé uniquement si l’adresse e-mail change."
+msgstr "To protect the account, the current password is required only when the email address changes."
+
+msgid "Pour votre sécurité, la réponse restera identique qu’un compte corresponde ou non à cette adresse."
+msgstr "For your security, the response is the same whether or not an account matches this address."
+
+msgid "Pourquoi cette prédiction ?"
+msgstr "Why this prediction?"
+
+msgid "Premières lignes"
+msgstr "First rows"
+
+msgid "Probabilité de référence"
+msgstr "Baseline probability"
+
+msgid "Probabilité non satisfait"
+msgstr "Dissatisfaction probability"
+
+msgid "Probabilité satisfait"
+msgstr "Satisfaction probability"
+
+msgid "Probabilité satisfaite moyenne"
+msgstr "Average satisfaction probability"
+
+msgid "Profil"
+msgstr "Profile"
+
+msgid "Projet de Classification ML"
+msgstr "ML Classification Project"
+
+msgid "Projet de classification par réseau de neurones MLP avec interface Django."
+msgstr "MLP neural-network classification project with a Django interface."
+
+msgid "Protégez l’accès à votre compte."
+msgstr "Protect access to your account."
+
+msgid "Protégé"
+msgstr "Protected"
+
+msgid "Précision"
+msgstr "Accuracy"
+
+msgid "Précédent"
+msgstr "Previous"
+
+msgid "Prédicteur de Satisfaction Étudiante"
+msgstr "Student Satisfaction Predictor"
+
+msgid "Prédiction"
+msgstr "Prediction"
+
+msgid "Prédiction CSV par lot"
+msgstr "Batch CSV Prediction"
+
+msgid "Prédiction avec probabilités"
+msgstr "Prediction with probabilities"
+
+msgid "Prédiction de Satisfaction"
+msgstr "Satisfaction Prediction"
+
+msgid "Prédiction par lot"
+msgstr "Batch Prediction"
+
+msgid "Prédictions enregistrées"
+msgstr "Recorded predictions"
+
+msgid "Prédire la Satisfaction"
+msgstr "Predict Satisfaction"
+
+msgid "Prédire plusieurs lignes depuis un CSV"
+msgstr "Predict multiple rows from a CSV"
+
+msgid "Prédire un fichier CSV"
+msgstr "Predict a CSV file"
+
+msgid "Prénom"
+msgstr "First name"
+
+msgid "Présentiel"
+msgstr "In person"
+
+msgid "Prétraitement"
+msgstr "Preprocessing"
+
+msgid "Prévisualisation"
+msgstr "Preview"
+
+msgid "Prêt"
+msgstr "Ready"
+
+msgid "Qualité"
+msgstr "Quality"
+
+msgid "Qualité d'enseignement"
+msgstr "Teaching quality"
+
+msgid "Qualité de l'enseignement"
+msgstr "Teaching quality"
+
+msgid "Qualité minimale"
+msgstr "Minimum quality"
+
+msgid "Recherche"
+msgstr "Search"
+
+msgid "Rechercher"
+msgstr "Search"
+
+msgid "Rechercher un utilisateur"
+msgstr "Search users"
+
+msgid "Requis uniquement pour changer l’e-mail"
+msgstr "Required only to change email"
+
+msgid "Responsable ML"
+msgstr "ML Manager"
+
+msgid "Retour"
+msgstr "Back"
+
+msgid "Retour au profil"
+msgstr "Back to profile"
+
+msgid "Retour à la connexion"
+msgstr "Back to sign in"
+
+msgid "Retour à la prédiction"
+msgstr "Back to prediction"
+
+msgid "Retour à l’accueil"
+msgstr "Back to home"
+
+msgid "Récupération du compte"
+msgstr "Account recovery"
+
+msgid "Régularisation :"
+msgstr "Regularization:"
+
+msgid "Réinitialiser"
+msgstr "Reset"
+
+msgid "Répartition globale"
+msgstr "Overall Distribution"
+
+msgid "Résultat de la prédiction"
+msgstr "Prediction Result"
+
+msgid "Résultats de la prédiction par lot"
+msgstr "Batch Prediction Results"
+
+msgid "Résumé"
+msgstr "Summary"
+
+msgid "Rôle"
+msgstr "Role"
+
+msgid "Rôle actuel :"
+msgstr "Current role:"
+
+msgid "Rôle du compte"
+msgstr "Account role"
+
+msgid "Rôle non reconnu."
+msgstr "Unknown role."
+
+msgid "Rôles disponibles"
+msgstr "Available roles"
+
+msgid "Saisissez les caractéristiques du cours pour prédire la satisfaction de l'étudiant"
+msgstr "Enter the course characteristics to predict student satisfaction"
+
+msgid "Saisissez l’adresse e-mail associée à votre compte."
+msgstr "Enter the email address associated with your account."
+
+msgid "Saisissez votre mot de passe actuel pour modifier l’e-mail."
+msgstr "Enter your current password to change the email address."
+
+msgid "Satisfaction Étudiante"
+msgstr "Student Satisfaction"
+
+msgid "Satisfait"
+msgstr "Satisfied"
+
+msgid "Satisfaits"
+msgstr "Satisfied"
+
+msgid "Satisfaits prédits"
+msgstr "Predicted satisfied"
+
+msgid "Se connecter"
+msgstr "Sign in"
+
+msgid "Si un compte actif correspond à l’adresse indiquée, un lien de réinitialisation vient d’être envoyé."
+msgstr "If an active account matches the address provided, a reset link has been sent."
+
+msgid "Sombre"
+msgstr "Dark"
+
+msgid "Standardisation des variables numériques et encodage des catégories sans fuite du jeu de test."
+msgstr "Numeric features are standardized and categories encoded without test-set leakage."
+
+msgid "Statistiques"
+msgstr "Statistics"
+
+msgid "Statistiques - Analyse des prédictions"
+msgstr "Statistics - Prediction Analysis"
+
+msgid "Succès"
+msgstr "Success"
+
+msgid "Suivant"
+msgstr "Next"
+
+msgid "Super Administrateur"
+msgstr "Super Administrator"
+
+msgid "Supprimer"
+msgstr "Delete"
+
+msgid "Sécurité"
+msgstr "Security"
+
+msgid "Sélection :"
+msgstr "Selection:"
+
+msgid "Sélection automatique :"
+msgstr "Automatic selection:"
+
+msgid "Sélectionnez le format du cours"
+msgstr "Select the course format"
+
+msgid "Sélectionnez une option"
+msgstr "Select an option"
+
+msgid "Taux"
+msgstr "Rate"
+
+msgid "Taux de satisfaction"
+msgstr "Satisfaction rate"
+
+msgid "Taux par niveau étudiant"
+msgstr "Rate by Student Level"
+
+msgid "Taux par type de cours"
+msgstr "Rate by Course Type"
+
+msgid "Taux prédit satisfait"
+msgstr "Predicted satisfaction rate"
+
+msgid "Taux satisfait prédit (%)"
+msgstr "Predicted satisfaction rate (%)"
+
+msgid "Taux selon les notes 1–7"
+msgstr "Rate by 1–7 Ratings"
+
+msgid "Thème"
+msgstr "Theme"
+
+msgid "Thème : Automatique"
+msgstr "Theme: Automatic"
+
+msgid "Thème : Automatique. Changer le thème"
+msgstr "Theme: Automatic. Change theme"
+
+msgid "Total"
+msgstr "Total"
+
+msgid "Total enregistré"
+msgstr "Total recorded"
+
+msgid "Tous"
+msgstr "All"
+
+msgid "Tout lire"
+msgstr "Mark all read"
+
+msgid "Tout marquer comme lu"
+msgstr "Mark all as read"
+
+msgid "Toutes"
+msgstr "All"
+
+msgid "Très insatisfait"
+msgstr "Very dissatisfied"
+
+msgid "Très interactif"
+msgstr "Very interactive"
+
+msgid "Très lourd"
+msgstr "Very heavy"
+
+msgid "Très léger"
+msgstr "Very light"
+
+msgid "Très non interactif"
+msgstr "Very non-interactive"
+
+msgid "Très non interactif / Totalement passif"
+msgstr "Very non-interactive / Fully passive"
+
+msgid "Très satisfait"
+msgstr "Very satisfied"
+
+msgid "Type"
+msgstr "Type"
+
+msgid "Type de cours"
+msgstr "Course type"
+
+msgid "Télécharger le CSV résultat"
+msgstr "Download result CSV"
+
+msgid "Télécharger les résultats"
+msgstr "Download results"
+
+msgid "Un Super Administrateur ne peut pas être modifié depuis cette interface. Utilisez l’administration Django ou la CLI."
+msgstr "A Super Administrator cannot be modified from this interface. Use Django Admin or the CLI."
+
+msgid "Un modèle est actuellement chargé et prêt pour les prédictions."
+msgstr "A model is currently loaded and ready for predictions."
+
+msgid "Uploadez vos données pour entraîner un nouveau modèle de prédiction"
+msgstr "Upload your data to train a new prediction model"
+
+msgid "Utilisateur"
+msgstr "User"
+
+msgid "Valeurs Attendues"
+msgstr "Expected Values"
+
+msgid "Validation croisée :"
+msgstr "Cross-validation:"
+
+msgid "Version scikit-learn différente"
+msgstr "Different scikit-learn version"
+
+msgid "Voir"
+msgstr "View"
+
+msgid "Voir les statistiques"
+msgstr "View statistics"
+
+msgid "Votre compte"
+msgstr "Your account"
+
+msgid "Votre mot de passe a été modifié. Votre session actuelle reste active."
+msgstr "Your password was changed. Your current session remains active."
+
+msgid "Votre profil a été mis à jour avec succès."
+msgstr "Your profile was updated successfully."
+
+msgid "Votre rôle ne permet pas d’accéder à cette fonctionnalité."
+msgstr "Your role does not allow access to this feature."
+
+msgid "Votre rôle ne permet pas d’accéder à cette page."
+msgstr "Your role does not allow access to this page."
+
+msgid "Voulez-vous vraiment supprimer cette prédiction ?"
+msgstr "Do you really want to delete this prediction?"
+
+msgid "Vous ne pouvez pas modifier votre propre rôle depuis cette interface."
+msgstr "You cannot change your own role from this interface."
+
+msgid "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe."
+msgstr "You can now sign in with your new password."
+
+msgid "Vérifiez votre messagerie"
+msgstr "Check your inbox"
+
+msgid "compte"
+msgstr "account"
+
+msgid "comptes"
+msgstr "accounts"
+
+msgid "ou l’administration Django."
+msgstr "or Django Admin."
+
+msgid "points de probabilité"
+msgstr "probability points"
+
+msgid "résultat"
+msgstr "result"
+
+msgid "résultats"
+msgstr "results"
+
+msgid "seulement 9 prédictions enregistrées. Les taux par sous-groupes et les associations observées peuvent varier fortement avec si peu de données. Ils doivent être interprétés comme des indications descriptives, pas comme des conclusions générales."
+msgstr "only 9 predictions are recorded. Subgroup rates and observed associations may vary substantially with so little data. They should be interpreted as descriptive indications, not general conclusions."
+
+msgid "sur"
+msgstr "of"
+
+msgid "À propos du modèle:"
+msgstr "About the model:"
+
+msgid "Écart entre le taux prédit le plus élevé et le plus faible parmi les valeurs observées de chaque facteur."
+msgstr "Difference between the highest and lowest predicted rates among the observed values of each factor."
+
+msgid "Écart-type :"
+msgstr "Std. dev.:"
+
+msgid "Échantillon encore limité :"
+msgstr "Sample still limited:"
+
+msgid "Échantillons"
+msgstr "Samples"
+
+msgid "État"
+msgstr "Status"
+
+msgid "État Actuel du Modèle"
+msgstr "Current Model Status"
+
+msgid "Évaluez de 1 (très non interactif) à 7 (très interactif)"
+msgstr "Rate from 1 (very non-interactive) to 7 (very interactive)"
+
+msgid "Évolution de la Performance du Modèle"
+msgstr "Model Performance Over Time"

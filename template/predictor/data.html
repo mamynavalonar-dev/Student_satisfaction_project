@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
+{% load i18n predictor_i18n %}
 
-{% block title %}Gestion des Données - Prédicteur de Satisfaction{% endblock %}
+{% block title %}{% trans "Gestion des Données" %} - Prédicteur de Satisfaction{% endblock %}
 
 {% block nav_data %}active{% endblock %}
 {% block nav_active %}page-data{% endblock %}
@@ -10,15 +11,15 @@
     <div class="col-12">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
             <div>
-                <h1 class="h3 mb-1">🗂️ Gestion des Données</h1>
-                <p class="text-muted mb-0">Consultez, filtrez, modifiez et exportez les prédictions enregistrées.</p>
+                <h1 class="h3 mb-1">🗂️ {% trans "Gestion des Données" %}</h1>
+                <p class="text-muted mb-0">{% trans "Consultez, filtrez, modifiez et exportez les prédictions enregistrées." %}</p>
             </div>
             <div class="d-flex gap-2">
                 <a class="btn btn-outline-success"
                    href="{% url 'export_data' %}{% if query_string %}?{{ query_string }}{% endif %}">
-                    📥 Exporter le résultat
+                    📥 {% trans "Exporter le résultat" %}
                 </a>
-                <a class="btn btn-primary" href="{% url 'predict' %}">➕ Nouvelle prédiction</a>
+                <a class="btn btn-primary" href="{% url 'predict' %}">➕ {% trans "Nouvelle prédiction" %}</a>
             </div>
         </div>
     </div>
@@ -28,7 +29,7 @@
     <div class="col-sm-6 col-lg-3">
         <div class="card h-100 border-0 shadow-sm">
             <div class="card-body">
-                <div class="text-muted small">Total enregistré</div>
+                <div class="text-muted small">{% trans "Total enregistré" %}</div>
                 <div class="fs-3 fw-bold">{{ total_count }}</div>
             </div>
         </div>
@@ -36,7 +37,7 @@
     <div class="col-sm-6 col-lg-3">
         <div class="card h-100 border-0 shadow-sm">
             <div class="card-body">
-                <div class="text-muted small">Satisfaits prédits</div>
+                <div class="text-muted small">{% trans "Satisfaits prédits" %}</div>
                 <div class="fs-3 fw-bold text-success">{{ satisfied_count }}</div>
             </div>
         </div>
@@ -44,7 +45,7 @@
     <div class="col-sm-6 col-lg-3">
         <div class="card h-100 border-0 shadow-sm">
             <div class="card-body">
-                <div class="text-muted small">Non satisfaits prédits</div>
+                <div class="text-muted small">{% trans "Non satisfaits prédits" %}</div>
                 <div class="fs-3 fw-bold text-danger">{{ unsatisfied_count }}</div>
             </div>
         </div>
@@ -52,7 +53,7 @@
     <div class="col-sm-6 col-lg-3">
         <div class="card h-100 border-0 shadow-sm">
             <div class="card-body">
-                <div class="text-muted small">Taux prédit satisfait</div>
+                <div class="text-muted small">{% trans "Taux prédit satisfait" %}</div>
                 <div class="fs-3 fw-bold text-info">{{ satisfaction_rate|floatformat:1 }}%</div>
             </div>
         </div>
@@ -62,8 +63,8 @@
 <div class="card mb-4 shadow-sm">
     <div class="card-header bg-white">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <h5 class="mb-0">🔎 Filtres</h5>
-            <a href="{% url 'data_management' %}" class="btn btn-sm btn-outline-secondary">Réinitialiser</a>
+            <h5 class="mb-0">🔎 {% trans "Filtres" %}</h5>
+            <a href="{% url 'data_management' %}" class="btn btn-sm btn-outline-secondary">{% trans "Réinitialiser" %}</a>
         </div>
     </div>
     <div class="card-body">
@@ -73,33 +74,33 @@
             <div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Filtre de satisfaction">
                 <button type="button"
                         class="btn {% if filters.status == 'all' %}btn-info{% else %}btn-outline-info{% endif %}"
-                        onclick="setStatusFilter('all')">Tous</button>
+                        onclick="setStatusFilter('all')">{% trans "Tous" %}</button>
                 <button type="button"
                         class="btn {% if filters.status == 'satisfied' %}btn-success{% else %}btn-outline-success{% endif %}"
-                        onclick="setStatusFilter('satisfied')">😊 Satisfaits</button>
+                        onclick="setStatusFilter('satisfied')">😊 {% trans "Satisfaits" %}</button>
                 <button type="button"
                         class="btn {% if filters.status == 'unsatisfied' %}btn-danger{% else %}btn-outline-danger{% endif %}"
-                        onclick="setStatusFilter('unsatisfied')">😞 Non satisfaits</button>
+                        onclick="setStatusFilter('unsatisfied')">😞 {% trans "Non satisfaits" %}</button>
                 <button type="button"
                         class="btn {% if filters.status == 'recent' %}btn-warning{% else %}btn-outline-warning{% endif %}"
-                        onclick="setStatusFilter('recent')">🕒 7 derniers jours</button>
+                        onclick="setStatusFilter('recent')">🕒 {% trans "7 derniers jours" %}</button>
             </div>
 
             <div class="row g-3">
                 <div class="col-md-3">
-                    <label for="filterType" class="form-label">Type de cours</label>
+                    <label for="filterType" class="form-label">{% trans "Type de cours" %}</label>
                     <select class="form-select" id="filterType" name="type_cours" onchange="this.form.submit()">
-                        <option value="">Tous</option>
-                        <option value="présentiel" {% if filters.type_cours == 'présentiel' %}selected{% endif %}>Présentiel</option>
-                        <option value="distanciel" {% if filters.type_cours == 'distanciel' %}selected{% endif %}>Distanciel</option>
-                        <option value="hybride" {% if filters.type_cours == 'hybride' %}selected{% endif %}>Hybride</option>
+                        <option value="">{% trans "Tous" %}</option>
+                        <option value="présentiel" {% if filters.type_cours == 'présentiel' %}selected{% endif %}>{% trans "Présentiel" %}</option>
+                        <option value="distanciel" {% if filters.type_cours == 'distanciel' %}selected{% endif %}>{% trans "Distanciel" %}</option>
+                        <option value="hybride" {% if filters.type_cours == 'hybride' %}selected{% endif %}>{% trans "Hybride" %}</option>
                     </select>
                 </div>
 
                 <div class="col-md-3">
-                    <label for="filterNiveau" class="form-label">Niveau étudiant</label>
+                    <label for="filterNiveau" class="form-label">{% trans "Niveau étudiant" %}</label>
                     <select class="form-select" id="filterNiveau" name="niveau" onchange="this.form.submit()">
-                        <option value="">Tous</option>
+                        <option value="">{% trans "Tous" %}</option>
                         <option value="L1" {% if filters.niveau == 'L1' %}selected{% endif %}>L1</option>
                         <option value="L2" {% if filters.niveau == 'L2' %}selected{% endif %}>L2</option>
                         <option value="L3" {% if filters.niveau == 'L3' %}selected{% endif %}>L3</option>
@@ -109,9 +110,9 @@
                 </div>
 
                 <div class="col-md-3">
-                    <label for="filterQualite" class="form-label">Qualité minimale</label>
+                    <label for="filterQualite" class="form-label">{% trans "Qualité minimale" %}</label>
                     <select class="form-select" id="filterQualite" name="qualite_min" onchange="this.form.submit()">
-                        <option value="">Toutes</option>
+                        <option value="">{% trans "Toutes" %}</option>
                         {% for value in "1234567" %}
                             <option value="{{ value }}" {% if filters.qualite_min == value %}selected{% endif %}>
                                 {{ value }}/7 et plus
@@ -121,15 +122,15 @@
                 </div>
 
                 <div class="col-md-3">
-                    <label for="searchInput" class="form-label">Recherche</label>
+                    <label for="searchInput" class="form-label">{% trans "Recherche" %}</label>
                     <div class="input-group">
                         <input type="search"
                                class="form-control"
                                id="searchInput"
                                name="q"
                                value="{{ filters.q }}"
-                               placeholder="ID, type ou niveau">
-                        <button class="btn btn-outline-primary" type="submit">Rechercher</button>
+                               placeholder="{% trans "ID, type ou niveau" %}">
+                        <button class="btn btn-outline-primary" type="submit">{% trans "Rechercher" %}</button>
                     </div>
                 </div>
             </div>
@@ -140,9 +141,9 @@
 <div class="card shadow-sm">
     <div class="card-header bg-white">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <h5 class="mb-0">📋 Liste des Avis Étudiants</h5>
+            <h5 class="mb-0">📋 {% trans "Liste des Avis Étudiants" %}</h5>
             <span class="badge bg-secondary">
-                {{ result_count }} résultat{{ result_count|pluralize }}
+                {{ result_count }} {% trans "résultat" %}{{ result_count|pluralize }}
             </span>
         </div>
     </div>
@@ -154,15 +155,15 @@
                     <thead class="table-dark">
                         <tr>
                             <th>ID</th>
-                            <th>Date</th>
-                            <th>Qualité</th>
-                            <th>Charge</th>
-                            <th>Interactivité</th>
-                            <th>Type</th>
-                            <th>Niveau</th>
-                            <th>Prédiction</th>
-                            <th>Probabilité satisfait</th>
-                            <th class="text-end">Actions</th>
+                            <th>{% trans "Date" %}</th>
+                            <th>{% trans "Qualité" %}</th>
+                            <th>{% trans "Charge" %}</th>
+                            <th>{% trans "Interactivité" %}</th>
+                            <th>{% trans "Type" %}</th>
+                            <th>{% trans "Niveau" %}</th>
+                            <th>{% trans "Prédiction" %}</th>
+                            <th>{% trans "Probabilité satisfait" %}</th>
+                            <th class="text-end">{% trans "Actions" %}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -207,9 +208,9 @@
 
                             <td>
                                 {% if feedback.predicted_satisfaction == True %}
-                                    <span class="badge bg-success">😊 Satisfait</span>
+                                    <span class="badge bg-success">😊 {% trans "Satisfait" %}</span>
                                 {% elif feedback.predicted_satisfaction == False %}
-                                    <span class="badge bg-danger">😞 Non satisfait</span>
+                                    <span class="badge bg-danger">😞 {% trans "Non satisfait" %}</span>
                                 {% else %}
                                     <span class="badge bg-secondary">N/A</span>
                                 {% endif %}
@@ -242,7 +243,7 @@
                                             data-detail-url="{% url 'feedback_detail' feedback.id %}"
                                             data-edit-url="{% url 'feedback_update' feedback.id %}"
                                             onclick="editFeedback(this)"
-                                            title="Modifier">✏️</button>
+                                            title="{% trans "Modifier" %}">✏️</button>
 
                                     <form method="post"
                                           action="{% url 'feedback_delete' feedback.id %}"
@@ -250,7 +251,7 @@
                                           onsubmit="return confirm('Supprimer définitivement l\'avis #{{ feedback.id }} ?');">
                                         {% csrf_token %}
                                         <input type="hidden" name="next" value="{{ return_url }}">
-                                        <button type="submit" class="btn btn-outline-danger" title="Supprimer">🗑️</button>
+                                        <button type="submit" class="btn btn-outline-danger" title="{% trans "Supprimer" %}">🗑️</button>
                                     </form>
                                 </div>
                             </td>
@@ -263,9 +264,9 @@
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4">
                 <small class="text-muted">
                     {% if result_count %}
-                        Affichage {{ feedbacks.start_index }}–{{ feedbacks.end_index }} sur {{ result_count }}
+                        {% trans "Affichage" %} {{ feedbacks.start_index }}–{{ feedbacks.end_index }} {% trans "sur" %} {{ result_count }}
                     {% else %}
-                        Aucun résultat
+                        {% trans "Aucun résultat" %}
                     {% endif %}
                 </small>
 
@@ -306,7 +307,7 @@
                 <div class="fs-1 mb-3">🔍</div>
                 <h5>Aucun avis ne correspond aux filtres.</h5>
                 <p class="text-muted">Modifiez les critères ou réinitialisez les filtres.</p>
-                <a class="btn btn-outline-primary" href="{% url 'data_management' %}">Réinitialiser les filtres</a>
+                <a class="btn btn-outline-primary" href="{% url 'data_management' %}">{% trans "Réinitialiser" %} les filtres</a>
             </div>
         {% endif %}
     </div>
@@ -318,11 +319,11 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Détails de l'avis <span id="detailId"></span></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans "Fermer" %}"></button>
             </div>
             <div class="modal-body" id="detailContent">
                 <div class="text-center py-4">
-                    <div class="spinner-border" role="status"><span class="visually-hidden">Chargement...</span></div>
+                    <div class="spinner-border" role="status"><span class="visually-hidden">{% trans "Chargement..." %}</span></div>
                 </div>
             </div>
         </div>
@@ -338,8 +339,8 @@
                 <input type="hidden" name="next" value="{{ return_url }}">
 
                 <div class="modal-header">
-                    <h5 class="modal-title">Modifier l'avis <span id="editId"></span></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                    <h5 class="modal-title">{% trans "Modifier" %} l'avis <span id="editId"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans "Fermer" %}"></button>
                 </div>
 
                 <div class="modal-body">
@@ -349,55 +350,55 @@
 
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label for="editQualite" class="form-label">Qualité d'enseignement</label>
+                            <label for="editQualite" class="form-label">{% trans "Qualité d'enseignement" %}</label>
                             <select class="form-select" id="editQualite" name="qualite_enseignement" required>
-                                <option value="1">1 — Très insatisfait</option>
+                                <option value="1">1 — {% trans "Très insatisfait" %}</option>
                                 <option value="2">2 — Insatisfait</option>
                                 <option value="3">3 — Plutôt insatisfait</option>
                                 <option value="4">4 — Neutre</option>
                                 <option value="5">5 — Plutôt satisfait</option>
-                                <option value="6">6 — Satisfait</option>
-                                <option value="7">7 — Très satisfait</option>
+                                <option value="6">6 — {% trans "Satisfait" %}</option>
+                                <option value="7">7 — {% trans "Très satisfait" %}</option>
                             </select>
                         </div>
 
                         <div class="col-md-6">
-                            <label for="editCharge" class="form-label">Charge de travail</label>
+                            <label for="editCharge" class="form-label">{% trans "Charge de travail" %}</label>
                             <select class="form-select" id="editCharge" name="charge_travail" required>
-                                <option value="1">1 — Très léger</option>
+                                <option value="1">1 — {% trans "Très léger" %}</option>
                                 <option value="2">2 — Léger</option>
                                 <option value="3">3 — Plutôt léger</option>
                                 <option value="4">4 — Moyen / Modéré</option>
                                 <option value="5">5 — Plutôt lourd</option>
                                 <option value="6">6 — Lourd</option>
-                                <option value="7">7 — Très lourd</option>
+                                <option value="7">7 — {% trans "Très lourd" %}</option>
                             </select>
                         </div>
 
                         <div class="col-md-6">
-                            <label for="editInteractivite" class="form-label">Interactivité</label>
+                            <label for="editInteractivite" class="form-label">{% trans "Interactivité" %}</label>
                             <select class="form-select" id="editInteractivite" name="interactivite" required>
-                                <option value="1">1 — Très non interactif</option>
+                                <option value="1">1 — {% trans "Très non interactif" %}</option>
                                 <option value="2">2 — Non interactif</option>
                                 <option value="3">3 — Peu interactif</option>
                                 <option value="4">4 — Interaction moyenne</option>
                                 <option value="5">5 — Plutôt interactif</option>
                                 <option value="6">6 — Interactif</option>
-                                <option value="7">7 — Très interactif</option>
+                                <option value="7">7 — {% trans "Très interactif" %}</option>
                             </select>
                         </div>
 
                         <div class="col-md-6">
-                            <label for="editType" class="form-label">Type de cours</label>
+                            <label for="editType" class="form-label">{% trans "Type de cours" %}</label>
                             <select class="form-select" id="editType" name="type_cours" required>
-                                <option value="présentiel">Présentiel</option>
-                                <option value="distanciel">Distanciel</option>
-                                <option value="hybride">Hybride</option>
+                                <option value="présentiel">{% trans "Présentiel" %}</option>
+                                <option value="distanciel">{% trans "Distanciel" %}</option>
+                                <option value="hybride">{% trans "Hybride" %}</option>
                             </select>
                         </div>
 
                         <div class="col-md-6">
-                            <label for="editNiveau" class="form-label">Niveau étudiant</label>
+                            <label for="editNiveau" class="form-label">{% trans "Niveau étudiant" %}</label>
                             <select class="form-select" id="editNiveau" name="niveau_etudiant" required>
                                 <option value="L1">L1</option>
                                 <option value="L2">L2</option>
@@ -432,7 +433,7 @@ async function fetchFeedback(url) {
     });
 
     if (!response.ok) {
-        throw new Error(`Erreur HTTP ${response.status}`);
+        throw new Error(`{% trans "Erreur" %} HTTP ${response.status}`);
     }
 
     return response.json();
@@ -446,7 +447,7 @@ async function viewDetails(button) {
     document.getElementById('detailId').textContent = '';
     content.innerHTML = `
         <div class="text-center py-4">
-            <div class="spinner-border" role="status"><span class="visually-hidden">Chargement...</span></div>
+            <div class="spinner-border" role="status"><span class="visually-hidden">{% trans "Chargement..." %}</span></div>
         </div>`;
     modal.show();
 
@@ -463,18 +464,18 @@ async function viewDetails(button) {
                 <div class="col-md-6">
                     <h6>Caractéristiques du cours</h6>
                     <dl class="row mb-0">
-                        <dt class="col-7">Qualité</dt><dd class="col-5">${data.qualite_enseignement}/7</dd>
-                        <dt class="col-7">Charge</dt><dd class="col-5">${data.charge_travail}/7</dd>
-                        <dt class="col-7">Interactivité</dt><dd class="col-5">${data.interactivite}/7</dd>
-                        <dt class="col-7">Type</dt><dd class="col-5">${escapeHtml(data.type_cours)}</dd>
-                        <dt class="col-7">Niveau</dt><dd class="col-5">${escapeHtml(data.niveau_etudiant)}</dd>
+                        <dt class="col-7">{% trans "Qualité" %}</dt><dd class="col-5">${data.qualite_enseignement}/7</dd>
+                        <dt class="col-7">{% trans "Charge" %}</dt><dd class="col-5">${data.charge_travail}/7</dd>
+                        <dt class="col-7">{% trans "Interactivité" %}</dt><dd class="col-5">${data.interactivite}/7</dd>
+                        <dt class="col-7">{% trans "Type" %}</dt><dd class="col-5">${escapeHtml(data.type_cours)}</dd>
+                        <dt class="col-7">{% trans "Niveau" %}</dt><dd class="col-5">${escapeHtml(data.niveau_etudiant)}</dd>
                     </dl>
                 </div>
                 <div class="col-md-6">
                     <h6>Résultat de prédiction</h6>
                     <dl class="row mb-0">
-                        <dt class="col-7">Prédiction</dt><dd class="col-5">${escapeHtml(data.prediction_label)}</dd>
-                        <dt class="col-7">Probabilité satisfait</dt><dd class="col-5">${probability}</dd>
+                        <dt class="col-7">{% trans "Prédiction" %}</dt><dd class="col-5">${escapeHtml(data.prediction_label)}</dd>
+                        <dt class="col-7">{% trans "Probabilité satisfait" %}</dt><dd class="col-5">${probability}</dd>
                         <dt class="col-7">Créé le</dt><dd class="col-5">${escapeHtml(data.created_at)}</dd>
                         <dt class="col-7">Mis à jour le</dt><dd class="col-5">${escapeHtml(data.updated_at)}</dd>
                     </dl>
@@ -492,10 +493,10 @@ async function editFeedback(button) {
         document.getElementById('editId').textContent = `#${data.id}`;
         document.getElementById('editForm').action = button.dataset.editUrl;
         document.getElementById('editQualite').value = String(data.qualite_enseignement);
-        document.getElementById('editCharge').value = String(data.charge_travail);
+        document.getElementById('edit{% trans "Charge" %}').value = String(data.charge_travail);
         document.getElementById('editInteractivite').value = String(data.interactivite);
-        document.getElementById('editType').value = data.type_cours;
-        document.getElementById('editNiveau').value = data.niveau_etudiant;
+        document.getElementById('edit{% trans "Type" %}').value = data.type_cours;
+        document.getElementById('edit{% trans "Niveau" %}').value = data.niveau_etudiant;
 
         bootstrap.Modal.getOrCreateInstance(document.getElementById('editModal')).show();
     } catch (error) {

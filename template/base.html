@@ -1,12 +1,14 @@
-{% load static %}
+{% load static i18n %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="{{ LANGUAGE_CODE }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="light dark">
     <meta name="theme-color" content="#ffffff">
-    <title>{% block title %}Prédicteur de Satisfaction Étudiante{% endblock %}</title>
+    <title>{% block title %}{% trans "Prédicteur de Satisfaction Étudiante" %}{% endblock %}</title>
 
 
 <script>
@@ -368,41 +370,70 @@
 
     {% block extra_css %}{% endblock %}
     <link rel="stylesheet" href="{% static 'ux/theme_accessibility.css' %}">
+    <link rel="stylesheet" href="{% static 'ux/i18n_design.css' %}">
+    <link rel="stylesheet" href="{% static 'ux/predictor_i18n_design.css' %}">
+    <link rel="stylesheet" href="{% static 'ux/i18n_residuals.css' %}">
+    <script defer src="{% static 'ux/i18n_residuals.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'ux/academic_control_room_v14d.css' %}">
 </head>
 <body>
-    <a class="skip-link" href="#main-content">Aller au contenu principal</a>
+    <a class="skip-link" href="#main-content">{% trans "Aller au contenu principal" %}</a>
     <header class="page-header">
-        <a class="brand" href="{% url 'home' %}">🎓 Satisfaction Étudiante</a>
+        <a class="brand" href="{% url 'home' %}">🎓 {% trans "Satisfaction Étudiante" %}</a>
         <div class="user-info">
             {% if user.is_authenticated %}
-                <span class="navbar-text">Bonjour, <strong>{{ user.username }}</strong></span>
+                <span class="navbar-text">{% trans "Bonjour," %} <strong>{{ user.username }}</strong></span>
 
+
+
+                <form class="app-locale-switch"
+                      action="{% url 'set_language' %}"
+                      method="post"
+                      aria-label="{% trans 'Langue' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <span class="app-locale-label">{% trans "Langue" %}</span>
+                    <button type="submit"
+                            name="language"
+                            value="fr"
+                            aria-pressed="{% if LANGUAGE_CODE == 'fr' %}true{% else %}false{% endif %}"
+                            title="{% trans 'Français' %}">
+                        FR
+                    </button>
+                    <button type="submit"
+                            name="language"
+                            value="en"
+                            aria-pressed="{% if LANGUAGE_CODE == 'en' %}true{% else %}false{% endif %}"
+                            title="{% trans 'Anglais' %}">
+                        EN
+                    </button>
+                </form>
 
 <button type="button"
         class="app-theme-toggle"
         data-theme-toggle
-        aria-label="Thème : Automatique. Changer le thème"
-        title="Thème : Automatique">
+        aria-label="{% trans "Thème : Automatique. Changer le thème" %}"
+        title="{% trans "Thème : Automatique" %}">
     <i class="bi bi-circle-half theme-icon-auto" aria-hidden="true"></i>
     <i class="bi bi-sun theme-icon-light" aria-hidden="true"></i>
     <i class="bi bi-moon-stars theme-icon-dark" aria-hidden="true"></i>
     <span class="visually-hidden-ux" data-theme-status>Thème Automatique</span>
 </button>
 
-                <span class="badge {{ current_role_badge_class }} account-role-badge" title="Rôle du compte">
+                <span class="badge {{ current_role_badge_class }} account-role-badge" title="{% trans "Rôle du compte" %}">
                     {{ current_role_label }}
                 </span>
 
                 {% if can_manage_users %}
-                <a class="btn btn-outline-primary btn-sm" href="{% url 'accounts:user_list' %}" aria-label="Gérer les utilisateurs">
+                <a class="btn btn-outline-primary btn-sm" href="{% url 'accounts:user_list' %}" aria-label="{% trans "Gérer les utilisateurs" %}">
                     <i class="bi bi-people me-1" aria-hidden="true"></i>
                     Administration
                 </a>
                 {% endif %}
 
-                <a class="btn btn-outline-primary btn-sm account-profile-link" href="{% url 'accounts:profile' %}" aria-label="Ouvrir mon profil">
+                <a class="btn btn-outline-primary btn-sm account-profile-link" href="{% url 'accounts:profile' %}" aria-label="{% trans "Ouvrir mon profil" %}">
                     <i class="bi bi-person-circle me-1" aria-hidden="true"></i>
-                    Profil
+                    {% trans "Profil" %}
                 </a>
 
                 <div class="notification-center"
@@ -410,25 +441,25 @@
                      data-feed-url="{% url 'notifications_feed' %}"
                      data-mark-all-url="{% url 'notifications_mark_all_read' %}">
                     <button type="button" class="notification-bell" data-notification-toggle
-                            aria-label="Ouvrir les notifications" aria-expanded="false">
+                            aria-label="{% trans "Ouvrir les notifications" %}" aria-expanded="false">
                         <i class="bi bi-bell" aria-hidden="true"></i>
                         <span class="notification-badge" data-notification-badge hidden>0</span>
                     </button>
 
-                    <section class="notification-panel" data-notification-panel hidden aria-label="Centre de notifications">
+                    <section class="notification-panel" data-notification-panel hidden aria-label="{% trans "Centre de notifications" %}">
                         <div class="notification-panel-header">
                             <div>
-                                <strong>Notifications</strong>
-                                <small data-notification-status>Actualisation automatique</small>
+                                <strong>{% trans "Notifications" %}</strong>
+                                <small data-notification-status>{% trans "Actualisation automatique" %}</small>
                             </div>
                             <button type="button" class="notification-read-all" data-notification-read-all>
-                                <i class="bi bi-check2-all" aria-hidden="true"></i> Tout lire
+                                <i class="bi bi-check2-all" aria-hidden="true"></i> {% trans "Tout lire" %}
                             </button>
                         </div>
                         <div class="notification-list" data-notification-list>
                             <div class="notification-empty">
                                 <i class="bi bi-bell-slash" aria-hidden="true"></i>
-                                <span>Aucune notification pour le moment.</span>
+                                <span>{% trans "Aucune notification pour le moment." %}</span>
                             </div>
                         </div>
                     </section>
@@ -436,19 +467,19 @@
 
                 <form method="post" action="{% url 'logout' %}" class="logout-form">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-outline-danger btn-sm">Déconnexion</button>
+                    <button type="submit" class="btn btn-outline-danger btn-sm">{% trans "Déconnexion" %}</button>
                 </form>
             {% endif %}
         </div>
     </header>
 
     <div class="nav-container">
-        <nav class="animated-nav {% block nav_active %}page-home{% endblock %}" data-animated-nav aria-label="Navigation principale" style="--rbac-nav-count: {{ rbac_nav_count|default:5 }};">
-            <a href="{% url 'home' %}" class="{% block nav_home %}{% endblock %}">Accueil</a>
-            <a href="{% url 'predict' %}" class="{% block nav_predict %}{% endblock %}">Prédiction</a>
-            {% if can_train_models %}<a href="{% url 'train_model' %}" class="{% block nav_train %}{% endblock %}">Entraînement</a>{% endif %}
-            {% if can_view_data %}<a href="{% url 'data_management' %}" class="{% block nav_data %}{% endblock %}">Données</a>{% endif %}
-            {% if can_view_statistics %}<a href="{% url 'statistics' %}" class="{% block nav_stats %}{% endblock %}">Statistiques</a>{% endif %}
+        <nav class="animated-nav {% block nav_active %}page-home{% endblock %}" data-animated-nav aria-label="{% trans "Navigation principale" %}" style="--rbac-nav-count: {{ rbac_nav_count|default:5 }};">
+            <a href="{% url 'home' %}" class="{% block nav_home %}{% endblock %}">{% trans "Accueil" %}</a>
+            <a href="{% url 'predict' %}" class="{% block nav_predict %}{% endblock %}">{% trans "Prédiction" %}</a>
+            {% if can_train_models %}<a href="{% url 'train_model' %}" class="{% block nav_train %}{% endblock %}">{% trans "Entraînement" %}</a>{% endif %}
+            {% if can_view_data %}<a href="{% url 'data_management' %}" class="{% block nav_data %}{% endblock %}">{% trans "Données" %}</a>{% endif %}
+            {% if can_view_statistics %}<a href="{% url 'statistics' %}" class="{% block nav_stats %}{% endblock %}">{% trans "Statistiques" %}</a>{% endif %}
             <span class="nav-indicator" aria-hidden="true"></span>
         </nav>
     </div>
@@ -460,7 +491,7 @@
                     <div class="app-toast app-toast-{{ message.tags|default:'info' }}" data-server-toast role="status">
                         <span class="app-toast-icon"><i class="bi bi-info-circle" aria-hidden="true"></i></span>
                         <div class="app-toast-content">{{ message }}</div>
-                        <button type="button" class="app-toast-close" data-toast-close aria-label="Fermer">×</button>
+                        <button type="button" class="app-toast-close" data-toast-close aria-label="{% trans "Fermer" %}">×</button>
                     </div>
                 {% endif %}
             {% endfor %}
@@ -475,22 +506,22 @@
         <div class="container">
             <div class="row g-4">
                 <div class="col-md-6">
-                    <h5>Prédicteur de Satisfaction Étudiante</h5>
-                    <p class="mb-0">Projet de classification par réseau de neurones MLP avec interface Django.</p>
+                    <h5>{% trans "Prédicteur de Satisfaction Étudiante" %}</h5>
+                    <p class="mb-0">{% trans "Projet de classification par réseau de neurones MLP avec interface Django." %}</p>
                 </div>
                 <div class="col-md-6">
-                    <h5>Fonctionnalités</h5>
+                    <h5>{% trans "Fonctionnalités" %}</h5>
                     <ul class="list-unstyled mb-0">
-                        <li>• Prédiction avec probabilités</li>
-                        <li>• Prédiction CSV par lot</li>
-                        <li>• Entraînement de modèles MLP</li>
-                        <li>• Analyse statistique des prédictions</li>
-                        <li>• Gestion et export des données</li>
+                        <li>• {% trans "Prédiction avec probabilités" %}</li>
+                        <li>• {% trans "Prédiction CSV par lot" %}</li>
+                        <li>• {% trans "Entraînement de modèles MLP" %}</li>
+                        <li>• {% trans "Analyse statistique des prédictions" %}</li>
+                        <li>• {% trans "Gestion et export des données" %}</li>
                     </ul>
                 </div>
             </div>
             <hr>
-            <p class="text-center mb-0">&copy; 2026 - Projet de Classification ML</p>
+            <p class="text-center mb-0">&copy; 2026 - {% trans "Projet de Classification ML" %}</p>
         </div>
     </footer>
 
@@ -555,7 +586,7 @@
             toast.innerHTML = `
                 <span class="app-toast-icon"><i class="bi ${icon}" aria-hidden="true"></i></span>
                 <div class="app-toast-content"><strong>${notificationEscapeHtml(title)}</strong><br>${notificationEscapeHtml(message)}</div>
-                <button type="button" class="app-toast-close" data-toast-close aria-label="Fermer">×</button>`;
+                <button type="button" class="app-toast-close" data-toast-close aria-label="{% trans "Fermer" %}">×</button>`;
             toastRegion.appendChild(toast);
             wireToast(toast, 5200);
         };
@@ -599,12 +630,12 @@
             const date = new Date(iso);
             const diffSeconds = Math.round((date.getTime() - Date.now()) / 1000);
             const abs = Math.abs(diffSeconds);
-            const rtf = new Intl.RelativeTimeFormat('fr', { numeric: 'auto' });
+            const rtf = new Intl.RelativeTimeFormat('{{ LANGUAGE_CODE }}', { numeric: 'auto' });
             if (abs < 60) return rtf.format(diffSeconds, 'second');
             if (abs < 3600) return rtf.format(Math.round(diffSeconds / 60), 'minute');
             if (abs < 86400) return rtf.format(Math.round(diffSeconds / 3600), 'hour');
             if (abs < 604800) return rtf.format(Math.round(diffSeconds / 86400), 'day');
-            return date.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
+            return date.toLocaleString(('{{ LANGUAGE_CODE }}' === 'en' ? 'en-US' : 'fr-FR'), { dateStyle: 'short', timeStyle: 'short' });
         };
 
         const iconFor = (notification) => {
@@ -620,12 +651,12 @@
             const value = Number(count) || 0;
             badge.textContent = value > 99 ? '99+' : String(value);
             badge.hidden = value === 0;
-            toggle.setAttribute('aria-label', value ? `Notifications — ${value} non lue(s)` : 'Notifications — aucune non lue');
+            toggle.setAttribute('aria-label', value ? `{% trans "Notifications" %} — ${value} non lue(s)` : '{% trans "Notifications — aucune non lue" %}');
         };
 
-        const renderNotifications = (notifications) => {
+        const render{% trans "Notifications" %} = (notifications) => {
             if (!notifications.length) {
-                list.innerHTML = '<div class="notification-empty"><i class="bi bi-bell-slash" aria-hidden="true"></i><span>Aucune notification pour le moment.</span></div>';
+                list.innerHTML = '<div class="notification-empty"><i class="bi bi-bell-slash" aria-hidden="true"></i><span>{% trans "Aucune notification pour le moment." %}</span></div>';
                 return;
             }
 
@@ -645,7 +676,7 @@
                 </button>`).join('');
         };
 
-        const fetchNotifications = async ({ toastNew = true } = {}) => {
+        const fetch{% trans "Notifications" %} = async ({ toastNew = true } = {}) => {
             try {
                 const response = await fetch(feedUrl, {
                     method: 'GET',
@@ -657,9 +688,9 @@
                 const data = await response.json();
                 const notifications = Array.isArray(data.notifications) ? data.notifications : [];
 
-                renderNotifications(notifications);
+                render{% trans "Notifications" %}(notifications);
                 updateBadge(data.unread_count);
-                if (status) status.textContent = 'Mis à jour à l’instant';
+                if (status) status.textContent = '{% trans "Mis à jour à l’instant" %}';
 
                 const currentMax = notifications.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0);
                 if (initialized && toastNew && currentMax > maxKnownId) {
@@ -672,15 +703,15 @@
                 maxKnownId = Math.max(maxKnownId, currentMax);
                 initialized = true;
             } catch (error) {
-                if (status) status.textContent = 'Actualisation momentanément indisponible';
-                console.debug('Notifications:', error);
+                if (status) status.textContent = '{% trans "Actualisation momentanément indisponible" %}';
+                console.debug('{% trans "Notifications" %}:', error);
             }
         };
 
         const setPanelOpen = (open) => {
             panel.hidden = !open;
             toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-            if (open) fetchNotifications({ toastNew: false });
+            if (open) fetch{% trans "Notifications" %}({ toastNew: false });
         };
 
         toggle.addEventListener('click', (event) => {
@@ -700,7 +731,7 @@
             try {
                 await postJson(item.dataset.readUrl);
                 item.classList.remove('is-unread');
-                await fetchNotifications({ toastNew: false });
+                await fetch{% trans "Notifications" %}({ toastNew: false });
             } catch (error) {
                 console.debug('Lecture notification:', error);
             }
@@ -710,14 +741,14 @@
         markAllButton.addEventListener('click', async () => {
             try {
                 await postJson(markAllUrl);
-                await fetchNotifications({ toastNew: false });
+                await fetch{% trans "Notifications" %}({ toastNew: false });
             } catch (error) {
-                showToast('Notifications', 'Impossible de tout marquer comme lu.', 'error');
+                showToast('{% trans "Notifications" %}', '{% trans "Impossible de tout marquer comme lu." %}', 'error');
             }
         });
 
-        fetchNotifications({ toastNew: false });
-        pollTimer = window.setInterval(() => fetchNotifications({ toastNew: true }), 5000);
+        fetch{% trans "Notifications" %}({ toastNew: false });
+        pollTimer = window.setInterval(() => fetch{% trans "Notifications" %}({ toastNew: true }), 5000);
         window.addEventListener('beforeunload', () => window.clearInterval(pollTimer));
     });
 
@@ -731,6 +762,21 @@
     }
     </script>
 
+
+    {% trans "Thème" as i18n_theme %}
+    {% trans "Automatique" as i18n_theme_auto %}
+    {% trans "Clair" as i18n_theme_light %}
+    {% trans "Sombre" as i18n_theme_dark %}
+    {% trans "Changer le thème" as i18n_change_theme %}
+    <script>
+        window.APP_I18N = {
+            theme: "{{ i18n_theme|escapejs }}",
+            themeAuto: "{{ i18n_theme_auto|escapejs }}",
+            themeLight: "{{ i18n_theme_light|escapejs }}",
+            themeDark: "{{ i18n_theme_dark|escapejs }}",
+            changeTheme: "{{ i18n_change_theme|escapejs }}"
+        };
+    </script>
     <script src="{% static 'ux/theme_accessibility.js' %}"></script>
     {% block scripts %}{% endblock %}
 </body>

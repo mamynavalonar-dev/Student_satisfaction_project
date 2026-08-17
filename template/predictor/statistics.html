@@ -1,8 +1,9 @@
 {% extends 'base.html' %}
+{% load i18n predictor_i18n %}
 
 {% block nav_active %}page-stats{% endblock %}
 {% block nav_stats %}active{% endblock %}
-{% block title %}Statistiques - Analyse des prédictions{% endblock %}
+{% block title %}{% trans "Statistiques - Analyse des prédictions" %}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -18,8 +19,8 @@
 <div class="container">
     <div class="row mb-4">
         <div class="col-12 text-center">
-            <h1 class="mb-2">📊 Analyse Statistique</h1>
-            <p class="text-muted mb-0">Analyse descriptive des prédictions enregistrées par l'application.</p>
+            <h1 class="mb-2">📊 {% trans "Analyse Statistique" %}</h1>
+            <p class="text-muted mb-0">{% trans "Analyse descriptive des prédictions enregistrées par l'application." %}</p>
         </div>
     </div>
 
@@ -28,7 +29,7 @@
             <div class="card stats-card h-100 border-0 shadow-sm">
                 <div class="card-body text-center">
                     <div class="metric-value">{{ stats.total }}</div>
-                    <div>Prédictions enregistrées</div>
+                    <div>{% trans "Prédictions enregistrées" %}</div>
                 </div>
             </div>
         </div>
@@ -36,7 +37,7 @@
             <div class="card bg-success text-white h-100 border-0 shadow-sm">
                 <div class="card-body text-center">
                     <div class="metric-value">{{ stats.satisfied }}</div>
-                    <div>Satisfaits prédits</div>
+                    <div>{% trans "Satisfaits prédits" %}</div>
                 </div>
             </div>
         </div>
@@ -44,7 +45,7 @@
             <div class="card bg-danger text-white h-100 border-0 shadow-sm">
                 <div class="card-body text-center">
                     <div class="metric-value">{{ stats.unsatisfied }}</div>
-                    <div>Non satisfaits prédits</div>
+                    <div>{% trans "Non satisfaits prédits" %}</div>
                 </div>
             </div>
         </div>
@@ -52,7 +53,7 @@
             <div class="card bg-info text-white h-100 border-0 shadow-sm">
                 <div class="card-body text-center">
                     <div class="metric-value">{{ stats.satisfaction_rate|floatformat:1 }}%</div>
-                    <div>Taux prédit satisfait</div>
+                    <div>{% trans "Taux prédit satisfait" %}</div>
                 </div>
             </div>
         </div>
@@ -60,11 +61,11 @@
 
     {% if stats.total == 0 %}
         <div class="alert alert-info text-center">
-            Aucune prédiction n'est encore enregistrée. Effectuez une prédiction pour alimenter les statistiques.
+            {% trans "Aucune prédiction n'est encore enregistrée. Effectuez une prédiction pour alimenter les statistiques." %}
         </div>
     {% elif stats.total < 30 %}
         <div class="alert alert-warning">
-            <strong>Échantillon encore limité :</strong>
+            <strong>{% trans "Échantillon encore limité :" %}</strong>
             seulement {{ stats.total }} prédiction{{ stats.total|pluralize }} enregistrée{{ stats.total|pluralize }}.
             Les taux par sous-groupes et les associations observées peuvent varier fortement avec si peu de données.
             Ils doivent être interprétés comme des indications descriptives, pas comme des conclusions générales.
@@ -74,25 +75,25 @@
     <div class="row g-4 mb-4">
         <div class="col-lg-6">
             <div class="card h-100 border-0 shadow-sm">
-                <div class="card-header bg-white"><h5 class="mb-0">🥧 Répartition globale</h5></div>
+                <div class="card-header bg-white"><h5 class="mb-0">🥧 {% trans "Répartition globale" %}</h5></div>
                 <div class="card-body"><div class="chart-shell"><canvas id="satisfactionChart"></canvas></div></div>
             </div>
         </div>
         <div class="col-lg-6">
             <div class="card h-100 border-0 shadow-sm">
-                <div class="card-header bg-white"><h5 class="mb-0">📚 Taux par type de cours</h5></div>
+                <div class="card-header bg-white"><h5 class="mb-0">📚 {% trans "Taux par type de cours" %}</h5></div>
                 <div class="card-body"><div class="chart-shell"><canvas id="courseTypeChart"></canvas></div></div>
             </div>
         </div>
         <div class="col-lg-6">
             <div class="card h-100 border-0 shadow-sm">
-                <div class="card-header bg-white"><h5 class="mb-0">🎓 Taux par niveau étudiant</h5></div>
+                <div class="card-header bg-white"><h5 class="mb-0">🎓 {% trans "Taux par niveau étudiant" %}</h5></div>
                 <div class="card-body"><div class="chart-shell"><canvas id="levelChart"></canvas></div></div>
             </div>
         </div>
         <div class="col-lg-6">
             <div class="card h-100 border-0 shadow-sm">
-                <div class="card-header bg-white"><h5 class="mb-0">📈 Taux selon les notes 1–7</h5></div>
+                <div class="card-header bg-white"><h5 class="mb-0">📈 {% trans "Taux selon les notes 1–7" %}</h5></div>
                 <div class="card-body"><div class="chart-shell"><canvas id="scoreChart"></canvas></div></div>
             </div>
         </div>
@@ -102,24 +103,29 @@
     {% if model_importance and model_importance.available %}
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-header bg-white">
-            <h5 class="mb-1">🧠 Importance globale du modèle</h5>
-            <p class="small text-muted mb-0">Baisse moyenne du F1-score lorsque chaque caractéristique est mélangée.</p>
+            <h5 class="mb-1">🧠 {% trans "Importance globale du modèle" %}</h5>
+            <p class="small text-muted mb-0">{% trans "Baisse moyenne du F1-score lorsque chaque caractéristique est mélangée." %}</p>
         </div>
         <div class="card-body">
-            <div class="alert alert-light border small">
-                Cette mesure décrit ce que le <strong>MLP actif utilise pour prédire</strong>. Elle est différente des « Associations observées » et ne constitue pas une preuve de causalité.
-            </div>
+            <div class="alert alert-light border">
+    {# V14D3_GLOBAL_IMPORTANCE_COPY_SOURCE #}
+    {% if request.LANGUAGE_CODE == "en" %}
+        This measure describes what the active MLP uses for prediction. It differs from “Observed Associations” and is not evidence of causality.
+    {% else %}
+        Cette mesure décrit ce que le MLP actif utilise pour prédire. Elle est différente des « Associations observées » et ne constitue pas une preuve de causalité.
+    {% endif %}
+</div>
             {% for item in model_importance.items %}
             <div class="mb-3">
                 <div class="d-flex justify-content-between gap-3 mb-1">
-                    <span>{{ item.label }}</span>
+                    <span>{{ item.label|localized_display }}</span>
                     <strong>{{ item.importance_points|floatformat:2 }} pts F1</strong>
                 </div>
                 <div class="progress" style="height:10px;">
                     <div class="progress-bar" role="progressbar" style="width:{{ item.width }}%;"
                          aria-valuenow="{{ item.width }}" aria-valuemin="0" aria-valuemax="100"></div>
                 </div>
-                <small class="text-muted">Écart-type : {{ item.std_points|floatformat:2 }} pts</small>
+                <small class="text-muted">{% trans "Écart-type :" %} {{ item.std_points|floatformat:2 }} pts</small>
             </div>
             {% endfor %}
             <p class="small text-muted mb-0">
@@ -137,17 +143,17 @@
         <div class="col-lg-7">
             <div class="card h-100 border-0 shadow-sm">
                 <div class="card-header bg-white">
-                    <h5 class="mb-1">🔎 Associations observées</h5>
-                    <p class="small text-muted mb-0">Écart entre le taux prédit le plus élevé et le plus faible parmi les valeurs observées de chaque facteur.</p>
+                    <h5 class="mb-1">🔎 {% trans "Associations observées" %}</h5>
+                    <p class="small text-muted mb-0">{% trans "Écart entre le taux prédit le plus élevé et le plus faible parmi les valeurs observées de chaque facteur." %}</p>
                 </div>
                 <div class="card-body">
                     <div class="alert alert-light border small">
-                        Ces valeurs sont calculées sur les prédictions enregistrées. Elles décrivent une association et ne constituent ni une causalité ni une importance interne des poids du MLP.
+                        {% trans "Ces valeurs sont calculées sur les prédictions enregistrées. Elles décrivent une association et ne constituent ni une causalité ni une importance interne des poids du MLP." %}
                     </div>
                     {% for factor in association_factors %}
                         <div class="mb-3">
                             <div class="d-flex justify-content-between gap-3 mb-1">
-                                <span>{{ factor.label }}</span>
+                                <span>{{ factor.label|localized_display }}</span>
                                 <strong>{{ factor.spread|floatformat:1 }} points</strong>
                             </div>
                             <div class="progress association-progress">
@@ -163,7 +169,7 @@
 
         <div class="col-lg-5">
             <div class="card h-100 border-0 shadow-sm">
-                <div class="card-header bg-white"><h5 class="mb-0">🤖 Performance du modèle actif</h5></div>
+                <div class="card-header bg-white"><h5 class="mb-0">🤖 {% trans "Performance du modèle actif" %}</h5></div>
                 <div class="card-body">
                     {% if active_model %}
                         <div class="row g-3">
@@ -182,8 +188,8 @@
                             <div class="alert alert-warning py-2 mt-3 mb-0 small">Ancien artefact : réentraînez le modèle pour disposer de Precision, Recall et F1.</div>
                         {% endif %}
                     {% else %}
-                        <p class="text-muted">Aucun modèle actif.</p>
-                        <a href="{% url 'train_model' %}" class="btn btn-success">Entraîner un modèle</a>
+                        <p class="text-muted">{% trans "Aucun modèle actif" %}.</p>
+                        <a href="{% url 'train_model' %}" class="btn btn-success">{% trans "Entraîner un modèle" %}</a>
                     {% endif %}
                 </div>
             </div>
@@ -193,13 +199,13 @@
     <div class="row g-4">
         <div class="col-lg-6">
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white"><h5 class="mb-0">Détail par type de cours</h5></div>
+                <div class="card-header bg-white"><h5 class="mb-0">{% trans "Détail par type de cours" %}</h5></div>
                 <div class="table-responsive">
                     <table class="table table-stats mb-0">
-                        <thead><tr><th>Type</th><th>Total</th><th>Satisfaits</th><th>Taux</th></tr></thead>
+                        <thead><tr><th>{% trans "Type" %}</th><th>{% trans "Total" %}</th><th>{% trans "Satisfaits" %}</th><th>{% trans "Taux" %}</th></tr></thead>
                         <tbody>
                             {% for key, row in type_stats.items %}
-                                <tr><td>{{ row.label }}</td><td>{{ row.total }}</td><td>{{ row.satisfied }}</td><td>{{ row.rate|floatformat:1 }}%</td></tr>
+                                <tr><td>{{ row.label|localized_display }}</td><td>{{ row.total }}</td><td>{{ row.satisfied }}</td><td>{{ row.rate|floatformat:1 }}%</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -208,13 +214,13 @@
         </div>
         <div class="col-lg-6">
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white"><h5 class="mb-0">Détail par niveau</h5></div>
+                <div class="card-header bg-white"><h5 class="mb-0">{% trans "Détail par niveau" %}</h5></div>
                 <div class="table-responsive">
                     <table class="table table-stats mb-0">
-                        <thead><tr><th>Niveau</th><th>Total</th><th>Satisfaits</th><th>Taux</th></tr></thead>
+                        <thead><tr><th>{% trans "Niveau" %}</th><th>{% trans "Total" %}</th><th>{% trans "Satisfaits" %}</th><th>{% trans "Taux" %}</th></tr></thead>
                         <tbody>
                             {% for key, row in niveau_stats.items %}
-                                <tr><td>{{ row.label }}</td><td>{{ row.total }}</td><td>{{ row.satisfied }}</td><td>{{ row.rate|floatformat:1 }}%</td></tr>
+                                <tr><td>{{ row.label|localized_display }}</td><td>{{ row.total }}</td><td>{{ row.satisfied }}</td><td>{{ row.rate|floatformat:1 }}%</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -224,7 +230,7 @@
     </div>
 </div>
 
-{{ charts_data|json_script:"charts-data" }}
+{{ charts_data|localized_structure|json_script:"charts-data" }}
 {% endblock %}
 
 {% block scripts %}
@@ -266,16 +272,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     } else if (satisfactionCanvas) {
-        satisfactionCanvas.parentElement.innerHTML = '<p class="text-muted text-center py-5">Aucune donnée disponible</p>';
+        satisfactionCanvas.parentElement.innerHTML = '<p class="text-muted text-center py-5">{% trans "Aucune donnée disponible" %}</p>';
     }
 
-    const courseTypeCanvas = document.getElementById('courseTypeChart');
-    if (courseTypeCanvas) {
-        new Chart(courseTypeCanvas, {
+    const course{% trans "Type" %}Canvas = document.getElementById('course{% trans "Type" %}Chart');
+    if (course{% trans "Type" %}Canvas) {
+        new Chart(course{% trans "Type" %}Canvas, {
             type: 'bar',
             data: {
                 labels: charts.course_types.labels,
-                datasets: [{ label: 'Taux satisfait prédit (%)', data: charts.course_types.rates }]
+                datasets: [{ label: '{% trans "Taux satisfait prédit (%)" %}', data: charts.course_types.rates }]
             },
             options: { responsive: true, maintainAspectRatio: false, scales: { y: percentageScale } }
         });
@@ -287,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
             type: 'bar',
             data: {
                 labels: charts.levels.labels,
-                datasets: [{ label: 'Taux satisfait prédit (%)', data: charts.levels.rates }]
+                datasets: [{ label: '{% trans "Taux satisfait prédit (%)" %}', data: charts.levels.rates }]
             },
             options: { responsive: true, maintainAspectRatio: false, scales: { y: percentageScale } }
         });
@@ -300,9 +306,9 @@ document.addEventListener('DOMContentLoaded', () => {
             data: {
                 labels: charts.scores.labels,
                 datasets: [
-                    { label: 'Qualité', data: charts.scores.quality, tension: .25 },
-                    { label: 'Charge', data: charts.scores.workload, tension: .25 },
-                    { label: 'Interactivité', data: charts.scores.interactivity, tension: .25 }
+                    { label: '{% trans "Qualité" %}', data: charts.scores.quality, tension: .25 },
+                    { label: '{% trans "Charge" %}', data: charts.scores.workload, tension: .25 },
+                    { label: '{% trans "Interactivité" %}', data: charts.scores.interactivity, tension: .25 }
                 ]
             },
             options: {

@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
+{% load i18n %}
 
-{% block title %}Gestion des utilisateurs - Satisfaction Étudiante{% endblock %}
+{% block title %}{% trans "Gestion des utilisateurs" %} - Satisfaction Étudiante{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'accounts/account.css' %}">
@@ -12,19 +13,19 @@
     <div class="account-heading-row">
         <div>
             <span class="account-eyebrow">Administration</span>
-            <h1>Gestion des utilisateurs</h1>
-            <p>Créez les comptes, attribuez les rôles et contrôlez leur activation.</p>
+            <h1>{% trans "Gestion des utilisateurs" %}</h1>
+            <p>{% trans "Créez les comptes, attribuez les rôles et contrôlez leur activation." %}</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
             {% if user.is_staff %}
                 <a class="btn btn-outline-secondary" href="/admin/">
                     <i class="bi bi-gear me-1" aria-hidden="true"></i>
-                    Django Admin
+                    {% trans "Django Admin" %}
                 </a>
             {% endif %}
             <a class="btn btn-primary" href="{% url 'accounts:user_create' %}">
                 <i class="bi bi-person-plus me-1" aria-hidden="true"></i>
-                Nouveau compte
+                {% trans "Nouveau compte" %}
             </a>
         </div>
     </div>
@@ -33,39 +34,39 @@
         <div class="card-body">
             <div class="rbac-toolbar">
                 <form method="get" class="rbac-search" role="search">
-                    <label class="visually-hidden" for="user-search">Rechercher un utilisateur</label>
+                    <label class="visually-hidden" for="user-search">{% trans "Rechercher" %} un utilisateur</label>
                     <input
                         id="user-search"
                         class="form-control"
                         type="search"
                         name="q"
                         value="{{ query }}"
-                        placeholder="Nom, e-mail, prénom…"
+                        placeholder="{% trans "Nom, e-mail, prénom…" %}"
                     >
                     <button class="btn btn-outline-primary" type="submit">
-                        Rechercher
+                        {% trans "Rechercher" %}
                     </button>
                 </form>
-                <span class="badge bg-secondary">{{ total_users }} compte{{ total_users|pluralize }}</span>
+                <span class="badge bg-secondary">{{ total_users }} {% trans "compte" %}{{ total_users|pluralize }}</span>
             </div>
 
             <div class="rbac-role-legend" aria-label="Rôles disponibles">
-                <span class="badge bg-danger">Super Administrateur</span>
-                <span class="badge bg-primary">Administrateur</span>
-                <span class="badge bg-info text-dark">Responsable ML</span>
-                <span class="badge bg-success">Analyste</span>
-                <span class="badge bg-secondary">Utilisateur</span>
+                <span class="badge bg-danger">{% trans "Super Administrateur" %}</span>
+                <span class="badge bg-primary">{% trans "Administrateur" %}</span>
+                <span class="badge bg-info text-dark">{% trans "Responsable ML" %}</span>
+                <span class="badge bg-success">{% trans "Analyste" %}</span>
+                <span class="badge bg-secondary">{% trans "Utilisateur" %}</span>
             </div>
 
             <div class="table-responsive">
                 <table class="table align-middle rbac-table">
                     <thead>
                         <tr>
-                            <th>Utilisateur</th>
-                            <th>Rôle</th>
-                            <th>État</th>
-                            <th>Dernière connexion</th>
-                            <th class="text-end">Action</th>
+                            <th>{% trans "Utilisateur" %}</th>
+                            <th>{% trans "Rôle" %}</th>
+                            <th>{% trans "État" %}</th>
+                            <th>{% trans "Dernière connexion" %}</th>
+                            <th class="text-end">{% trans "Action" %}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -74,22 +75,22 @@
                                 <td>
                                     <strong>{{ row.user.username }}</strong>
                                     <div class="small text-muted">
-                                        {{ row.user.get_full_name|default:"Nom non renseigné" }}
+                                        {% if row.user.get_full_name %}{{ row.user.get_full_name }}{% else %}{% trans "Nom non renseigné" %}{% endif %}
                                     </div>
                                     <div class="small text-muted">
-                                        {{ row.user.email|default:"E-mail non renseigné" }}
+                                        {% if row.user.email %}{{ row.user.email }}{% else %}{% trans "E-mail non renseigné" %}{% endif %}
                                     </div>
                                 </td>
                                 <td>
                                     <span class="badge {{ row.role_badge_class }}">
-                                        {{ row.role }}
+                                        {{ row.role_label }}
                                     </span>
                                 </td>
                                 <td>
                                     {% if row.user.is_active %}
-                                        <span class="badge bg-success">Actif</span>
+                                        <span class="badge bg-success">{% trans "Actif" %}</span>
                                     {% else %}
-                                        <span class="badge bg-secondary">Désactivé</span>
+                                        <span class="badge bg-secondary">{% trans "Désactivé" %}</span>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -105,21 +106,21 @@
                                             class="btn btn-outline-primary btn-sm"
                                             href="{% url 'accounts:user_role_edit' row.user.pk %}"
                                         >
-                                            Gérer
+                                            {% trans "Gérer" %}
                                         </a>
                                     {% elif row.user.is_superuser %}
-                                        <span class="small text-muted">Protégé</span>
+                                        <span class="small text-muted">{% trans "Protégé" %}</span>
                                     {% elif row.user.pk == user.pk %}
-                                        <span class="small text-muted">Votre compte</span>
+                                        <span class="small text-muted">{% trans "Votre compte" %}</span>
                                     {% else %}
-                                        <span class="small text-muted">Non modifiable</span>
+                                        <span class="small text-muted">{% trans "Non modifiable" %}</span>
                                     {% endif %}
                                 </td>
                             </tr>
                         {% empty %}
                             <tr>
                                 <td colspan="5" class="text-center text-muted py-4">
-                                    Aucun utilisateur trouvé.
+                                    {% trans "Aucun utilisateur trouvé." %}
                                 </td>
                             </tr>
                         {% endfor %}
@@ -133,7 +134,7 @@
                         {% if page_obj.has_previous %}
                             <li class="page-item">
                                 <a class="page-link" href="?q={{ query|urlencode }}&page={{ page_obj.previous_page_number }}">
-                                    Précédent
+                                    {% trans "Précédent" %}
                                 </a>
                             </li>
                         {% endif %}
@@ -145,7 +146,7 @@
                         {% if page_obj.has_next %}
                             <li class="page-item">
                                 <a class="page-link" href="?q={{ query|urlencode }}&page={{ page_obj.next_page_number }}">
-                                    Suivant
+                                    {% trans "Suivant" %}
                                 </a>
                             </li>
                         {% endif %}

@@ -28,6 +28,38 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 from .models import ModelTraining
 
+# V14C227_ARTIFACT_REASON_SOURCE
+def _localized_artifact_reason(kind, **values):
+    from django.utils.translation import get_language
+
+    language = str(get_language() or "").lower()
+    is_english = language.startswith("en")
+
+    if kind == "missing_joblib":
+        if is_english:
+            return "Missing .joblib file."
+        return "Fichier .joblib introuvable."
+
+    if kind == "sklearn_version":
+        saved = values.get("saved", "")
+        current = values.get("current", "")
+
+        if is_english:
+            return (
+                f"Saved with scikit-learn {saved}; "
+                f"current environment {current}. "
+                "Retrain this model before activation."
+            )
+
+        return (
+            f"Enregistré avec scikit-learn {saved}, "
+            f"environnement actuel {current}. "
+            "Réentraînez ce modèle avant de l'activer."
+        )
+
+    return str(values.get("fallback", ""))
+
+
 logger = logging.getLogger(__name__)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -540,7 +572,7 @@ def inspect_model_artifact(stored_path: str):
 
     model_path = _resolve_model_path(stored_path)
     if model_path is None:
-        result["reason"] = "Fichier .joblib introuvable."
+        result["reason"] = _localized_artifact_reason("missing_joblib")
         return result
 
     result["available"] = True

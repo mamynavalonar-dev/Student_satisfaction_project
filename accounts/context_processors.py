@@ -1,3 +1,4 @@
+from django.utils.translation import gettext
 from .rbac import (
     CAP_BATCH,
     CAP_DATA,
@@ -44,7 +45,7 @@ def rbac_context(request):
         nav_count += 1
 
     return {
-        "current_role_label": role,
+        "current_role_label": gettext(role),
         "current_role_badge_class": role_badge_class(role),
         "can_batch_predict": user_can(user, CAP_BATCH),
         "can_view_statistics": can_stats,

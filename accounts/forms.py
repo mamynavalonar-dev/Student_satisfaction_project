@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from django import forms
 from django.contrib.auth import get_user_model
+from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.forms import (
     PasswordChangeForm,
     PasswordResetForm,
@@ -35,20 +36,20 @@ def _validate_unique_email(email, instance=None):
 
     if queryset.exists():
         raise forms.ValidationError(
-            "Cette adresse e-mail est déjà utilisée par un autre compte."
+            _("Cette adresse e-mail est déjà utilisée par un autre compte.")
         )
     return email
 
 
 class ProfileForm(forms.ModelForm):
     current_password = forms.CharField(
-        label="Mot de passe actuel",
+        label=_("Mot de passe actuel"),
         required=False,
         strip=False,
         widget=forms.PasswordInput(
             attrs={
                 "autocomplete": "current-password",
-                "placeholder": "Requis uniquement pour changer l’e-mail",
+                "placeholder": _("Requis uniquement pour changer l’e-mail"),
             }
         ),
         help_text=(
@@ -61,16 +62,16 @@ class ProfileForm(forms.ModelForm):
         model = User
         fields = ("first_name", "last_name", "email")
         labels = {
-            "first_name": "Prénom",
-            "last_name": "Nom",
-            "email": "Adresse e-mail",
+            "first_name": _("Prénom"),
+            "last_name": _("Nom"),
+            "email": _("Adresse e-mail"),
         }
         widgets = {
             "first_name": forms.TextInput(
-                attrs={"autocomplete": "given-name", "placeholder": "Prénom"}
+                attrs={"autocomplete": "given-name", "placeholder": _("Prénom")}
             ),
             "last_name": forms.TextInput(
-                attrs={"autocomplete": "family-name", "placeholder": "Nom"}
+                attrs={"autocomplete": "family-name", "placeholder": _("Nom")}
             ),
             "email": forms.EmailInput(
                 attrs={"autocomplete": "email", "placeholder": "nom@exemple.com"}
@@ -103,12 +104,12 @@ class ProfileForm(forms.ModelForm):
             if not password:
                 self.add_error(
                     "current_password",
-                    "Saisissez votre mot de passe actuel pour modifier l’e-mail.",
+                    _("Saisissez votre mot de passe actuel pour modifier l’e-mail."),
                 )
             elif not self.instance.check_password(password):
                 self.add_error(
                     "current_password",
-                    "Le mot de passe actuel est incorrect.",
+                    _("Le mot de passe actuel est incorrect."),
                 )
 
         return cleaned
@@ -144,12 +145,12 @@ class BootstrapSetPasswordForm(SetPasswordForm):
 
 
 class ManagedUserCreateForm(UserCreationForm):
-    email = forms.EmailField(label="Adresse e-mail", required=True)
-    first_name = forms.CharField(label="Prénom", required=False)
-    last_name = forms.CharField(label="Nom", required=False)
-    role = forms.ChoiceField(label="Rôle", choices=ROLE_CHOICES)
+    email = forms.EmailField(label=_("Adresse e-mail"), required=True)
+    first_name = forms.CharField(label=_("Prénom"), required=False)
+    last_name = forms.CharField(label=_("Nom"), required=False)
+    role = forms.ChoiceField(label=_("Rôle"), choices=ROLE_CHOICES)
     is_active = forms.BooleanField(
-        label="Compte actif",
+        label=_("Compte actif"),
         required=False,
         initial=True,
     )
@@ -189,9 +190,9 @@ class ManagedUserCreateForm(UserCreationForm):
 
 
 class ManagedUserRoleForm(forms.Form):
-    role = forms.ChoiceField(label="Rôle", choices=ROLE_CHOICES)
+    role = forms.ChoiceField(label=_("Rôle"), choices=ROLE_CHOICES)
     is_active = forms.BooleanField(
-        label="Compte actif",
+        label=_("Compte actif"),
         required=False,
     )
 

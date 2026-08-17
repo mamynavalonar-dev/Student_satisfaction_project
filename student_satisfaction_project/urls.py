@@ -8,6 +8,7 @@ from django.views.generic import RedirectView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("favicon.ico", RedirectView.as_view(url="/static/ux/favicon.svg", permanent=False)),
+    path("i18n/", include("django.conf.urls.i18n")),
     path("account/", include("accounts.urls")),
     path("api/v1/", include("api.urls")),
     path('', include('predictor.urls')),

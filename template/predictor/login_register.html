@@ -1,4 +1,4 @@
-{% load static %}
+{% load static i18n predictor_i18n %}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -14,7 +14,7 @@
             <aside class="auth-intro" aria-label="Présentation du projet">
                 <div class="auth-brand">
                     <span class="auth-brand-icon" aria-hidden="true">🎓</span>
-                    <span>Satisfaction Étudiante</span>
+                    <span>{% trans "Satisfaction Étudiante" %}</span>
                 </div>
 
                 <div class="auth-intro-copy" data-intro="login">
@@ -26,11 +26,11 @@
                 <div class="auth-intro-copy" data-intro="register">
                     <p class="auth-kicker">Projet IA · MLP + Django</p>
                     <h1>Bienvenue</h1>
-                    <p>Créez votre compte pour commencer à manipuler le modèle de classification.</p>
+                    <p>Créez votre {% trans "compte" %} pour commencer à manipuler le modèle de classification.</p>
                 </div>
 
                 <div class="auth-pills" aria-label="Fonctionnalités principales">
-                    <span>Prédiction</span>
+                    <span>{% trans "Prédiction" %}</span>
                     <span>MLP</span>
                     <span>Statistiques</span>
                 </div>
@@ -111,7 +111,7 @@
 
                 <section class="auth-panel" id="register-panel" data-auth-panel="register" role="tabpanel">
                     <div class="auth-heading">
-                        <h2>Créer un compte</h2>
+                        <h2>Créer un {% trans "compte" %}</h2>
                         <p>Le mot de passe est vérifié par les validateurs de sécurité Django.</p>
                     </div>
 
@@ -152,7 +152,7 @@
                         </div>
 
                         <p class="auth-password-hint">Utilisez un mot de passe suffisamment long, difficile à deviner et différent de vos informations personnelles.</p>
-                        <button type="submit" class="auth-submit">Créer mon compte</button>
+                        <button type="submit" class="auth-submit">Créer mon {% trans "compte" %}</button>
                     </form>
                 </section>
             </div>

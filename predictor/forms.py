@@ -4,6 +4,7 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import User
 
 from .models import StudentFeedback
+from django.utils.translation import gettext_lazy as _
 
 
 class LoginForm(AuthenticationForm):
@@ -99,39 +100,39 @@ class RegistrationForm(UserCreationForm):
 class PredictionForm(forms.Form):
     # Libellés pédagogiques conservés : l'utilisateur comprend la valeur avant de choisir.
     QUALITE_CHOICES = [
-        ("1", "Très insatisfait"),
+        ("1", _("Très insatisfait")),
         ("2", "Insatisfait"),
         ("3", "Plutôt insatisfait / Peu satisfait"),
         ("4", "Neutre / Sans opinion"),
         ("5", "Plutôt satisfait / Assez satisfait"),
         ("6", "Satisfait"),
-        ("7", "Très satisfait"),
+        ("7", _("Très satisfait")),
     ]
 
     INTERACTIVITE_CHOICES = [
-        ("1", "Très non interactif / Totalement passif"),
+        ("1", _("Très non interactif / Totalement passif")),
         ("2", "Non interactif"),
         ("3", "Peu interactif / Plutôt passif"),
         ("4", "Neutre / Interaction moyenne"),
         ("5", "Plutôt interactif / Assez interactif"),
         ("6", "Interactif"),
-        ("7", "Très interactif"),
+        ("7", _("Très interactif")),
     ]
 
     CHARGE_CHOICES = [
-        ("1", "Très léger"),
+        ("1", _("Très léger")),
         ("2", "Léger"),
         ("3", "Plutôt léger / Assez léger"),
         ("4", "Moyen / Modéré"),
         ("5", "Plutôt lourd / Assez lourd"),
         ("6", "Lourd"),
-        ("7", "Très lourd"),
+        ("7", _("Très lourd")),
     ]
 
     TYPE_COURS_CHOICES = [
-        ("présentiel", "Présentiel"),
-        ("distanciel", "Distanciel"),
-        ("hybride", "Hybride"),
+        ("présentiel", _("Présentiel")),
+        ("distanciel", _("Distanciel")),
+        ("hybride", _("Hybride")),
     ]
 
     NIVEAU_CHOICES = [
@@ -143,31 +144,31 @@ class PredictionForm(forms.Form):
     ]
 
     qualite_enseignement = forms.ChoiceField(
-        label="Qualité d'enseignement",
+        label=_("Qualité d'enseignement"),
         choices=QUALITE_CHOICES,
         widget=forms.Select(attrs={"class": "form-control"}),
     )
 
     charge_travail = forms.ChoiceField(
-        label="Charge de travail",
+        label=_("Charge de travail"),
         choices=CHARGE_CHOICES,
         widget=forms.Select(attrs={"class": "form-control"}),
     )
 
     interactivite = forms.ChoiceField(
-        label="Interactivité du cours",
+        label=_("Interactivité du cours"),
         choices=INTERACTIVITE_CHOICES,
         widget=forms.Select(attrs={"class": "form-control"}),
     )
 
     type_cours = forms.ChoiceField(
-        label="Type de cours",
+        label=_("Type de cours"),
         choices=TYPE_COURS_CHOICES,
         widget=forms.Select(attrs={"class": "form-control"}),
     )
 
     niveau_etudiant = forms.ChoiceField(
-        label="Niveau étudiant",
+        label=_("Niveau étudiant"),
         choices=NIVEAU_CHOICES,
         widget=forms.Select(attrs={"class": "form-control"}),
     )
@@ -196,12 +197,12 @@ class StudentFeedbackEditForm(forms.ModelForm):
     """Édition des caractéristiques d'un avis ; la prédiction est recalculée côté serveur."""
 
     qualite_enseignement = forms.TypedChoiceField(
-        label="Qualité d'enseignement",
+        label=_("Qualité d'enseignement"),
         choices=PredictionForm.QUALITE_CHOICES,
         coerce=int,
     )
     charge_travail = forms.TypedChoiceField(
-        label="Charge de travail",
+        label=_("Charge de travail"),
         choices=PredictionForm.CHARGE_CHOICES,
         coerce=int,
     )
@@ -211,11 +212,11 @@ class StudentFeedbackEditForm(forms.ModelForm):
         coerce=int,
     )
     type_cours = forms.ChoiceField(
-        label="Type de cours",
+        label=_("Type de cours"),
         choices=PredictionForm.TYPE_COURS_CHOICES,
     )
     niveau_etudiant = forms.ChoiceField(
-        label="Niveau étudiant",
+        label=_("Niveau étudiant"),
         choices=PredictionForm.NIVEAU_CHOICES,
     )
 

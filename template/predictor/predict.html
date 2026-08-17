@@ -1,20 +1,21 @@
 {% extends 'base.html' %}
+{% load i18n predictor_i18n %}
 
 {% block nav_active %}page-predict{% endblock %}
 {% block nav_predict %}active{% endblock %}
 
-{% block title %}Prédiction - Satisfaction Étudiante{% endblock %}
+{% block title %}{% trans "Prédiction" %} - {% trans "Satisfaction Étudiante" %}{% endblock %}
 
 {% block content %}
 <div class="container">
     <div class="row">
         <div class="col-12">
-            <h1 class="text-center mb-4">🔮 Prédiction de Satisfaction</h1>
-            <p class="text-center text-muted mb-3">Saisissez les caractéristiques du cours pour prédire la satisfaction de l'étudiant</p>
+            <h1 class="text-center mb-4">🔮 {% trans "Prédiction de Satisfaction" %}</h1>
+            <p class="text-center text-muted mb-3">{% trans "Saisissez les caractéristiques du cours pour prédire la satisfaction de l'étudiant" %}</p>
             {% if can_batch_predict %}
 <div class="text-center mb-5">
                 <a href="{% url 'batch_predict' %}" class="btn btn-outline-primary btn-sm">
-                    📦 Prédire plusieurs lignes depuis un CSV
+                    📦 {% trans "Prédire plusieurs lignes depuis un CSV" %}
                 </a>
             </div>
 {% endif %}
@@ -25,14 +26,14 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Caractéristiques du Cours</h4>
+                    <h4 class="mb-0">{% trans "Caractéristiques du Cours" %}</h4>
                 </div>
                 <div class="card-body">
                     <form method="post" id="predictionForm">
                         {% csrf_token %}
                         {% for field in form %}
                         <div class="mb-3">
-                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label|localized_display }}</label>
                             {{ field }}
                             {% if field.help_text %}
                             <div class="form-text">{{ field.help_text }}</div>
@@ -41,7 +42,7 @@
                         {% endfor %}
                         <button type="submit" class="btn btn-primary btn-lg w-100" id="predictBtn">
                             <span class="spinner-border spinner-border-sm d-none" id="spinner"></span>
-                            Prédire la Satisfaction
+                            {% trans "Prédire la Satisfaction" %}
                         </button>
                     </form>
                 </div>
@@ -52,32 +53,32 @@
             {% if prediction_result %}
             <div class="card">
                 <div class="card-header">
-                    <h4 class="mb-0">Résultat de la Prédiction</h4>
+                    <h4 class="mb-0">Résultat de la {% trans "Prédiction" %}</h4>
                 </div>
                 <div class="card-body">
                     <div class="prediction-result {% if prediction_result.prediction == 1 %}satisfied{% else %}unsatisfied{% endif %} text-center mb-4">
                         <h2 class="mb-3">
                             {% if prediction_result.prediction == 1 %}
-                                😊 {{ prediction_result.satisfaction_text }}
+                                😊 {{ prediction_result.satisfaction_text|localized_display }}
                             {% else %}
-                                😞 {{ prediction_result.satisfaction_text }}
+                                😞 {{ prediction_result.satisfaction_text|localized_display }}
                             {% endif %}
                         </h2>
                         <h3>
-                            Confiance : {{ prediction_result.prediction_probability|floatformat:1 }}%
+                            {% trans "Confiance" %} : {{ prediction_result.prediction_probability|floatformat:1 }}%
                         </h3>
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label">Confiance de la prédiction:</label>
+                        <label class="form-label">{% trans "Confiance" %} de la prédiction:</label>
                         <div class="probability-bar">
                             <div class="probability-fill {% if prediction_result.prediction == 1 %}bg-success{% else %}bg-danger{% endif %}"
                                  style="width: {% widthratio prediction_result.prediction_probability 100 100 %}%;">
                             </div>
                         </div>
                         <div class="d-flex justify-content-between mt-1">
-                            <small>Non Satisfait ({{ prediction_result.probability_unsatisfied|floatformat:1 }}%)</small>
-                            <small>Satisfait ({{ prediction_result.probability_satisfied|floatformat:1 }}%)</small>
+                            <small>Non {% trans "Satisfait" %} ({{ prediction_result.probability_unsatisfied|floatformat:1 }}%)</small>
+                            <small>{% trans "Satisfait" %} ({{ prediction_result.probability_satisfied|floatformat:1 }}%)</small>
                         </div>
                     </div>
 
@@ -85,11 +86,11 @@
                         <div class="card-body">
                             <h6 class="card-title">Données utilisées:</h6>
                             <ul class="list-unstyled mb-0">
-                                <li><strong>Qualité enseignement:</strong> {{ input_data.qualite_enseignement }}/7</li>
-                                <li><strong>Charge de travail:</strong> {{ input_data.charge_travail }}/7</li>
-                                <li><strong>Interactivité:</strong> {{ input_data.interactivite }}/7</li>
-                                <li><strong>Type de cours:</strong> {{ input_data.type_cours|capfirst }}</li>
-                                <li><strong>Niveau étudiant:</strong> {{ input_data.niveau_etudiant }}</li>
+                                <li><strong>{% trans "Qualité" %} enseignement:</strong> {{ input_data.qualite_enseignement }}/7</li>
+                                <li><strong>{% trans "Charge de travail" %}:</strong> {{ input_data.charge_travail }}/7</li>
+                                <li><strong>{% trans "Interactivité" %}:</strong> {{ input_data.interactivite }}/7</li>
+                                <li><strong>{% trans "Type de cours" %}:</strong> {{ input_data.type_cours|capfirst }}</li>
+                                <li><strong>{% trans "Niveau étudiant" %}:</strong> {{ input_data.niveau_etudiant }}</li>
                             </ul>
                         </div>
                     </div>
@@ -98,19 +99,19 @@
                     {% if prediction_explanation and prediction_explanation.available %}
                     <div class="card mt-4 border-0 shadow-sm">
                         <div class="card-header bg-white">
-                            <h6 class="mb-1">🧭 Pourquoi cette prédiction ?</h6>
+                            <h6 class="mb-1">🧭 {% trans "Pourquoi cette prédiction ?" %}</h6>
                             <p class="small text-muted mb-0">Contribution de chaque caractéristique à la probabilité d'être satisfait.</p>
                         </div>
                         <div class="card-body">
                             <div class="alert alert-light border small">
                                 Référence : {{ prediction_explanation.baseline_probability|floatformat:1 }}% satisfait ·
-                                Prédiction : {{ prediction_explanation.predicted_probability|floatformat:1 }}% satisfait.
+                                {% trans "Prédiction" %} : {{ prediction_explanation.predicted_probability|floatformat:1 }}% satisfait.
                                 Une contribution positive augmente cette probabilité ; une contribution négative la diminue.
                             </div>
                             {% for item in prediction_explanation.items %}
                             <div class="mb-3">
                                 <div class="d-flex justify-content-between gap-3 mb-1">
-                                    <span><strong>{{ item.label }}</strong> <small class="text-muted">({{ item.value }})</small></span>
+                                    <span><strong>{{ item.label|localized_display }}</strong> <small class="text-muted">({{ item.value|localized_display }})</small></span>
                                     <strong class="{% if item.direction == 'positive' %}text-success{% else %}text-danger{% endif %}">
                                         {% if item.direction == 'positive' %}+{% endif %}{{ item.contribution|floatformat:2 }} pts
                                     </strong>
@@ -163,30 +164,30 @@
                     </div>
 
                     <div class="mt-3 text-center">
-                        <a href="{% url 'predict' %}" class="btn btn-outline-primary">Nouvelle Prédiction</a>
+                        <a href="{% url 'predict' %}" class="btn btn-outline-primary">Nouvelle {% trans "Prédiction" %}</a>
                     </div>
                 </div>
             </div>
             {% else %}
                 <div class="card">
                     <div class="card-header">
-                        <h4 class="mb-0">Instructions</h4>
+                        <h4 class="mb-0">{% trans "Instructions" %}</h4>
                     </div>
                     <div class="card-body">
                          <div class="alert alert-info">
-                            <h6>Comment utiliser ce prédicteur:</h6>
+                            <h6>{% trans "Comment utiliser ce prédicteur:" %}</h6>
                             <ol>
-                                <li><strong>Qualité d'enseignement:</strong> Notez de 1 (très insatisfait) à 7 (très satisfait)</li>
-                                <li><strong>Charge de travail:</strong> Indiquez de 1 (très léger) à 7 (très lourd)</li>
-                                <li><strong>Interactivité:</strong> Évaluez de 1 (très non interactif) à 7 (très interactif)</li>
-                                <li><strong>Type de cours:</strong> Sélectionnez le format du cours</li>
-                                <li><strong>Niveau étudiant:</strong> Choisissez le niveau académique</li>
+                                <li><strong>{% trans "Qualité d'enseignement" %}:</strong> {% trans "Notez de 1 (très insatisfait) à 7 (très satisfait)" %}</li>
+                                <li><strong>{% trans "Charge de travail" %}:</strong> {% trans "Indiquez de 1 (très léger) à 7 (très lourd)" %}</li>
+                                <li><strong>{% trans "Interactivité" %}:</strong> {% trans "Évaluez de 1 (très non interactif) à 7 (très interactif)" %}</li>
+                                <li><strong>{% trans "Type de cours" %}:</strong> {% trans "Sélectionnez le format du cours" %}</li>
+                                <li><strong>{% trans "Niveau étudiant" %}:</strong> {% trans "Choisissez le niveau académique" %}</li>
                             </ol>
                         </div>
                         <div class="card bg-light">
                             <div class="card-body">
-                                <h6>🧠 À propos du modèle:</h6>
-                                <p class="mb-2">Ce prédicteur utilise un <strong>réseau de neurones MLP</strong> (Multi-Layer Perceptron) entraîné sur des données d'avis étudiants.</p>
+                                <h6>🧠 {% trans "À propos du modèle:" %}</h6>
+                                <p class="mb-2">Ce prédicteur utilise un <strong>réseau de neurones MLP</strong> (Multi-Layer Perceptron) entraîné {% trans "sur" %} des données d'avis étudiants.</p>
                             </div>
                         </div>
                     </div>
@@ -200,6 +201,6 @@
 
 {% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded',function(){const e=document.getElementById("predictionForm"),t=document.getElementById("predictBtn"),o=document.getElementById("spinner");e&&t&&o&&e.addEventListener("submit",function(e){t.disabled=!0,o.classList.remove("d-none"),t.innerHTML='<span class="spinner-border spinner-border-sm me-2"></span> Prédiction en cours...'});const n=document.querySelectorAll(".probability-fill");n.forEach(e=>{const t=e.style.width;e.style.width="0%",setTimeout(()=>{e.style.width=t},500)});const d=e?e.querySelectorAll("input, select"):[];d.forEach(e=>{e.addEventListener("change",function(){!function(e){const t=e.value,o=e.name;e.classList.remove("is-invalid","is-valid"),"qualite_enseignement"===o||"interactivite"===o||"charge_travail"===o?t>=1&&t<=7?e.classList.add("is-valid"):""!==t&&e.classList.add("is-invalid"):""!==t&&e.classList.add("is-valid")}(this)})})});
+document.addEventListener('DOMContentLoaded',function(){const e=document.getElementById("predictionForm"),t=document.getElementById("predictBtn"),o=document.getElementById("spinner");e&&t&&o&&e.addEventListener("submit",function(e){t.disabled=!0,o.classList.remove("d-none"),t.innerHTML='<span class="spinner-border spinner-border-sm me-2"></span> {% trans "Prédiction" %} en cours...'});const n=document.querySelectorAll(".probability-fill");n.forEach(e=>{const t=e.style.width;e.style.width="0%",setTimeout(()=>{e.style.width=t},500)});const d=e?e.querySelectorAll("input, select"):[];d.forEach(e=>{e.addEventListener("change",function(){!function(e){const t=e.value,o=e.name;e.classList.remove("is-invalid","is-valid"),"qualite_enseignement"===o||"interactivite"===o||"charge_travail"===o?t>=1&&t<=7?e.classList.add("is-valid"):""!==t&&e.classList.add("is-invalid"):""!==t&&e.classList.add("is-valid")}(this)})})});
 </script>
 {% endblock %}

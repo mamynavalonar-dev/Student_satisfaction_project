@@ -66,16 +66,23 @@
     }
 
     function syncButtons(preference, effective) {
-        const labels = {auto: "Automatique", light: "Clair", dark: "Sombre"};
+        const ui = window.APP_I18N || {};
+        const labels = {
+            auto: ui.themeAuto || "Automatique",
+            light: ui.themeLight || "Clair",
+            dark: ui.themeDark || "Sombre",
+        };
+        const themeWord = ui.theme || "Thème";
+        const changeTheme = ui.changeTheme || "Changer le thème";
 
         document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
             const readable = labels[preference] || labels.auto;
-            button.setAttribute("aria-label", `Thème : ${readable}. Changer le thème`);
-            button.setAttribute("title", `Thème : ${readable}`);
+            button.setAttribute("aria-label", `${themeWord} : ${readable}. ${changeTheme}`);
+            button.setAttribute("title", `${themeWord} : ${readable}`);
             button.setAttribute("data-effective-theme", effective);
 
             const status = button.querySelector("[data-theme-status]");
-            if (status) status.textContent = `Thème ${readable}`;
+            if (status) status.textContent = `${themeWord} ${readable}`;
         });
     }
 

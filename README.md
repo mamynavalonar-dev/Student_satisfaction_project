@@ -209,3 +209,21 @@ Les quatre rôles métier sont des groupes Django et reçoivent des permissions 
 La commande `python manage.py setup_roles` recrée de façon idempotente les groupes et permissions. L'option `--promote-superuser <username>` permet de confirmer explicitement un Super Administrateur sans modifier son mot de passe.
 
 Les Super Administrateurs sont protégés contre les modifications de rôle depuis l'interface métier. Pour créer ou modifier un superuser, utiliser `createsuperuser`, la CLI Django ou l'administration Django avec un compte superuser.
+
+## Internationalisation FR / EN — V14C.1
+
+L'application utilise désormais l'infrastructure i18n native de Django avec `LocaleMiddleware`, la route `set_language`, une langue source française et un catalogue anglais compilé. Le choix FR/EN est conservé par Django et suit la navigation.
+
+Cette première étape couvre le shell global, les contrôles de thème, le profil, la sécurité du compte et l'administration RBAC. Les noms internes des groupes Django restent stables en français, tandis que leurs libellés d'affichage sont traduits selon la langue active.
+
+Direction visuelle : « Academic Control Room ». L'identité académique existante est conservée avec un traitement plus éditorial des titres et un sélecteur de langue compact, accessible et cohérent avec le thème clair/sombre.
+
+V14C.2 traduira ensuite les écrans métier Predictor (Accueil, Prédiction, Batch, Entraînement, Données, Statistiques), leurs messages Python et le JavaScript spécifique.
+
+## Internationalisation Predictor — V14C.2
+
+V14C.2 étend la traduction FR/EN aux écrans métier : Dashboard, prédiction individuelle, prédiction par lot, entraînement, comparaison de modèles, gestion des données, statistiques et explications de prédiction.
+
+Les valeurs métier stockées en base ou dans les artefacts ne sont pas renommées. Un filtre de template traduit uniquement leur libellé d'affichage (`Présentiel`, `Satisfait`, états d'artefacts, etc.), ce qui évite de casser les comparaisons, les exports, l'API ou le modèle ML.
+
+La passe frontend poursuit la direction « Academic Control Room » : titres éditoriaux, tableaux plus lisibles, densité maîtrisée, cartes et formulaires harmonisés, sans remplacer l'identité existante par un thème générique.
