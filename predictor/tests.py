@@ -10,6 +10,9 @@ from .models import StudentFeedback
 class DataManagementTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="tester", password="mot-de-passe-test")
+        # V15A1_EXPLICIT_TEST_ROLE: this legacy fixture explicitly exercises ROLE_ANALYST access.
+        from accounts.rbac import ROLE_ANALYST, assign_role
+        assign_role(self.user, ROLE_ANALYST)
         self.feedback_satisfied = StudentFeedback.objects.create(
             qualite_enseignement=6,
             charge_travail=4,
@@ -144,6 +147,9 @@ class DataManagementTests(TestCase):
 class StatisticsDashboardTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="stats-tester", password="mot-de-passe-test")
+        # V15A1_EXPLICIT_TEST_ROLE: this legacy fixture explicitly exercises ROLE_ANALYST access.
+        from accounts.rbac import ROLE_ANALYST, assign_role
+        assign_role(self.user, ROLE_ANALYST)
         rows = [
             (1, 7, 1, "distanciel", "L1", False, 10.0),
             (1, 6, 2, "distanciel", "L1", False, 20.0),
@@ -338,6 +344,9 @@ class PredictionTrainingUxTests(TestCase):
             email="ux-validator@example.com",
             password="UxValidation123!",
         )
+        # V15A1_EXPLICIT_TEST_ROLE: this legacy fixture explicitly exercises ROLE_ML_MANAGER access.
+        from accounts.rbac import ROLE_ML_MANAGER, assign_role
+        assign_role(self.user, ROLE_ML_MANAGER)
         self.client.force_login(self.user)
 
     def test_prediction_keeps_submitted_values_and_valid_css_width(self):
@@ -627,6 +636,9 @@ class FinalStatisticsRegressionTests(TestCase):
             email="final-stats-validator@example.com",
             password="FinalStats123!",
         )
+        # V15A1_EXPLICIT_TEST_ROLE: this legacy fixture explicitly exercises ROLE_ANALYST access.
+        from accounts.rbac import ROLE_ANALYST, assign_role
+        assign_role(self.user, ROLE_ANALYST)
         self.client.force_login(self.user)
 
     def test_home_average_confidence_uses_predicted_class(self):
@@ -961,6 +973,9 @@ class InterpretabilityTests(TestCase):
         from unittest.mock import patch
 
         user = User.objects.create_user(username="explain-stats", password="ProjetIA-2026!Solide")
+        # V15A1_EXPLICIT_TEST_ROLE: this legacy fixture explicitly exercises ROLE_ANALYST access.
+        from accounts.rbac import ROLE_ANALYST, assign_role
+        assign_role(user, ROLE_ANALYST)
         self.client.force_login(user)
         importance = {
             "available": True,
@@ -1010,6 +1025,9 @@ class BatchPredictionTests(TestCase):
             username="batch-user",
             password="mot-de-passe-batch",
         )
+        # V15A1_EXPLICIT_TEST_ROLE: this legacy fixture explicitly exercises ROLE_ANALYST access.
+        from accounts.rbac import ROLE_ANALYST, assign_role
+        assign_role(self.user, ROLE_ANALYST)
         self.client.force_login(self.user)
 
     def test_validate_prediction_dataframe_accepts_m1_m2_and_normalizes_values(self):
@@ -1183,6 +1201,9 @@ class ModelManagementTests(TestCase):
             email="model-manager@example.com",
             password="ModelManagement123!",
         )
+        # V15A1_EXPLICIT_TEST_ROLE: this legacy fixture explicitly exercises ROLE_ML_MANAGER access.
+        from accounts.rbac import ROLE_ML_MANAGER, assign_role
+        assign_role(self.user, ROLE_ML_MANAGER)
         self.client.force_login(self.user)
 
     def _training(self, *, accuracy=0.70, model_file="model.joblib", active=False):

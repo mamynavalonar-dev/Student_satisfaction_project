@@ -47,8 +47,8 @@ class RbacAccessMiddleware(MiddlewareMixin):
         # Compatibilité avec les anciens tests et éventuels comptes techniques
         # créés directement par du code historique : seuls les comptes auxquels
         # le RBAC a été explicitement appliqué sont filtrés par ce middleware.
-        if not has_explicit_managed_role(request.user):
-            return None
+        # V15A1_FAIL_CLOSED: no implicit access for an
+        # authenticated account without a managed application role.
 
         if user_can(request.user, capability):
             return None
