@@ -407,3 +407,43 @@ LOCALE_PATHS = [
     BASE_DIR / "locale",
 ]
 USE_I18N = True
+
+# V17.2 — modèle ML de production + compte public portfolio
+PORTFOLIO_DEMO_ENABLED = _env_bool(
+    "PORTFOLIO_DEMO_ENABLED",
+    default=False,
+)
+PORTFOLIO_DEMO_USERNAME = os.environ.get(
+    "PORTFOLIO_DEMO_USERNAME",
+    "portfolio-demo",
+).strip()
+PORTFOLIO_DEMO_EMAIL = os.environ.get(
+    "PORTFOLIO_DEMO_EMAIL",
+    "portfolio-demo@example.invalid",
+).strip()
+PORTFOLIO_DEMO_PASSWORD = os.environ.get(
+    "PORTFOLIO_DEMO_PASSWORD",
+    "",
+)
+PORTFOLIO_MODEL_PATH = os.environ.get(
+    "PORTFOLIO_MODEL_PATH",
+    "deployment/model/portfolio_model.joblib",
+).strip()
+
+if IS_PRODUCTION and PORTFOLIO_DEMO_ENABLED:
+    if not PORTFOLIO_DEMO_USERNAME:
+        raise ImproperlyConfigured(
+            "PORTFOLIO_DEMO_USERNAME est obligatoire quand le compte démo est activé."
+        )
+    if not PORTFOLIO_DEMO_PASSWORD:
+        raise ImproperlyConfigured(
+            "PORTFOLIO_DEMO_PASSWORD est obligatoire quand le compte démo est activé."
+        )
+    if len(PORTFOLIO_DEMO_PASSWORD) < 12:
+        raise ImproperlyConfigured(
+            "PORTFOLIO_DEMO_PASSWORD doit contenir au moins 12 caractères."
+        )
+    if not PORTFOLIO_MODEL_PATH:
+        raise ImproperlyConfigured(
+            "PORTFOLIO_MODEL_PATH est obligatoire quand le compte démo est activé."
+        )

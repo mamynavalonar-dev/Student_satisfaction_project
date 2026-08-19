@@ -23,6 +23,7 @@ from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
+from accounts.demo import is_portfolio_demo_user
 from accounts.rbac import ROLE_USER, assign_role
 from .forms import (
     LoginForm,
@@ -101,14 +102,15 @@ def login_register_view(request):
             if login_form.is_valid():
                 user = login_form.get_user()
                 login(request, user)
-                notify_user(
-                    user,
-                    "Connexion réussie",
-                    f"Bienvenue {user.username}. Votre session est active.",
-                    level="success",
-                    event_type="auth",
-                    target_url=reverse("home"),
-                )
+                if not is_portfolio_demo_user(user):
+                    notify_user(
+                        user,
+                        "Connexion réussie",
+                        f"Bienvenue {user.username}. Votre session est active.",
+                        level="success",
+                        event_type="auth",
+                        target_url=reverse("home"),
+                    )
                 messages.success(request, f"Connexion réussie. Bon retour, {user.username}.")
                 if next_url and url_has_allowed_host_and_scheme(
                     url=next_url,
@@ -343,25 +345,26 @@ def predict(request):
                             "Impossible de calculer l'explication locale de la prédiction"
                         )
 
-                    feedback = StudentFeedback.objects.create(
-                        qualite_enseignement=input_data["qualite_enseignement"],
-                        charge_travail=input_data["charge_travail"],
-                        interactivite=input_data["interactivite"],
-                        type_cours=input_data["type_cours"],
-                        niveau_etudiant=input_data["niveau_etudiant"],
-                        predicted_satisfaction=bool(prediction_result["prediction"]),
-                        probability_satisfied=prediction_result["probability_satisfied"],
-                    )
+                    if not is_portfolio_demo_user(request.user):
+                        feedback = StudentFeedback.objects.create(
+                            qualite_enseignement=input_data["qualite_enseignement"],
+                            charge_travail=input_data["charge_travail"],
+                            interactivite=input_data["interactivite"],
+                            type_cours=input_data["type_cours"],
+                            niveau_etudiant=input_data["niveau_etudiant"],
+                            predicted_satisfaction=bool(prediction_result["prediction"]),
+                            probability_satisfied=prediction_result["probability_satisfied"],
+                        )
 
-                    notify_user(
-                        request.user,
-                        "Nouvelle prédiction",
-                        f"Avis #{feedback.id} : {prediction_result['satisfaction_text']} "
-                        f"({prediction_result['prediction_probability']:.1f}% de confiance).",
-                        level="success" if prediction_result["prediction"] else "info",
-                        event_type="prediction",
-                        target_url=f"{reverse('data_management')}?q={feedback.id}",
-                    )
+                        notify_user(
+                            request.user,
+                            "Nouvelle prédiction",
+                            f"Avis #{feedback.id} : {prediction_result['satisfaction_text']} "
+                            f"({prediction_result['prediction_probability']:.1f}% de confiance).",
+                            level="success" if prediction_result["prediction"] else "info",
+                            event_type="prediction",
+                            target_url=f"{reverse('data_management')}?q={feedback.id}",
+                        )
 
                     return render(
                         request,

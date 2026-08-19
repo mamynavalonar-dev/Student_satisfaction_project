@@ -10,6 +10,7 @@ from django.contrib.auth.forms import (
     UserCreationForm,
 )
 
+from .demo import is_portfolio_demo_user
 from .rbac import (
     ROLE_CHOICES,
     assign_role,
@@ -134,6 +135,11 @@ class BootstrapPasswordResetForm(PasswordResetForm):
                 "placeholder": "nom@exemple.com",
             }
         )
+
+    def get_users(self, email):
+        for user in super().get_users(email):
+            if not is_portfolio_demo_user(user):
+                yield user
 
 
 class BootstrapSetPasswordForm(SetPasswordForm):

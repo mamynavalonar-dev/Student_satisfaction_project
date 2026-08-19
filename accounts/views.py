@@ -12,6 +12,7 @@ from django.urls import reverse_lazy
 from django.views.generic import FormView, TemplateView
 from django.utils.translation import gettext as _
 
+from .demo import is_portfolio_demo_user
 from .forms import (
     BootstrapPasswordChangeForm,
     BootstrapPasswordResetForm,
@@ -48,12 +49,21 @@ class CapabilityRequiredMixin(LoginRequiredMixin):
         return super().dispatch(request, *args, **kwargs)
 
 
+class DemoAccountImmutableMixin:
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and is_portfolio_demo_user(request.user):
+            return HttpResponseForbidden(
+                _("Le compte public de démonstration ne peut pas être modifié.")
+            )
+        return super().dispatch(request, *args, **kwargs)
+
+
 class ProfileView(LoginRequiredMixin, TemplateView):
     template_name = "accounts/profile.html"
     login_url = reverse_lazy("login_register")
 
 
-class ProfileUpdateView(LoginRequiredMixin, FormView):
+class ProfileUpdateView(DemoAccountImmutableMixin, LoginRequiredMixin, FormView):
     template_name = "accounts/profile_edit.html"
     form_class = ProfileForm
     success_url = reverse_lazy("accounts:profile")
@@ -74,6 +84,7 @@ class ProfileUpdateView(LoginRequiredMixin, FormView):
 
 
 class AccountPasswordChangeView(
+    DemoAccountImmutableMixin,
     LoginRequiredMixin,
     auth_views.PasswordChangeView,
 ):
@@ -106,6 +117,13 @@ class AccountPasswordResetConfirmView(auth_views.PasswordResetConfirmView):
     template_name = "accounts/password_reset_confirm.html"
     form_class = BootstrapSetPasswordForm
     success_url = reverse_lazy("accounts:password_reset_complete")
+
+    def form_valid(self, form):
+        if is_portfolio_demo_user(self.user):
+            return HttpResponseForbidden(
+                _("Le mot de passe du compte public de démonstration est administré par le déploiement.")
+            )
+        return super().form_valid(form)
 
 
 class AccountPasswordResetCompleteView(auth_views.PasswordResetCompleteView):

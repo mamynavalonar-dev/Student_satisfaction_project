@@ -10,6 +10,8 @@ from django.utils.translation import gettext_lazy as _
 
 from predictor.models import ModelTraining, StudentFeedback
 
+from .demo import is_portfolio_demo_user
+
 
 ROLE_SUPER_ADMIN = "Super Administrateur"
 ROLE_ADMIN = "Administrateur"
@@ -285,6 +287,8 @@ def can_manage_target(actor, target):
     if not actor.is_authenticated:
         return False
     if target.is_superuser:
+        return False
+    if is_portfolio_demo_user(target):
         return False
     if actor.pk == target.pk:
         return False
