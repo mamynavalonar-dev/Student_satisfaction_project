@@ -17,6 +17,20 @@
 
     let navigationSequence = 0;
 
+    const closestFromTarget = (
+        target,
+        selector
+    ) => {
+        const element =
+            target instanceof Element
+                ? target
+                : target?.parentElement;
+
+        return element instanceof Element
+            ? element.closest(selector)
+            : null;
+    };
+
     const normalizeUrl = (value) => {
         try {
             return new URL(value, window.location.href);
@@ -1149,7 +1163,8 @@
         "pointerenter",
         (event) => {
             const anchor =
-                event.target.closest(
+                closestFromTarget(
+                    event.target,
                     NAV_SELECTOR
                 );
 
@@ -1166,7 +1181,8 @@
         "focusin",
         (event) => {
             const anchor =
-                event.target.closest(
+                closestFromTarget(
+                    event.target,
                     NAV_SELECTOR
                 );
 
@@ -1183,7 +1199,8 @@
         "touchstart",
         (event) => {
             const anchor =
-                event.target.closest(
+                closestFromTarget(
+                    event.target,
                     NAV_SELECTOR
                 );
 
@@ -1203,7 +1220,8 @@
         "click",
         (event) => {
             const anchor =
-                event.target.closest(
+                closestFromTarget(
+                    event.target,
                     NAV_SELECTOR
                 );
 

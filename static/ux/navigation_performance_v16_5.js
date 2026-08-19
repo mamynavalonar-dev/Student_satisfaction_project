@@ -12,6 +12,17 @@
         }
     };
 
+    const closestAnchor = (target) => {
+        const element =
+            target instanceof Element
+                ? target
+                : target?.parentElement;
+
+        return element instanceof Element
+            ? element.closest("a[href]")
+            : null;
+    };
+
     const prefetch = (link) => {
         if (!(link instanceof HTMLAnchorElement)) return;
 
@@ -77,7 +88,7 @@
     };
 
     const primeLink = (event) => {
-        const link = event.target.closest("a[href]");
+        const link = closestAnchor(event.target);
 
         if (!(link instanceof HTMLAnchorElement)) return;
 
@@ -92,7 +103,7 @@
     };
 
     const immediateFeedback = (event) => {
-        const link = event.target.closest("a[href]");
+        const link = closestAnchor(event.target);
 
         if (!(link instanceof HTMLAnchorElement)) return;
 
@@ -111,7 +122,7 @@
     };
 
     const navigationStarted = (event) => {
-        const link = event.target.closest("a[href]");
+        const link = closestAnchor(event.target);
 
         if (!(link instanceof HTMLAnchorElement)) return;
 

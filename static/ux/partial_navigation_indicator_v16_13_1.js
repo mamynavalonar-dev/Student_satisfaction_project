@@ -2,6 +2,8 @@
 (() => {
     "use strict";
 
+    const root = document.documentElement;
+
     const STORAGE_KEY =
         "student-satisfaction-v16131-last-route";
 
@@ -28,6 +30,20 @@
             hideWithoutMatch: true,
         },
     ];
+
+    const closestFromTarget = (
+        target,
+        selector
+    ) => {
+        const element =
+            target instanceof Element
+                ? target
+                : target?.parentElement;
+
+        return element instanceof Element
+            ? element.closest(selector)
+            : null;
+    };
 
     const toUrl = (value) => {
         try {
@@ -414,7 +430,8 @@
             ).join(",");
 
         const anchor =
-            event.target.closest(
+            closestFromTarget(
+                event.target,
                 selector
             );
 
