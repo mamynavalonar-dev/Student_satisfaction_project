@@ -109,10 +109,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Set up Python 3.11
+      - name: Set up Python 3.12
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.11"
+          python-version: "3.12"
           cache: pip
           cache-dependency-path: requirements.txt
 
@@ -120,6 +120,14 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
+
+      - name: V17.4 Vercel runtime dry-run
+        env:
+          VERCEL: "1"
+          VERCEL_ENV: preview
+          VERCEL_BUILD_DRY_RUN: "1"
+          DATABASE_URL_UNPOOLED: postgresql://postgres:postgres-ci-password@127.0.0.1:5432/student_satisfaction_ci
+        run: python scripts/vercel_build.py
 
       - name: Verify packaged model
         run: python scripts/verify_release.py

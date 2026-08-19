@@ -6,6 +6,11 @@ Les changements notables du projet sont regroupés dans ce fichier.
 
 ### Added
 
+- adaptation Vercel Django zéro-configuration avec Python 3.12 ;
+- intégration Neon serverless avec connexion poolée et URL directe pour les migrations ;
+- hosts et origines CSRF dérivés des variables système Vercel sans wildcard ;
+- build Vercel idempotent pour migrations, RBAC et bootstrap portfolio ;
+- validation CI de la cible de production sous Python 3.12 ;
 - configuration production fail-closed avec PostgreSQL configurable ;
 - Gunicorn, WhiteNoise et health-check `/health/` ;
 - `.env.example` sans secrets réels ;

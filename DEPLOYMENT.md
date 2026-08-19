@@ -192,3 +192,57 @@ git status --short
 Après validation de GitHub Actions, fusionner la branche de production vers `main`, taguer la release puis pousser le tag.
 
 Le choix exact de l'hébergeur et ses commandes spécifiques seront ajoutés seulement après sélection de la plateforme.
+
+## 13. Déploiement retenu : Vercel Hobby + Neon Free
+
+La cible du portfolio est **Vercel + Neon**.
+
+Vercel utilise le projet Django directement à partir de `manage.py` et de son WSGI. Aucun ancien wrapper `api/index.py` ni rewrite `vercel.json` n'est utilisé.
+
+Le runtime Vercel est fixé à Python 3.12 par `.python-version` et `pyproject.toml`. Le build exécute `scripts/vercel_build.py`.
+
+### Neon
+
+Connecter Neon depuis Vercel Marketplace pour **Preview** et **Production**. L'application utilise `DATABASE_URL` au runtime. Si l'intégration expose aussi `DATABASE_URL_UNPOOLED`, le build l'utilise automatiquement pour les migrations et le bootstrap.
+
+Activer les branches Neon de Preview afin que les déploiements Preview n'écrivent pas dans la base de production.
+
+### Variables applicatives Vercel
+
+Activer **Automatically expose System Environment Variables** dans les paramètres Vercel. Les variables système Vercel servent alors à construire automatiquement `ALLOWED_HOSTS` et `CSRF_TRUSTED_ORIGINS`, sans wildcard.
+
+Ajouter pour Preview et Production :
+
+```text
+DJANGO_ENV=production
+DJANGO_DEBUG=0
+DJANGO_SECRET_KEY=<secret fort>
+DJANGO_SECURE_SSL_REDIRECT=1
+DJANGO_HSTS_SECONDS=3600
+PORTFOLIO_DEMO_ENABLED=1
+PORTFOLIO_DEMO_USERNAME=portfolio-demo
+PORTFOLIO_DEMO_EMAIL=portfolio-demo@example.invalid
+PORTFOLIO_DEMO_PASSWORD=<mot de passe public >= 12 caractères>
+PORTFOLIO_MODEL_PATH=deployment/model/portfolio_model.joblib
+```
+
+`DJANGO_ALLOWED_HOSTS` et `DJANGO_CSRF_TRUSTED_ORIGINS` peuvent rester absents si les variables système Vercel sont exposées.
+
+### Build
+
+En Preview ou Production, `scripts/vercel_build.py` :
+
+1. vérifie l'intégrité de la release ;
+2. applique les migrations ;
+3. initialise le RBAC ;
+4. provisionne le modèle et le compte portfolio si la démo est activée.
+
+Les opérations sont idempotentes.
+
+### Connexions
+
+Le runtime Vercel utilise la connexion poolée Neon. `DJANGO_DB_CONN_MAX_AGE` vaut 30 secondes par défaut sur Vercel et reste configurable. Les hébergements WSGI traditionnels conservent 600 secondes par défaut et WhiteNoise.
+
+### Ordre de release
+
+Déployer d'abord `feature/production-readiness-v17` comme Preview avec une branche Neon de Preview. Tester `/health/`, le compte démo, une prédiction réelle, les permissions, les statiques, FR/EN, thème et mobile. Après validation seulement : fusion vers `main`, CI verte sur `main`, déploiement Production, smoke tests publics, puis tag final.

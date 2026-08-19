@@ -46,6 +46,27 @@ def _env_csv(name, default=""):
     ]
 
 
+def _unique_nonempty(values):
+    return list(
+        dict.fromkeys(
+            value.strip()
+            for value in values
+            if value and value.strip()
+        )
+    )
+
+
+# V17.4 — Vercel + Neon
+IS_VERCEL = os.environ.get("VERCEL", "").strip() == "1"
+VERCEL_HOSTS = _unique_nonempty(
+    [
+        os.environ.get("VERCEL_URL", ""),
+        os.environ.get("VERCEL_BRANCH_URL", ""),
+        os.environ.get("VERCEL_PROJECT_PRODUCTION_URL", ""),
+    ]
+)
+
+
 ENVIRONMENT = os.environ.get(
     "DJANGO_ENV",
     "development",
@@ -95,8 +116,18 @@ ALLOWED_HOSTS = _env_csv(
     ),
 )
 
+if IS_VERCEL:
+    ALLOWED_HOSTS = _unique_nonempty(
+        [*ALLOWED_HOSTS, *VERCEL_HOSTS]
+    )
+
 if IS_PRODUCTION:
     if not ALLOWED_HOSTS:
+        if IS_VERCEL:
+            raise ImproperlyConfigured(
+                "Variables système Vercel absentes : exposez-les "
+                "ou définissez DJANGO_ALLOWED_HOSTS."
+            )
         raise ImproperlyConfigured(
             "DJANGO_ALLOWED_HOSTS est obligatoire en production."
         )
@@ -111,7 +142,20 @@ CSRF_TRUSTED_ORIGINS = _env_csv(
     "DJANGO_CSRF_TRUSTED_ORIGINS",
 )
 
+if IS_VERCEL:
+    CSRF_TRUSTED_ORIGINS = _unique_nonempty(
+        [
+            *CSRF_TRUSTED_ORIGINS,
+            *[f"https://{host}" for host in VERCEL_HOSTS],
+        ]
+    )
+
 if IS_PRODUCTION and not CSRF_TRUSTED_ORIGINS:
+    if IS_VERCEL:
+        raise ImproperlyConfigured(
+            "Origines CSRF Vercel indéterminées : exposez les "
+            "variables système ou définissez DJANGO_CSRF_TRUSTED_ORIGINS."
+        )
     raise ImproperlyConfigured(
         "DJANGO_CSRF_TRUSTED_ORIGINS est obligatoire en production."
     )
@@ -155,7 +199,7 @@ MIDDLEWARE = [
 # WhiteNoise n'est activé que dans l'environnement de production.
 # Cela évite d'interférer avec le serveur statique Django en développement
 # et avec le test runner.
-if IS_PRODUCTION:
+if IS_PRODUCTION and not IS_VERCEL:
     _security_index = MIDDLEWARE.index(
         "django.middleware.security.SecurityMiddleware"
     )
@@ -187,6 +231,11 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'student_satisfaction_project.wsgi.application'
 
+DATABASE_CONN_MAX_AGE = _env_int(
+    "DJANGO_DB_CONN_MAX_AGE",
+    30 if IS_PRODUCTION and IS_VERCEL else 600 if IS_PRODUCTION else 0,
+)
+
 DATABASE_URL = os.environ.get(
     "DATABASE_URL",
     "",
@@ -203,7 +252,7 @@ if DATABASE_URL:
     DATABASES = {
         "default": dj_database_url.parse(
             DATABASE_URL,
-            conn_max_age=600 if IS_PRODUCTION else 0,
+            conn_max_age=DATABASE_CONN_MAX_AGE,
             conn_health_checks=IS_PRODUCTION,
         )
     }
@@ -260,14 +309,16 @@ STORAGES = {
     },
     "staticfiles": {
         "BACKEND": (
-            "whitenoise.storage.CompressedManifestStaticFilesStorage"
+            "django.contrib.staticfiles.storage.StaticFilesStorage"
+            if IS_PRODUCTION and IS_VERCEL
+            else "whitenoise.storage.CompressedManifestStaticFilesStorage"
             if IS_PRODUCTION
             else "django.contrib.staticfiles.storage.StaticFilesStorage"
         ),
     },
 }
 
-WHITENOISE_MAX_AGE = 31536000 if IS_PRODUCTION else 0
+WHITENOISE_MAX_AGE = 31536000 if IS_PRODUCTION and not IS_VERCEL else 0
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -390,9 +441,12 @@ SECURE_HSTS_PRELOAD = _env_bool(
 
 SECURE_PROXY_SSL_HEADER = (
     ("HTTP_X_FORWARDED_PROTO", "https")
-    if _env_bool(
-        "DJANGO_TRUST_X_FORWARDED_PROTO",
-        False,
+    if (
+        IS_VERCEL
+        or _env_bool(
+            "DJANGO_TRUST_X_FORWARDED_PROTO",
+            False,
+        )
     )
     else None
 )
