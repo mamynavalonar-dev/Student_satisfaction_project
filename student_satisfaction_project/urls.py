@@ -4,8 +4,10 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
+from student_satisfaction_project.health import health_check
 
 urlpatterns = [
+    path("health/", health_check, name="health"),
     path('admin/', admin.site.urls),
     path("favicon.ico", RedirectView.as_view(url="/static/ux/favicon.svg", permanent=False)),
     path("i18n/", include("django.conf.urls.i18n")),

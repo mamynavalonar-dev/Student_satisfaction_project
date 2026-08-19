@@ -41,3 +41,6 @@ data_cleanup_backups/
 # Scripts locaux d'amélioration
 amelioration_*.py
 correctif_*.py
+# Production locale / secrets runtime
+.env.production
+.env.local

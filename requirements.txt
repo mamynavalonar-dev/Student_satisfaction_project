@@ -6,3 +6,7 @@ joblib==1.5.3
 djangorestframework==3.18.0
 djangorestframework-simplejwt==5.5.1
 drf-spectacular==0.30.0
+gunicorn==26.1.0
+whitenoise==6.12.0
+dj-database-url==3.1.2
+psycopg[binary]==3.3.4
