@@ -227,3 +227,25 @@ V14C.2 étend la traduction FR/EN aux écrans métier : Dashboard, prédiction i
 Les valeurs métier stockées en base ou dans les artefacts ne sont pas renommées. Un filtre de template traduit uniquement leur libellé d'affichage (`Présentiel`, `Satisfait`, états d'artefacts, etc.), ce qui évite de casser les comparaisons, les exports, l'API ou le modèle ML.
 
 La passe frontend poursuit la direction « Academic Control Room » : titres éditoriaux, tableaux plus lisibles, densité maîtrisée, cartes et formulaires harmonisés, sans remplacer l'identité existante par un thème générique.
+
+---
+## Production, CI et démonstration portfolio — V17
+
+Le projet dispose maintenant d'un socle de production avec PostgreSQL configurable, Gunicorn, WhiteNoise, health-check, variables d'environnement fail-closed et CI GitHub Actions.
+
+Un modèle ML Pipeline v3 est livré dans `deployment/model/` avec son manifeste SHA-256. La commande suivante vérifie l'intégrité de la release locale :
+
+```powershell
+python .\scripts\verify_release.py
+```
+
+Pour un déploiement neuf, après les migrations :
+
+```powershell
+python manage.py setup_roles
+python manage.py bootstrap_portfolio
+```
+
+Le compte portfolio est volontairement public mais limité au rôle `Utilisateur` et à la prédiction individuelle. Ses prédictions ne sont pas persistées dans `StudentFeedback`, afin de ne pas fausser les statistiques du projet.
+
+La procédure complète de production, les variables d'environnement, le bootstrap, la création du compte administrateur et les contrôles post-déploiement sont documentés dans `DEPLOYMENT.md`.
