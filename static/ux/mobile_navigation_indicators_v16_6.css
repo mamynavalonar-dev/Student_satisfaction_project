@@ -1,0 +1,296 @@
+/* V16.6_SLIDING_INDICATORS_START
+   Mobile navigation polish:
+   - one real sliding pill in the bottom bar
+   - one real sliding indicator in the drawer
+   - account owner link beside the profile icon
+*/
+
+/* ---------- Notification bell follows the active theme ---------- */
+.notification-bell {
+    color: var(--app-primary, #0d6efd) !important;
+    background: var(--ux-surface, #ffffff) !important;
+    border-color: var(--ux-border, #d7dee8) !important;
+    box-shadow: none !important;
+    transition:
+        color 140ms ease-out,
+        background-color 140ms ease-out,
+        border-color 140ms ease-out,
+        transform 100ms ease-out !important;
+}
+
+.notification-bell:hover,
+.notification-bell:focus-visible {
+    color: var(--app-primary, #0d6efd) !important;
+    background: var(--ux-surface-soft, #f5f8fc) !important;
+    border-color: var(--app-primary, #0d6efd) !important;
+}
+
+html[data-app-theme="dark"] .notification-bell {
+    color: #8ec5ff !important;
+    background: #202d3f !important;
+    border-color: #405269 !important;
+}
+
+html[data-app-theme="dark"] .notification-bell:hover,
+html[data-app-theme="dark"] .notification-bell:focus-visible {
+    color: #d8ebff !important;
+    background: #293a50 !important;
+    border-color: #6caef6 !important;
+}
+
+html[data-app-theme="dark"] .notification-bell .bi {
+    color: inherit !important;
+}
+
+.notification-badge {
+    color: #ffffff !important;
+    background: #dc3545 !important;
+}
+
+/* ---------- Bottom navigation: independent sliding white pill ---------- */
+@media (max-width: 820px) {
+    .mobile-bottom-nav {
+        isolation: isolate;
+        overflow: hidden;
+    }
+
+    .mobile-bottom-slider {
+        position: absolute;
+        z-index: 1;
+        top: 7px;
+        left: 0;
+        width: 0;
+        height: calc(100% - 14px);
+        border-radius: 999px;
+        background: #ffffff;
+        box-shadow:
+            0 7px 20px rgba(7, 53, 108, .18),
+            inset 0 0 0 1px rgba(6, 80, 160, .04);
+        pointer-events: none;
+        transform: translate3d(0, 0, 0);
+        will-change: transform, width;
+    }
+
+    .mobile-bottom-slider.is-ready {
+        transition:
+            transform 235ms cubic-bezier(.22, .78, .2, 1),
+            width 235ms cubic-bezier(.22, .78, .2, 1);
+    }
+
+    .mobile-bottom-link {
+        position: relative;
+        z-index: 2;
+        background: transparent !important;
+        box-shadow: none !important;
+        transition:
+            color 150ms ease-out,
+            transform 100ms ease-out !important;
+    }
+
+    .mobile-bottom-link.is-active,
+    html[data-app-theme="dark"] .mobile-bottom-link.is-active {
+        color: var(--mobile-nav-cobalt-strong, #0754a7) !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .mobile-bottom-link:not(.is-active) {
+        color: rgba(255, 255, 255, .90) !important;
+    }
+
+    .mobile-bottom-label {
+        transition:
+            max-width 170ms ease-out,
+            opacity 130ms ease-out,
+            transform 170ms ease-out !important;
+    }
+
+    /* ---------- Drawer owner ---------- */
+    .mobile-drawer-head > .mobile-drawer-identity {
+        display: none !important;
+    }
+
+    .mobile-drawer-owner {
+        position: relative;
+        z-index: 4;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        max-width: calc(100% - 52px);
+        color: #ffffff;
+        text-decoration: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .mobile-drawer-owner:hover,
+    .mobile-drawer-owner:focus-visible {
+        color: #ffffff;
+        text-decoration: none;
+    }
+
+    .mobile-drawer-owner-icon {
+        display: grid;
+        place-items: center;
+        flex: 0 0 42px;
+        width: 42px;
+        height: 42px;
+        border: 1px solid rgba(255, 255, 255, .20);
+        border-radius: 50%;
+        color: #ffffff;
+        background: rgba(255, 255, 255, .11);
+        transition:
+            background-color 150ms ease-out,
+            transform 120ms ease-out;
+    }
+
+    .mobile-drawer-owner:hover .mobile-drawer-owner-icon,
+    .mobile-drawer-owner:focus-visible .mobile-drawer-owner-icon {
+        background: rgba(255, 255, 255, .18);
+    }
+
+    .mobile-drawer-owner:active .mobile-drawer-owner-icon {
+        transform: scale(.95);
+    }
+
+    .mobile-drawer-owner-icon .bi {
+        font-size: 1rem;
+        line-height: 1;
+    }
+
+    .mobile-drawer-owner-name {
+        display: block;
+        min-width: 0;
+        overflow: hidden;
+        color: #ffffff;
+        font-size: .82rem;
+        font-weight: 800;
+        line-height: 1.15;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* ---------- Drawer: independent vertical sliding indicator ---------- */
+    .mobile-side-drawer {
+        isolation: isolate;
+    }
+
+    .mobile-drawer-head,
+    .mobile-drawer-nav,
+    .mobile-drawer-tools,
+    .mobile-drawer-separator,
+    .mobile-drawer-locale,
+    .mobile-drawer-logout {
+        position: relative;
+        z-index: 3;
+    }
+
+    .mobile-drawer-slider {
+        position: absolute;
+        z-index: 2;
+        top: 0;
+        left: 0;
+        width: 0;
+        height: 0;
+        border: 1px solid rgba(255, 255, 255, .13);
+        border-radius: 12px;
+        background:
+            linear-gradient(
+                90deg,
+                rgba(255, 255, 255, .17),
+                rgba(255, 255, 255, .10)
+            );
+        box-shadow:
+            inset 3px 0 0 rgba(255, 255, 255, .88);
+        pointer-events: none;
+        transform: translate3d(0, 0, 0);
+        will-change: transform, width, height;
+    }
+
+    .mobile-drawer-slider.is-ready {
+        transition:
+            transform 235ms cubic-bezier(.22, .78, .2, 1),
+            width 235ms cubic-bezier(.22, .78, .2, 1),
+            height 180ms ease-out;
+    }
+
+    .mobile-drawer-link {
+        position: relative;
+        z-index: 4;
+        background: transparent !important;
+        box-shadow: none !important;
+        transition:
+            color 150ms ease-out,
+            opacity 120ms ease-out !important;
+    }
+
+    .mobile-drawer-link.is-active,
+    html[data-app-theme="dark"] .mobile-drawer-link.is-active {
+        color: #ffffff !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .mobile-drawer-link.is-active::after {
+        display: none !important;
+        content: none !important;
+    }
+
+    .mobile-drawer-link .bi {
+        transition: transform 160ms ease-out;
+    }
+
+    .mobile-drawer-link.is-active .bi {
+        transform: scale(1.06);
+    }
+}
+
+@media (max-width: 380px) {
+    .mobile-drawer-owner-name {
+        max-width: 72px;
+        font-size: .76rem;
+    }
+
+    .mobile-drawer-owner-icon {
+        flex-basis: 40px;
+        width: 40px;
+        height: 40px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mobile-bottom-slider.is-ready,
+    .mobile-drawer-slider.is-ready,
+    .mobile-bottom-link,
+    .mobile-drawer-link {
+        transition: none !important;
+    }
+}
+/* V16.6_SLIDING_INDICATORS_END */
+
+/* V16.7_DRAWER_PERSISTENCE_AND_GHOST_SLIDER_START */
+
+.mobile-bottom-slider.is-hidden {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transition:
+        opacity 100ms ease-out,
+        visibility 0s linear 100ms !important;
+}
+
+.mobile-bottom-slider:not(.is-hidden) {
+    opacity: 1;
+    visibility: visible;
+}
+
+@media (max-width: 820px) {
+    body.mobile-nav-open .mobile-side-drawer {
+        pointer-events: auto !important;
+    }
+
+    .mobile-drawer-close {
+        position: relative;
+        z-index: 10;
+    }
+}
+/* V16.7_DRAWER_PERSISTENCE_AND_GHOST_SLIDER_END */

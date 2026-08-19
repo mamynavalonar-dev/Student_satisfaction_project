@@ -1,0 +1,30 @@
+/* V16.13.1_NAV_INDICATOR_SYNC_START */
+
+/*
+ * Do not alter the V16.13 partial-navigation architecture.
+ * Only guarantee that indicator movement is visibly smooth.
+ */
+[data-animated-nav] .nav-indicator,
+.mobile-drawer-slider,
+.mobile-bottom-slider {
+    transition:
+        transform 180ms cubic-bezier(.22, .78, .2, 1),
+        width 180ms cubic-bezier(.22, .78, .2, 1),
+        height 180ms cubic-bezier(.22, .78, .2, 1),
+        opacity 120ms ease-out !important;
+    will-change: transform, width, height;
+}
+
+.mobile-bottom-slider.is-hidden {
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    [data-animated-nav] .nav-indicator,
+    .mobile-drawer-slider,
+    .mobile-bottom-slider {
+        transition: none !important;
+    }
+}
+/* V16.13.1_NAV_INDICATOR_SYNC_END */

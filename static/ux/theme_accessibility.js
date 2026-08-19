@@ -112,9 +112,11 @@
         }));
     }
 
-    function cycle() {
-        const current = root.dataset.themePreference || readPreference();
-        const next = current === "auto" ? "light" : current === "light" ? "dark" : "auto";
+    // V16.5_ONE_TAP_THEME: one click must always change the visible theme.
+    function toggleVisibleTheme() {
+        const preference = root.dataset.themePreference || readPreference();
+        const effective = root.dataset.appTheme || effectiveTheme(preference);
+        const next = effective === "dark" ? "light" : "dark";
         apply(next, true);
     }
 
@@ -125,7 +127,7 @@
 
     document.addEventListener("DOMContentLoaded", () => {
         document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
-            button.addEventListener("click", cycle);
+            button.addEventListener("click", toggleVisibleTheme);
         });
         apply(readPreference(), false);
     });

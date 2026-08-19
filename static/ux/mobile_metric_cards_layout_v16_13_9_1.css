@@ -1,0 +1,202 @@
+/* V16.13.9.1_MOBILE_METRIC_CARDS_LAYOUT_START */
+
+/*
+ * Minimal visual patch only.
+ * Goal:
+ * - keep all previous navigation/drawer/language/theme work intact
+ * - change ONLY the metric/summary cards layout on mobile
+ * - make the cards appear in a 2-column responsive grid like the reference
+ * - place the title/label above the numeric value
+ */
+
+@media (max-width: 820px) {
+    .main-content .row:has(> [class*="col"] > .stats-card),
+    .main-content .row:has(> [class*="col"] > .summary-card),
+    .main-content .row:has(> [class*="col"] > .metric-card),
+    .main-content .row:has(> [class*="col"] > .kpi-card),
+    .main-content .row:has(> [class*="col"] > .dashboard-stat-card) {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px !important;
+        align-items: stretch;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    .main-content .row:has(> [class*="col"] > .stats-card) > [class*="col"],
+    .main-content .row:has(> [class*="col"] > .summary-card) > [class*="col"],
+    .main-content .row:has(> [class*="col"] > .metric-card) > [class*="col"],
+    .main-content .row:has(> [class*="col"] > .kpi-card) > [class*="col"],
+    .main-content .row:has(> [class*="col"] > .dashboard-stat-card) > [class*="col"] {
+        width: auto !important;
+        max-width: none !important;
+        flex: unset !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        margin: 0 !important;
+    }
+
+    .main-content .stats-card,
+    .main-content .summary-card,
+    .main-content .metric-card,
+    .main-content .kpi-card,
+    .main-content .dashboard-stat-card {
+        min-height: 134px;
+        height: 100%;
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .main-content .stats-card .card-body,
+    .main-content .summary-card .card-body,
+    .main-content .metric-card .card-body,
+    .main-content .kpi-card .card-body,
+    .main-content .dashboard-stat-card .card-body {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        gap: 8px;
+        height: 100%;
+        text-align: left;
+        padding: 18px 16px;
+    }
+
+    .main-content .stats-card .card-title,
+    .main-content .summary-card .card-title,
+    .main-content .metric-card .card-title,
+    .main-content .kpi-card .card-title,
+    .main-content .dashboard-stat-card .card-title,
+    .main-content .stats-card .stats-label,
+    .main-content .summary-card .stats-label,
+    .main-content .metric-card .stats-label,
+    .main-content .kpi-card .stats-label,
+    .main-content .dashboard-stat-card .stats-label,
+    .main-content .stats-card .metric-label,
+    .main-content .summary-card .metric-label,
+    .main-content .metric-card .metric-label,
+    .main-content .kpi-card .metric-label,
+    .main-content .dashboard-stat-card .metric-label,
+    .main-content .stats-card .summary-label,
+    .main-content .summary-card .summary-label,
+    .main-content .metric-card .summary-label,
+    .main-content .kpi-card .summary-label,
+    .main-content .dashboard-stat-card .summary-label,
+    .main-content .stats-card p,
+    .main-content .summary-card p,
+    .main-content .metric-card p,
+    .main-content .kpi-card p,
+    .main-content .dashboard-stat-card p,
+    .main-content .stats-card small,
+    .main-content .summary-card small,
+    .main-content .metric-card small,
+    .main-content .kpi-card small,
+    .main-content .dashboard-stat-card small {
+        order: 1;
+        width: 100%;
+        margin: 0;
+        text-align: left;
+        line-height: 1.25;
+    }
+
+    .main-content .stats-card .display-1,
+    .main-content .summary-card .display-1,
+    .main-content .metric-card .display-1,
+    .main-content .kpi-card .display-1,
+    .main-content .dashboard-stat-card .display-1,
+    .main-content .stats-card .display-2,
+    .main-content .summary-card .display-2,
+    .main-content .metric-card .display-2,
+    .main-content .kpi-card .display-2,
+    .main-content .dashboard-stat-card .display-2,
+    .main-content .stats-card .display-3,
+    .main-content .summary-card .display-3,
+    .main-content .metric-card .display-3,
+    .main-content .kpi-card .display-3,
+    .main-content .dashboard-stat-card .display-3,
+    .main-content .stats-card .display-4,
+    .main-content .summary-card .display-4,
+    .main-content .metric-card .display-4,
+    .main-content .kpi-card .display-4,
+    .main-content .dashboard-stat-card .display-4,
+    .main-content .stats-card .display-5,
+    .main-content .summary-card .display-5,
+    .main-content .metric-card .display-5,
+    .main-content .kpi-card .display-5,
+    .main-content .dashboard-stat-card .display-5,
+    .main-content .stats-card .display-6,
+    .main-content .summary-card .display-6,
+    .main-content .metric-card .display-6,
+    .main-content .kpi-card .display-6,
+    .main-content .dashboard-stat-card .display-6,
+    .main-content .stats-card h1,
+    .main-content .summary-card h1,
+    .main-content .metric-card h1,
+    .main-content .kpi-card h1,
+    .main-content .dashboard-stat-card h1,
+    .main-content .stats-card h2,
+    .main-content .summary-card h2,
+    .main-content .metric-card h2,
+    .main-content .kpi-card h2,
+    .main-content .dashboard-stat-card h2,
+    .main-content .stats-card h3,
+    .main-content .summary-card h3,
+    .main-content .metric-card h3,
+    .main-content .kpi-card h3,
+    .main-content .dashboard-stat-card h3,
+    .main-content .stats-card h4,
+    .main-content .summary-card h4,
+    .main-content .metric-card h4,
+    .main-content .kpi-card h4,
+    .main-content .dashboard-stat-card h4,
+    .main-content .stats-card .stats-value,
+    .main-content .summary-card .stats-value,
+    .main-content .metric-card .stats-value,
+    .main-content .kpi-card .stats-value,
+    .main-content .dashboard-stat-card .stats-value,
+    .main-content .stats-card .metric-value,
+    .main-content .summary-card .metric-value,
+    .main-content .metric-card .metric-value,
+    .main-content .kpi-card .metric-value,
+    .main-content .dashboard-stat-card .metric-value,
+    .main-content .stats-card .summary-value,
+    .main-content .summary-card .summary-value,
+    .main-content .metric-card .summary-value,
+    .main-content .kpi-card .summary-value,
+    .main-content .dashboard-stat-card .summary-value,
+    .main-content .stats-card .stat-number,
+    .main-content .summary-card .stat-number,
+    .main-content .metric-card .stat-number,
+    .main-content .kpi-card .stat-number,
+    .main-content .dashboard-stat-card .stat-number,
+    .main-content .stats-card .metric-number,
+    .main-content .summary-card .metric-number,
+    .main-content .metric-card .metric-number,
+    .main-content .kpi-card .metric-number,
+    .main-content .dashboard-stat-card .metric-number {
+        order: 2;
+        margin: auto 0 0 0;
+        width: 100%;
+        text-align: left;
+        line-height: 1;
+    }
+}
+
+@media (max-width: 420px) {
+    .main-content .row:has(> [class*="col"] > .stats-card),
+    .main-content .row:has(> [class*="col"] > .summary-card),
+    .main-content .row:has(> [class*="col"] > .metric-card),
+    .main-content .row:has(> [class*="col"] > .kpi-card),
+    .main-content .row:has(> [class*="col"] > .dashboard-stat-card) {
+        gap: 12px !important;
+    }
+
+    .main-content .stats-card .card-body,
+    .main-content .summary-card .card-body,
+    .main-content .metric-card .card-body,
+    .main-content .kpi-card .card-body,
+    .main-content .dashboard-stat-card .card-body {
+        padding: 16px 14px;
+    }
+}
+/* V16.13.9.1_MOBILE_METRIC_CARDS_LAYOUT_END */

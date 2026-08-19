@@ -224,3 +224,139 @@ html[data-app-theme="dark"] pre {
     .skip-link,
     body { transition: none !important; }
 }
+
+/* V16.5_THEME_HARDENING_START */
+html[data-app-theme="dark"] .notification-panel {
+    color: var(--ux-text) !important;
+    background: var(--ux-surface) !important;
+    border-color: var(--ux-border) !important;
+}
+
+html[data-app-theme="dark"] .notification-panel-header {
+    color: var(--ux-text) !important;
+    background: #202d3f !important;
+    border-color: var(--ux-border) !important;
+}
+
+html[data-app-theme="dark"] .notification-panel-header strong {
+    color: #f3f7fc !important;
+}
+
+html[data-app-theme="dark"] .notification-panel-header small,
+html[data-app-theme="dark"] .notification-item-time,
+html[data-app-theme="dark"] .notification-empty {
+    color: #9fb0c5 !important;
+}
+
+html[data-app-theme="dark"] .notification-list {
+    overflow-x: hidden !important;
+    background: var(--ux-surface) !important;
+    scrollbar-color: #53657b #182231;
+}
+
+html[data-app-theme="dark"] .notification-item {
+    min-width: 0;
+    color: var(--ux-text) !important;
+    background: var(--ux-surface) !important;
+    border-color: var(--ux-border) !important;
+}
+
+html[data-app-theme="dark"] .notification-item > span {
+    min-width: 0;
+}
+
+html[data-app-theme="dark"] .notification-item:hover {
+    background: #202d3f !important;
+}
+
+html[data-app-theme="dark"] .notification-item.is-unread {
+    background: #1c2b40 !important;
+}
+
+html[data-app-theme="dark"] .notification-item-title {
+    color: #f1f5f9 !important;
+}
+
+html[data-app-theme="dark"] .notification-item-message {
+    color: #bdc9d9 !important;
+    overflow-wrap: anywhere;
+}
+
+html[data-app-theme="dark"] .notification-read-all {
+    color: #8ec5ff !important;
+}
+
+html[data-app-theme="dark"] .notification-read-all:hover {
+    background: rgba(125, 181, 255, .10) !important;
+}
+
+html[data-app-theme="dark"] .notification-item-icon {
+    color: #8ec5ff !important;
+    background: #21334b !important;
+}
+
+html[data-app-theme="dark"] .notification-item.level-success .notification-item-icon {
+    color: #6ee7b7 !important;
+    background: #15382f !important;
+}
+
+html[data-app-theme="dark"] .notification-item.level-warning .notification-item-icon {
+    color: #fbbf24 !important;
+    background: #3a2e16 !important;
+}
+
+html[data-app-theme="dark"] .notification-item.level-error .notification-item-icon {
+    color: #fda4af !important;
+    background: #41232a !important;
+}
+
+html[data-app-theme="dark"] .notification-list::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+html[data-app-theme="dark"] .notification-list::-webkit-scrollbar-track {
+    background: #182231;
+}
+
+html[data-app-theme="dark"] .notification-list::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: #53657b;
+}
+
+html[data-app-theme="dark"] .form-control::file-selector-button {
+    color: #e6edf7 !important;
+    background: #253247 !important;
+    border-color: #3a4a60 !important;
+}
+
+html[data-app-theme="dark"] .form-control:hover::file-selector-button {
+    background: #2d3c51 !important;
+}
+
+html[data-app-theme="dark"] input[type="file"] {
+    color: #b8c5d7 !important;
+    background: #111b29 !important;
+}
+
+html[data-app-theme="dark"] .alert-light,
+html[data-app-theme="dark"] .bg-white {
+    color: var(--ux-text) !important;
+    background: #202d3f !important;
+    border-color: var(--ux-border) !important;
+}
+
+html,
+body,
+.page-header,
+.main-content,
+.card,
+.notification-panel,
+.notification-item,
+.form-control,
+.form-select {
+    transition-property: background-color, border-color, color, box-shadow;
+    transition-duration: 140ms;
+    transition-timing-function: ease-out;
+}
+/* V16.5_THEME_HARDENING_END */

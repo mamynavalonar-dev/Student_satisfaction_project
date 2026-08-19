@@ -1,0 +1,1266 @@
+/* V16 — Mobile Navigation System
+   Reference behavior:
+   - slide drawer with shifted/scaled application canvas
+   - bottom dock with expanding active pill
+   Desktop navigation is intentionally preserved. */
+
+:root {
+    --mobile-nav-cobalt: #0b63ce;
+    --mobile-nav-cobalt-strong: #084fa8;
+    --mobile-nav-cobalt-soft: #eaf3ff;
+    --mobile-nav-ink: #172033;
+    --mobile-nav-muted: #667085;
+    --mobile-nav-surface: #ffffff;
+    --mobile-nav-drawer-width: min(82vw, 340px);
+    --mobile-nav-dock-height: 72px;
+    --mobile-nav-dock-gap: 12px;
+    --mobile-nav-radius: 28px;
+    --mobile-nav-shadow: 0 24px 70px rgba(16, 24, 40, 0.24);
+
+    --mobile-drawer-reveal: 56vw;
+    --mobile-card-scale: 0.74;
+    --mobile-card-top: 96px; /* fallback, sera recalculé en JS */
+}
+
+/* Desktop/tablet-large: new mobile controls do not participate. */
+.mobile-menu-toggle,
+.mobile-nav-scrim,
+.mobile-side-drawer,
+.mobile-bottom-nav {
+    display: none;
+}
+
+@media (max-width: 820px) {
+    html {
+        scroll-padding-bottom:
+            calc(var(--mobile-nav-dock-height) + 32px + env(safe-area-inset-bottom));
+    }
+
+    body {
+        overflow-x: clip;
+        padding-bottom:
+            calc(var(--mobile-nav-dock-height) + 28px + env(safe-area-inset-bottom));
+    }
+
+    body.mobile-nav-open {
+        overflow: hidden;
+        touch-action: none;
+    }
+
+    /* The old responsive grid navigation is replaced, not duplicated. */
+    .nav-container {
+        display: none !important;
+    }
+
+    /* Compact top bar: menu on left, brand centered-ish, notifications on right. */
+    .page-header {
+        position: relative;
+        z-index: 1040;
+        min-height: 64px;
+        align-items: center !important;
+        flex-wrap: nowrap !important;
+        padding: 10px 12px 10px 62px !important;
+        transition:
+            transform 340ms cubic-bezier(.2, .8, .2, 1),
+            border-radius 340ms cubic-bezier(.2, .8, .2, 1),
+            box-shadow 340ms cubic-bezier(.2, .8, .2, 1);
+    }
+
+    .page-header .brand {
+        max-width: calc(100vw - 132px);
+        overflow: hidden;
+        font-size: clamp(1rem, 4.8vw, 1.24rem) !important;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .page-header .user-info {
+        width: auto !important;
+        margin-left: auto;
+        justify-content: flex-end !important;
+        gap: 0 !important;
+    }
+
+    /* Move account utilities into the side drawer. Keep the bell like
+       the cart icon in the supplied reference. */
+    .page-header .user-info > .navbar-text,
+    .page-header .user-info > .app-locale-switch,
+    .page-header .user-info > .app-theme-toggle,
+    .page-header .user-info > .account-role-badge,
+    .page-header .user-info > a,
+    .page-header .user-info > .logout-form {
+        display: none !important;
+    }
+
+    .page-header .notification-center {
+        display: block !important;
+    }
+
+    .notification-bell {
+        width: 44px !important;
+        height: 44px !important;
+        border-radius: 14px !important;
+    }
+
+    .notification-panel {
+        z-index: 1205 !important;
+    }
+
+    /* Hamburger trigger */
+    .mobile-menu-toggle {
+        position: fixed;
+        z-index: 1220;
+        top: calc(10px + env(safe-area-inset-top));
+        left: 12px;
+        display: inline-grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        border: 1px solid rgba(11, 99, 206, 0.18);
+        border-radius: 14px;
+        color: var(--mobile-nav-cobalt);
+        background: rgba(255, 255, 255, 0.96);
+        box-shadow: 0 8px 24px rgba(16, 24, 40, 0.10);
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition:
+            transform 180ms ease,
+            background-color 180ms ease,
+            color 180ms ease;
+    }
+
+    .mobile-menu-toggle .bi {
+        font-size: 1.28rem;
+        line-height: 1;
+    }
+
+    .mobile-menu-toggle:active {
+        transform: scale(.94);
+    }
+
+    body.mobile-nav-open .mobile-menu-toggle {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    /* Click-catcher over the shifted page. It stays visually subtle so the
+       page peeks out like the reference instead of becoming a dark overlay. */
+    .mobile-nav-scrim {
+        position: fixed;
+        z-index: 1170;
+        inset: 0;
+        display: block;
+        visibility: hidden;
+        border: 0;
+        opacity: 0;
+        background: rgba(8, 26, 49, 0.10);
+        cursor: pointer;
+        transition:
+            opacity 280ms ease,
+            visibility 0s linear 280ms;
+    }
+
+    body.mobile-nav-open .mobile-nav-scrim {
+        visibility: visible;
+        opacity: 1;
+        transition-delay: 0s;
+    }
+
+    /* Side drawer */
+    .mobile-side-drawer {
+        position: fixed;
+        z-index: 1210;
+        inset: 0 auto 0 0;
+        display: flex;
+        flex-direction: column;
+        width: var(--mobile-nav-drawer-width);
+        max-width: calc(100vw - 58px);
+        height: 100dvh;
+        padding:
+            calc(18px + env(safe-area-inset-top))
+            18px
+            calc(22px + env(safe-area-inset-bottom));
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        color: #ffffff;
+        background: var(--mobile-nav-cobalt);
+        border-radius: 0 30px 30px 0;
+        box-shadow: var(--mobile-nav-shadow);
+        transform: translateX(calc(-100% - 24px));
+        visibility: hidden;
+        transition:
+            transform 340ms cubic-bezier(.2, .8, .2, 1),
+            visibility 0s linear 340ms;
+    }
+
+    body.mobile-nav-open .mobile-side-drawer {
+        visibility: visible;
+        transform: translateX(0);
+        transition-delay: 0s;
+    }
+
+    .mobile-drawer-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 22px;
+    }
+
+    .mobile-drawer-identity {
+        min-width: 0;
+    }
+
+    .mobile-drawer-kicker {
+        display: block;
+        margin-bottom: 5px;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: .72rem;
+        font-weight: 800;
+        letter-spacing: .11em;
+        text-transform: uppercase;
+    }
+
+    .mobile-drawer-user {
+        display: block;
+        overflow: hidden;
+        color: #ffffff;
+        font-size: 1.18rem;
+        font-weight: 800;
+        letter-spacing: -.02em;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .mobile-drawer-role {
+        display: inline-flex;
+        align-items: center;
+        min-height: 25px;
+        margin-top: 8px;
+        padding: 4px 8px;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        border-radius: 8px;
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.12);
+        font-size: .72rem;
+        font-weight: 750;
+    }
+
+    .mobile-drawer-close {
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        border: 0;
+        border-radius: 14px;
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.12);
+        cursor: pointer;
+    }
+
+    .mobile-drawer-close .bi {
+        font-size: 1.35rem;
+    }
+
+    .mobile-drawer-nav,
+    .mobile-drawer-tools {
+        display: grid;
+        gap: 7px;
+    }
+
+    .mobile-drawer-nav {
+        margin-top: 4px;
+    }
+
+    .mobile-drawer-separator {
+        height: 1px;
+        margin: 20px 4px;
+        background: rgba(255, 255, 255, 0.18);
+    }
+
+    .mobile-drawer-link,
+    .mobile-drawer-action {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        width: 100%;
+        min-height: 48px;
+        padding: 10px 12px;
+        border: 0;
+        border-radius: 14px;
+        color: rgba(255, 255, 255, 0.88);
+        background: transparent;
+        font: inherit;
+        font-size: .91rem;
+        font-weight: 700;
+        line-height: 1.2;
+        text-align: left;
+        text-decoration: none;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition:
+            color 160ms ease,
+            background-color 160ms ease,
+            transform 160ms ease;
+    }
+
+    .mobile-drawer-link .bi,
+    .mobile-drawer-action .bi {
+        display: grid;
+        place-items: center;
+        flex: 0 0 24px;
+        width: 24px;
+        height: 24px;
+        font-size: 1.05rem;
+    }
+
+    .mobile-drawer-link:hover,
+    .mobile-drawer-link:focus-visible,
+    .mobile-drawer-action:hover,
+    .mobile-drawer-action:focus-visible {
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.13);
+    }
+
+    .mobile-drawer-link.is-active {
+        color: var(--mobile-nav-cobalt-strong);
+        background: #ffffff;
+        box-shadow: 0 8px 26px rgba(0, 0, 0, 0.13);
+    }
+
+    .mobile-drawer-link:active,
+    .mobile-drawer-action:active {
+        transform: scale(.98);
+    }
+
+    .mobile-drawer-locale {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        gap: 8px;
+        align-items: center;
+        min-height: 48px;
+        padding: 7px 8px 7px 12px;
+        border-radius: 14px;
+        color: rgba(255, 255, 255, 0.88);
+    }
+
+    .mobile-drawer-locale-label {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        min-width: 0;
+        font-size: .91rem;
+        font-weight: 700;
+    }
+
+    .mobile-drawer-locale-label .bi {
+        width: 24px;
+        text-align: center;
+    }
+
+    .mobile-drawer-locale button {
+        min-width: 42px;
+        min-height: 38px;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        border-radius: 11px;
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.10);
+        font-size: .74rem;
+        font-weight: 850;
+    }
+
+    .mobile-drawer-locale button[aria-pressed="true"] {
+        color: var(--mobile-nav-cobalt-strong);
+        background: #ffffff;
+    }
+
+    .mobile-drawer-logout {
+        margin: 0;
+    }
+
+    .mobile-drawer-logout .mobile-drawer-action {
+        color: #ffffff;
+        background: rgba(123, 21, 35, 0.20);
+    }
+
+    /* Page movement: reproduces the visible "peek" of the reference. */
+    .page-header,
+    .main-content,
+    footer {
+        transition:
+            transform 340ms cubic-bezier(.2, .8, .2, 1),
+            border-radius 340ms cubic-bezier(.2, .8, .2, 1),
+            box-shadow 340ms cubic-bezier(.2, .8, .2, 1);
+        transform-origin: right center;
+        will-change: transform;
+    }
+
+    body.mobile-nav-open .page-header,
+    body.mobile-nav-open .main-content,
+    body.mobile-nav-open footer {
+        transform:
+            translateX(min(69vw, 292px))
+            scale(.955);
+        border-radius: 24px;
+        box-shadow: 0 22px 56px rgba(16, 24, 40, 0.18);
+        pointer-events: none;
+        user-select: none;
+    }
+
+    /* Bottom navigation dock */
+    .mobile-bottom-nav {
+        position: fixed;
+        z-index: 1160;
+        right: 12px;
+        bottom: calc(10px + env(safe-area-inset-bottom));
+        left: 12px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        width: min(calc(100% - 24px), 520px);
+        min-height: var(--mobile-nav-dock-height);
+        margin-inline: auto;
+        padding: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 999px;
+        background: var(--mobile-nav-cobalt);
+        box-shadow: 0 16px 42px rgba(16, 24, 40, 0.22);
+        transition:
+            transform 260ms ease,
+            opacity 200ms ease;
+    }
+
+    body.mobile-nav-open .mobile-bottom-nav {
+        opacity: 0;
+        transform: translateY(calc(100% + 30px));
+        pointer-events: none;
+    }
+
+    .mobile-bottom-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        flex: 1 1 0;
+        min-width: 48px;
+        min-height: 54px;
+        padding: 0 14px;
+        overflow: hidden;
+        border-radius: 999px;
+        color: rgba(255, 255, 255, 0.86);
+        text-decoration: none;
+        -webkit-tap-highlight-color: transparent;
+        transition:
+            flex-grow 260ms cubic-bezier(.2, .8, .2, 1),
+            color 220ms ease,
+            background-color 220ms ease,
+            transform 160ms ease;
+    }
+
+    .mobile-bottom-link .bi {
+        flex: 0 0 auto;
+        font-size: 1.28rem;
+        line-height: 1;
+    }
+
+    .mobile-bottom-label {
+        max-width: 0;
+        overflow: hidden;
+        opacity: 0;
+        font-size: .84rem;
+        font-weight: 800;
+        line-height: 1;
+        white-space: nowrap;
+        transform: translateX(-6px);
+        transition:
+            max-width 260ms cubic-bezier(.2, .8, .2, 1),
+            opacity 160ms ease,
+            transform 220ms ease;
+    }
+
+    .mobile-bottom-link.is-active {
+        flex-grow: 1.9;
+        color: var(--mobile-nav-cobalt-strong);
+        background: #ffffff;
+        box-shadow: 0 7px 20px rgba(7, 53, 108, 0.18);
+    }
+
+    .mobile-bottom-link.is-active .mobile-bottom-label {
+        max-width: 98px;
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    .mobile-bottom-link:active {
+        transform: scale(.95);
+    }
+
+    /* Avoid bottom dock covering important content. */
+    footer {
+        margin-bottom: 4px;
+    }
+
+    .main-content {
+        padding-bottom: 28px !important;
+    }
+
+    html[data-app-theme="dark"] {
+        --mobile-nav-cobalt: #1769c2;
+        --mobile-nav-cobalt-strong: #0754a7;
+        --mobile-nav-cobalt-soft: #152b46;
+        --mobile-nav-surface: #182231;
+        --mobile-nav-ink: #eef4ff;
+        --mobile-nav-muted: #aab6c8;
+    }
+
+    html[data-app-theme="dark"] .mobile-menu-toggle {
+        color: #8ec5ff;
+        border-color: rgba(142, 197, 255, 0.18);
+        background: rgba(24, 34, 49, 0.96);
+    }
+
+    html[data-app-theme="dark"] .mobile-bottom-link.is-active {
+        color: #0754a7;
+        background: #eef6ff;
+    }
+
+    html[data-app-theme="dark"] .mobile-drawer-link.is-active {
+        color: #0754a7;
+        background: #eef6ff;
+    }
+
+    @supports (backdrop-filter: blur(14px)) {
+        .mobile-menu-toggle {
+            backdrop-filter: blur(14px);
+        }
+    }
+}
+
+@media (max-width: 380px) {
+    :root {
+        --mobile-nav-drawer-width: min(84vw, 318px);
+    }
+
+    .mobile-bottom-nav {
+        right: 8px;
+        left: 8px;
+        width: calc(100% - 16px);
+        gap: 2px;
+        padding: 7px;
+    }
+
+    .mobile-bottom-link {
+        min-width: 44px;
+        padding-inline: 10px;
+    }
+
+    .mobile-bottom-link.is-active {
+        flex-grow: 2.15;
+    }
+
+    .mobile-bottom-label {
+        font-size: .78rem;
+    }
+
+    body.mobile-nav-open .page-header,
+    body.mobile-nav-open .main-content,
+    body.mobile-nav-open footer {
+        transform:
+            translateX(min(70vw, 250px))
+            scale(.95);
+    }
+}
+
+@media (max-height: 560px) and (orientation: landscape) and (max-width: 820px) {
+    .mobile-side-drawer {
+        padding-top: 12px;
+        padding-bottom: 12px;
+        border-radius: 0 22px 22px 0;
+    }
+
+    .mobile-drawer-head {
+        margin-bottom: 10px;
+    }
+
+    .mobile-drawer-separator {
+        margin-block: 10px;
+    }
+
+    .mobile-drawer-link,
+    .mobile-drawer-action {
+        min-height: 44px;
+        padding-block: 8px;
+    }
+
+    .mobile-bottom-nav {
+        --mobile-nav-dock-height: 62px;
+        min-height: 62px;
+    }
+
+    .mobile-bottom-link {
+        min-height: 46px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mobile-menu-toggle,
+    .mobile-nav-scrim,
+    .mobile-side-drawer,
+    .mobile-bottom-nav,
+    .mobile-bottom-link,
+    .mobile-bottom-label,
+    .mobile-drawer-link,
+    .mobile-drawer-action,
+    .page-header,
+    .main-content,
+    footer {
+        transition: none !important;
+    }
+}
+
+/* V16.2_REFERENCE_DRAWER — exact interaction model from supplied reference.
+   Drawer = full-screen background layer.
+   App = one floating canvas that scales down and slides right. */
+
+@media (max-width: 820px) {
+    body {
+        position: relative;
+        min-height: 100dvh;
+        overflow-x: hidden;
+    }
+
+    body.mobile-nav-open {
+        overflow: hidden;
+        background: var(--mobile-nav-cobalt);
+    }
+
+    /* One unified application surface, instead of transforming header/main/footer
+       independently. JS creates this wrapper without changing Django templates. */
+    .mobile-app-canvas {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        min-height: 100dvh;
+        overflow: visible;
+        background: var(--acr-canvas, var(--app-bg, #f5f7fb));
+        transform: translate3d(0, 0, 0) scale(1);
+        transform-origin: center center;
+        transition:
+            transform 420ms cubic-bezier(.2, .78, .2, 1),
+            border-radius 420ms cubic-bezier(.2, .78, .2, 1),
+            box-shadow 420ms cubic-bezier(.2, .78, .2, 1);
+        will-change: transform;
+    }
+
+    body.mobile-nav-open .mobile-app-canvas {
+        transform:
+            translate3d(min(67vw, 244px), 0, 0)
+            scale(.74);
+        border-radius: 24px;
+        box-shadow: -18px 26px 60px rgba(6, 25, 45, .27);
+        overflow: hidden;
+        pointer-events: none;
+        user-select: none;
+    }
+
+    /* Disable the old per-section movement. */
+    body.mobile-nav-open .page-header,
+    body.mobile-nav-open .main-content,
+    body.mobile-nav-open footer {
+        transform: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    /* Full background drawer like the green reference image. */
+    .mobile-side-drawer {
+        position: fixed;
+        z-index: 1;
+        inset: 0;
+        display: block;
+        width: 100vw;
+        max-width: none;
+        height: 100dvh;
+        padding:
+            calc(24px + env(safe-area-inset-top))
+            20px
+            calc(22px + env(safe-area-inset-bottom));
+        overflow-y: auto;
+        color: #fff;
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--mobile-nav-cobalt) 90%, white 10%),
+                var(--mobile-nav-cobalt-strong)
+            );
+        border-radius: 0;
+        box-shadow: none;
+        transform: none;
+        visibility: hidden;
+        opacity: 0;
+        pointer-events: none;
+        transition:
+            opacity 220ms ease,
+            visibility 0s linear 220ms;
+    }
+
+    body.mobile-nav-open .mobile-side-drawer {
+        visibility: visible;
+        opacity: 1;
+        transform: none;
+        pointer-events: auto;
+        transition-delay: 0s;
+    }
+
+    /* No overlay: the reference shows the actual colored menu background. */
+    .mobile-nav-scrim {
+        z-index: 3;
+        inset: 0 0 0 59%;
+        visibility: hidden;
+        opacity: 0;
+        background: transparent;
+    }
+
+    body.mobile-nav-open .mobile-nav-scrim {
+        visibility: visible;
+        opacity: 1;
+    }
+
+    /* Reference top row: circular profile icon at left, circular close at right. */
+    .mobile-drawer-head {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: min(55vw, 205px);
+        min-height: 48px;
+        margin: 0 0 14px;
+    }
+
+    .mobile-drawer-identity {
+        display: grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        margin: 0;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, .16);
+        border-radius: 50%;
+        background: rgba(255, 255, 255, .12);
+    }
+
+    .mobile-drawer-identity::before {
+        content: "\f4e1";
+        font-family: "bootstrap-icons";
+        font-size: 1.15rem;
+        line-height: 1;
+        color: #fff;
+    }
+
+    .mobile-drawer-kicker,
+    .mobile-drawer-user,
+    .mobile-drawer-role {
+        display: none !important;
+    }
+
+    .mobile-drawer-close {
+        display: grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        padding: 0;
+        border: 1px solid rgba(255, 255, 255, .12);
+        border-radius: 50%;
+        color: #fff;
+        background: rgba(255, 255, 255, .12);
+        box-shadow: none;
+    }
+
+    .mobile-drawer-close .bi {
+        font-size: 1.15rem;
+    }
+
+    /* Menu occupies only the exposed left portion; app canvas overlaps the right. */
+    .mobile-drawer-nav,
+    .mobile-drawer-tools {
+        display: grid;
+        width: min(55vw, 205px);
+        gap: 3px;
+    }
+
+    .mobile-drawer-link,
+    .mobile-drawer-action {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        width: 100%;
+        min-height: 42px;
+        padding: 8px 4px;
+        border: 0;
+        border-radius: 0;
+        color: rgba(255, 255, 255, .91);
+        background: transparent;
+        box-shadow: none;
+        font-size: .82rem;
+        font-weight: 650;
+        text-align: left;
+        text-decoration: none;
+    }
+
+    .mobile-drawer-link .bi,
+    .mobile-drawer-action .bi {
+        display: grid;
+        place-items: center;
+        flex: 0 0 23px;
+        width: 23px;
+        height: 23px;
+        font-size: .98rem;
+        color: rgba(255, 255, 255, .88);
+    }
+
+    .mobile-drawer-link.is-active,
+    html[data-app-theme="dark"] .mobile-drawer-link.is-active {
+        color: #fff;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .mobile-drawer-link.is-active::after {
+        content: "";
+        width: 4px;
+        height: 4px;
+        margin-left: auto;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, .92);
+    }
+
+    .mobile-drawer-separator {
+        width: min(55vw, 205px);
+        height: 1px;
+        margin: 10px 0;
+        background: rgba(255, 255, 255, .15);
+    }
+
+    .mobile-drawer-locale {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        align-items: center;
+        width: min(55vw, 205px);
+        min-height: 42px;
+        gap: 4px;
+        padding: 4px 0;
+        border-radius: 0;
+    }
+
+    .mobile-drawer-locale-label {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        min-width: 0;
+        color: rgba(255, 255, 255, .91);
+        font-size: .82rem;
+        font-weight: 650;
+    }
+
+    .mobile-drawer-locale-label .bi {
+        width: 23px;
+        text-align: center;
+    }
+
+    .mobile-drawer-locale button {
+        min-width: 34px;
+        min-height: 32px;
+        padding: 0 6px;
+        border: 1px solid rgba(255, 255, 255, .18);
+        border-radius: 9px;
+        color: #fff;
+        background: rgba(255, 255, 255, .08);
+        font-size: .68rem;
+        font-weight: 800;
+    }
+
+    .mobile-drawer-locale button[aria-pressed="true"] {
+        color: var(--mobile-nav-cobalt-strong);
+        background: #fff;
+    }
+
+    .mobile-drawer-logout {
+        width: min(55vw, 205px);
+        margin: 0;
+    }
+
+    .mobile-drawer-logout .mobile-drawer-action {
+        color: rgba(255, 255, 255, .88);
+        background: transparent;
+    }
+
+    /* Bottom menu: every inactive item gets the same slot.
+       Active item expands exactly like the pill reference. */
+    .mobile-bottom-nav {
+        right: 8px;
+        left: 8px;
+        bottom: calc(7px + env(safe-area-inset-bottom));
+        display: flex;
+        align-items: center;
+        width: calc(100% - 16px);
+        min-height: 66px;
+        gap: 3px;
+        padding: 7px;
+        border-radius: 999px;
+        background: var(--mobile-nav-cobalt);
+    }
+
+    .mobile-bottom-link {
+        flex: 1 1 0;
+        width: auto;
+        min-width: 0;
+        min-height: 52px;
+        padding: 0 8px;
+        gap: 6px;
+        border-radius: 999px;
+    }
+
+    .mobile-bottom-link.is-active {
+        flex: 2.15 1 0;
+        width: auto;
+        min-width: 0;
+    }
+
+    .mobile-bottom-link .bi {
+        flex: 0 0 21px;
+        width: 21px;
+        font-size: 1.18rem;
+        text-align: center;
+    }
+
+    .mobile-bottom-label {
+        max-width: 0;
+        overflow: hidden;
+        opacity: 0;
+        font-size: .72rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .mobile-bottom-link.is-active .mobile-bottom-label {
+        max-width: 66px;
+        opacity: 1;
+    }
+
+    body.mobile-nav-open .mobile-bottom-nav {
+        opacity: 0;
+        transform: translateY(calc(100% + 22px));
+        pointer-events: none;
+    }
+}
+
+@media (max-width: 380px) {
+    body.mobile-nav-open .mobile-app-canvas {
+        transform:
+            translate3d(67vw, 0, 0)
+            scale(.72);
+    }
+
+    .mobile-drawer-head,
+    .mobile-drawer-nav,
+    .mobile-drawer-tools,
+    .mobile-drawer-separator,
+    .mobile-drawer-locale,
+    .mobile-drawer-logout {
+        width: 56vw;
+    }
+
+    .mobile-drawer-link,
+    .mobile-drawer-action,
+    .mobile-drawer-locale-label {
+        font-size: .78rem;
+    }
+
+    .mobile-bottom-link {
+        padding-inline: 6px;
+    }
+
+    .mobile-bottom-link.is-active {
+        flex-grow: 2.25;
+    }
+
+    .mobile-bottom-label {
+        font-size: .69rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mobile-app-canvas,
+    .mobile-side-drawer {
+        transition: none !important;
+    }
+}
+
+/* V16.3_REFERENCE_ALIGNMENT_START
+   Exact reference alignment:
+   - drawer is the full-screen background
+   - the whole app is one floating white canvas
+   - the floating canvas begins at the same vertical level as the first drawer item
+   - the canvas is anchored from the top-left, never from the vertical center
+*/
+@media (max-width: 820px) {
+    :root {
+        --mobile-card-top: 94px;
+        --mobile-card-x: min(64vw, 232px);
+        --mobile-card-scale: .76;
+    }
+
+    body.mobile-nav-open {
+        background: var(--mobile-nav-cobalt);
+    }
+
+    .mobile-side-drawer {
+        position: fixed !important;
+        z-index: 1 !important;
+        inset: 0 !important;
+        width: 100vw !important;
+        max-width: none !important;
+        height: 100dvh !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        transform: none !important;
+    }
+
+    body.mobile-nav-open .mobile-side-drawer {
+        visibility: visible !important;
+        opacity: 1 !important;
+        transform: none !important;
+        pointer-events: auto !important;
+    }
+
+    .mobile-app-canvas {
+        position: relative;
+        z-index: 2;
+        width: 100%;
+        min-height: 100dvh;
+        transform: translate3d(0, 0, 0) scale(1);
+        transform-origin: top left !important;
+        transition:
+            transform 420ms cubic-bezier(.2, .78, .2, 1),
+            border-radius 420ms cubic-bezier(.2, .78, .2, 1),
+            box-shadow 420ms cubic-bezier(.2, .78, .2, 1);
+        will-change: transform;
+    }
+
+    body.mobile-nav-open .mobile-app-canvas {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100dvh !important;
+        min-height: 100dvh !important;
+        overflow: hidden !important;
+        transform-origin: top left !important;
+        transform:
+            translate3d(
+                var(--mobile-card-x),
+                var(--mobile-card-top),
+                0
+            )
+            scale(var(--mobile-card-scale)) !important;
+        border-radius: 27px !important;
+        background: var(--acr-canvas, var(--app-bg, #f5f7fb));
+        box-shadow:
+            -16px 20px 46px rgba(5, 24, 44, .23),
+            0 2px 0 rgba(255, 255, 255, .20);
+        pointer-events: none;
+        user-select: none;
+    }
+
+    /* Previous experiments transformed these pieces separately.
+       The reference moves only the unified application canvas. */
+    body.mobile-nav-open .page-header,
+    body.mobile-nav-open .main-content,
+    body.mobile-nav-open footer {
+        transform: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    /* Exposed left menu column: same geometry from profile row down. */
+    .mobile-drawer-head,
+    .mobile-drawer-nav,
+    .mobile-drawer-tools,
+    .mobile-drawer-separator,
+    .mobile-drawer-locale,
+    .mobile-drawer-logout {
+        width: min(56vw, 206px) !important;
+    }
+
+    .mobile-drawer-head {
+        min-height: 46px;
+        margin-bottom: 16px !important;
+    }
+
+    .mobile-drawer-nav {
+        gap: 3px !important;
+    }
+
+    .mobile-drawer-link,
+    .mobile-drawer-action {
+        min-height: 43px !important;
+        padding: 8px 3px !important;
+        gap: 12px !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .mobile-drawer-link.is-active,
+    html[data-app-theme="dark"] .mobile-drawer-link.is-active {
+        color: #ffffff !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    /* A tiny marker is closer to the supplied reference than a large pill. */
+    .mobile-drawer-link.is-active::after {
+        content: "";
+        flex: 0 0 auto;
+        width: 4px;
+        height: 4px;
+        margin-left: auto;
+        margin-right: 2px;
+        border-radius: 50%;
+        background: #ffffff;
+    }
+
+    /* Bottom navigation: equal inactive slots, only active item expands. */
+    .mobile-bottom-nav {
+        right: 8px !important;
+        left: 8px !important;
+        width: calc(100% - 16px) !important;
+        gap: 3px !important;
+        padding: 7px !important;
+    }
+
+    .mobile-bottom-link {
+        flex: 1 1 0 !important;
+        width: auto !important;
+        min-width: 0 !important;
+        padding-inline: 7px !important;
+    }
+
+    .mobile-bottom-link.is-active {
+        flex: 2.10 1 0 !important;
+        width: auto !important;
+        min-width: 0 !important;
+    }
+
+    .mobile-bottom-link.is-active .mobile-bottom-label {
+        max-width: 66px !important;
+        opacity: 1 !important;
+    }
+
+    body.mobile-nav-open .mobile-bottom-nav {
+        opacity: 0 !important;
+        transform: translateY(calc(100% + 24px)) !important;
+        pointer-events: none !important;
+    }
+}
+
+@media (max-width: 380px) {
+    :root {
+        --mobile-card-x: 64vw;
+        --mobile-card-scale: .74;
+    }
+
+    .mobile-drawer-head,
+    .mobile-drawer-nav,
+    .mobile-drawer-tools,
+    .mobile-drawer-separator,
+    .mobile-drawer-locale,
+    .mobile-drawer-logout {
+        width: 56vw !important;
+    }
+
+    .mobile-drawer-link,
+    .mobile-drawer-action,
+    .mobile-drawer-locale-label {
+        font-size: .78rem !important;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mobile-app-canvas {
+        transition: none !important;
+    }
+}
+/* V16.3_REFERENCE_ALIGNMENT_END */
+
+/* V16.4_SCROLLABLE_FLOATING_CANVAS_START
+   While the drawer is open, the reduced application card remains in place
+   but its own content can be vertically scrolled with touch/mouse wheel.
+*/
+@media (max-width: 820px) {
+    body.mobile-nav-open .mobile-app-canvas {
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        overscroll-behavior-y: contain;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
+        pointer-events: auto !important;
+        scrollbar-width: thin;
+        scrollbar-gutter: stable;
+    }
+
+    body.mobile-nav-open .mobile-app-canvas::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    body.mobile-nav-open .mobile-app-canvas::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    body.mobile-nav-open .mobile-app-canvas::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: rgba(102, 112, 133, .42);
+    }
+
+    /*
+     * V16.2/V16.3 used the right-side scrim as a click catcher.
+     * It would block finger scrolling over the white card, so it becomes
+     * non-interactive while the drawer is open. The X button remains the
+     * explicit close control, like the supplied reference.
+     */
+    body.mobile-nav-open .mobile-nav-scrim {
+        pointer-events: none !important;
+        background: transparent !important;
+    }
+
+    /* Keep desktop/main-page transforms neutral: only the unified canvas moves. */
+    body.mobile-nav-open .mobile-app-canvas .page-header,
+    body.mobile-nav-open .mobile-app-canvas .main-content,
+    body.mobile-nav-open .mobile-app-canvas footer {
+        pointer-events: auto;
+    }
+
+    /*
+     * Avoid accidental horizontal dragging caused by the scaled canvas.
+     * Vertical movement stays natural.
+     */
+    body.mobile-nav-open .mobile-app-canvas,
+    body.mobile-nav-open .mobile-app-canvas * {
+        overscroll-behavior-x: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.mobile-nav-open .mobile-app-canvas {
+        scroll-behavior: auto;
+    }
+}
+/* V16.4_SCROLLABLE_FLOATING_CANVAS_END */

@@ -368,16 +368,291 @@
         }
     </style>
 
+    <meta name="v1613-page-head-start" content="">
     {% block extra_css %}{% endblock %}
+    <meta name="v1613-page-head-end" content="">
     <link rel="stylesheet" href="{% static 'ux/theme_accessibility.css' %}">
     <link rel="stylesheet" href="{% static 'ux/i18n_design.css' %}">
     <link rel="stylesheet" href="{% static 'ux/predictor_i18n_design.css' %}">
     <link rel="stylesheet" href="{% static 'ux/i18n_residuals.css' %}">
     <script defer src="{% static 'ux/i18n_residuals.js' %}"></script>
     <link rel="stylesheet" href="{% static 'ux/academic_control_room_v14d.css' %}">
+    <link rel="stylesheet" href="{% static 'ux/mobile_navigation_v16.css' %}">
+    <script defer src="{% static 'ux/mobile_navigation_v16.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'ux/navigation_performance_v16_5.css' %}">
+    <link rel="stylesheet" href="{% static 'ux/mobile_navigation_indicators_v16_6.css' %}">
+    <link rel="stylesheet" href="{% static 'ux/theme_language_switches_v16_8.css' %}">
+
+    <script>
+    /* V16.9_DRAWER_PREOPEN_BOOT */
+    (() => {
+        try {
+            const mobile = (
+                window.matchMedia
+                && window.matchMedia("(max-width: 820px)").matches
+            );
+            const opened = (
+                sessionStorage.getItem(
+                    "student-satisfaction-mobile-drawer-open"
+                ) === "1"
+            );
+
+            if (mobile && opened) {
+                document.documentElement.classList.add(
+                    "v169-drawer-preopen"
+                );
+            }
+        } catch (_) {
+            /* Progressive enhancement only. */
+        }
+    })();
+    </script>
+
+    <link rel="stylesheet" href="{% static 'ux/mobile_polish_v16_9.css' %}">
+    <link rel="stylesheet" href="{% static 'ux/static_mobile_canvas_v16_11.css' %}">
+    <script>
+    /* V16.11_EARLY_STATIC_CANVAS_BOOT */
+    (() => {
+        try {
+            const mobile = (
+                window.matchMedia
+                && window.matchMedia(
+                    "(max-width: 820px)"
+                ).matches
+            );
+
+            const opened = (
+                sessionStorage.getItem(
+                    "student-satisfaction-mobile-drawer-open"
+                ) === "1"
+            );
+
+            if (mobile && opened) {
+                document.documentElement.classList.add(
+                    "v1611-drawer-preopen",
+                    "v1611-drawer-settling"
+                );
+            }
+        } catch (_) {
+            /* Progressive enhancement only. */
+        }
+    })();
+    </script>
+    <link rel="stylesheet" href="{% static 'ux/partial_navigation_v16_13.css' %}">
+    <link rel="stylesheet" href="{% static 'ux/partial_navigation_indicator_v16_13_1.css' %}">
+    <link rel="stylesheet" href="{% static 'ux/language_same_document_v16_13_6.css' %}">
+    <link rel="stylesheet" href="{% static 'ux/mobile_visual_state_recovery_v16_13_8.css' %}">
+    <link rel="stylesheet" href="{% static 'ux/mobile_metric_cards_layout_v16_13_9_1.css' %}">
 </head>
 <body>
-    <a class="skip-link" href="#main-content">{% trans "Aller au contenu principal" %}</a>
+{# V16_MOBILE_NAVIGATION — mobile drawer + expanding bottom dock #}
+    <button type="button"
+            class="mobile-menu-toggle"
+            data-mobile-menu-toggle
+            aria-controls="mobile-app-drawer"
+            aria-expanded="false"
+            aria-label="{% trans 'Ouvrir le menu' %}">
+        <i class="bi bi-list" aria-hidden="true"></i>
+    </button>
+
+    <button type="button"
+            class="mobile-nav-scrim"
+            data-mobile-nav-scrim
+            aria-label="{% trans 'Fermer le menu' %}"
+            tabindex="-1"></button>
+
+    <aside class="mobile-side-drawer"
+           id="mobile-app-drawer"
+           data-mobile-drawer
+           aria-hidden="true"
+           aria-label="{% trans 'Menu mobile' %}">
+        <div class="mobile-drawer-head">
+            <div class="mobile-drawer-identity">
+                <span class="mobile-drawer-kicker">{% trans "Student Satisfaction" %}</span>
+                {% if user.is_authenticated %}
+                    <strong class="mobile-drawer-user">{{ user.username }}</strong>
+                    <span class="mobile-drawer-role">{{ current_role_label }}</span>
+                {% else %}
+                    <strong class="mobile-drawer-user">{% trans "Navigation" %}</strong>
+                {% endif %}
+            </div>
+
+            {# V16.6_ACCOUNT_OWNER_LINK #}
+            {% if user.is_authenticated %}
+            <a href="{% url 'accounts:profile' %}"
+               class="mobile-drawer-owner"
+               aria-label="{% trans 'Profil' %}">
+                <span class="mobile-drawer-owner-icon" aria-hidden="true">
+                    <i class="bi bi-person"></i>
+                </span>
+                <span class="mobile-drawer-owner-name">{{ user.username }}</span>
+            </a>
+            {% endif %}
+<button type="button"
+                    class="mobile-drawer-close"
+                    data-mobile-menu-close
+                    aria-label="{% trans 'Fermer le menu' %}">
+                <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
+        </div>
+
+        <nav class="mobile-drawer-nav" aria-label="{% trans 'Navigation mobile principale' %}">
+            <a href="{% url 'home' %}"
+               data-mobile-drawer-link
+               class="mobile-drawer-link {% if request.resolver_match.url_name == 'home' %}is-active{% endif %}">
+                <i class="bi bi-house" aria-hidden="true"></i>
+                <span>{% trans "Accueil" %}</span>
+            </a>
+
+            <a href="{% url 'predict' %}"
+               data-mobile-drawer-link
+               class="mobile-drawer-link {% if request.resolver_match.url_name == 'predict' or request.resolver_match.url_name == 'batch_predict' %}is-active{% endif %}">
+                <i class="bi bi-stars" aria-hidden="true"></i>
+                <span>{% trans "Prédiction" %}</span>
+            </a>
+
+            {% if can_train_models %}
+            <a href="{% url 'train_model' %}"
+               data-mobile-drawer-link
+               class="mobile-drawer-link {% if request.resolver_match.url_name == 'train_model' or request.resolver_match.url_name == 'activate_model' or request.resolver_match.url_name == 'deactivate_model' %}is-active{% endif %}">
+                <i class="bi bi-cpu" aria-hidden="true"></i>
+                <span>{% trans "Entraînement" %}</span>
+            </a>
+            {% endif %}
+
+            {% if can_view_data %}
+            <a href="{% url 'data_management' %}"
+               data-mobile-drawer-link
+               class="mobile-drawer-link {% if request.resolver_match.url_name == 'data_management' %}is-active{% endif %}">
+                <i class="bi bi-grid" aria-hidden="true"></i>
+                <span>{% trans "Données" %}</span>
+            </a>
+            {% endif %}
+
+            {% if can_view_statistics %}
+            <a href="{% url 'statistics' %}"
+               data-mobile-drawer-link
+               class="mobile-drawer-link {% if request.resolver_match.url_name == 'statistics' %}is-active{% endif %}">
+                <i class="bi bi-bar-chart-line" aria-hidden="true"></i>
+                <span>{% trans "Statistiques" %}</span>
+            </a>
+            {% endif %}
+        </nav>
+
+        {% if user.is_authenticated %}
+        <div class="mobile-drawer-separator" aria-hidden="true"></div>
+
+        <div class="mobile-drawer-tools">
+            <a href="{% url 'accounts:profile' %}"
+               class="mobile-drawer-link {% if request.resolver_match.namespace == 'accounts' and request.resolver_match.url_name == 'profile' %}is-active{% endif %}">
+                <i class="bi bi-person-circle" aria-hidden="true"></i>
+                <span>{% trans "Profil" %}</span>
+            </a>
+
+            {% if can_manage_users %}
+            <a href="{% url 'accounts:user_list' %}"
+               class="mobile-drawer-link {% if request.resolver_match.namespace == 'accounts' and request.resolver_match.url_name == 'user_list' %}is-active{% endif %}">
+                <i class="bi bi-people" aria-hidden="true"></i>
+                <span>{% trans "Administration" %}</span>
+            </a>
+            {% endif %}
+
+            <button type="button"
+                    class="mobile-drawer-action"
+                    data-mobile-theme-cycle>
+                <i class="bi bi-circle-half" aria-hidden="true"></i>
+                <span>{% trans "Changer le thème" %}</span>
+            </button>
+
+            <form class="mobile-drawer-locale"
+                  action="{% url 'set_language' %}"
+                  method="post"
+                  aria-label="{% trans 'Langue' %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <span class="mobile-drawer-locale-label">
+                    <i class="bi bi-translate" aria-hidden="true"></i>
+                    <span>{% trans "Langue" %}</span>
+                </span>
+                <button type="submit"
+                        name="language"
+                        value="fr"
+                        aria-pressed="{% if LANGUAGE_CODE == 'fr' %}true{% else %}false{% endif %}">
+                    FR
+                </button>
+                <button type="submit"
+                        name="language"
+                        value="en"
+                        aria-pressed="{% if LANGUAGE_CODE == 'en' %}true{% else %}false{% endif %}">
+                    EN
+                </button>
+            </form>
+
+            <form method="post"
+                  action="{% url 'logout' %}"
+                  class="mobile-drawer-logout">
+                {% csrf_token %}
+                <button type="submit" class="mobile-drawer-action">
+                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                    <span>{% trans "Déconnexion" %}</span>
+                </button>
+            </form>
+        </div>
+        {% endif %}
+    </aside>
+
+    <nav class="mobile-bottom-nav"
+         aria-label="{% trans 'Navigation mobile rapide' %}">
+        <a href="{% url 'home' %}"
+           data-mobile-bottom-link
+           class="mobile-bottom-link {% if request.resolver_match.url_name == 'home' %}is-active{% endif %}"
+           aria-label="{% trans 'Accueil' %}">
+            <i class="bi bi-house" aria-hidden="true"></i>
+            <span class="mobile-bottom-label">{% trans "Accueil" %}</span>
+        </a>
+
+        <a href="{% url 'predict' %}"
+           data-mobile-bottom-link
+           class="mobile-bottom-link {% if request.resolver_match.url_name == 'predict' or request.resolver_match.url_name == 'batch_predict' %}is-active{% endif %}"
+           aria-label="{% trans 'Prédiction' %}">
+            <i class="bi bi-stars" aria-hidden="true"></i>
+            <span class="mobile-bottom-label">{% trans "Prédiction" %}</span>
+        </a>
+
+        {% if can_train_models %}
+        <a href="{% url 'train_model' %}"
+           data-mobile-bottom-link
+           class="mobile-bottom-link {% if request.resolver_match.url_name == 'train_model' or request.resolver_match.url_name == 'activate_model' or request.resolver_match.url_name == 'deactivate_model' %}is-active{% endif %}"
+           aria-label="{% trans 'Entraînement' %}">
+            <i class="bi bi-cpu" aria-hidden="true"></i>
+            <span class="mobile-bottom-label">{% trans "Entraînement" %}</span>
+        </a>
+        {% endif %}
+
+        {% if can_view_data %}
+        <a href="{% url 'data_management' %}"
+           data-mobile-bottom-link
+           class="mobile-bottom-link {% if request.resolver_match.url_name == 'data_management' %}is-active{% endif %}"
+           aria-label="{% trans 'Données' %}">
+            <i class="bi bi-grid" aria-hidden="true"></i>
+            <span class="mobile-bottom-label">{% trans "Données" %}</span>
+        </a>
+        {% endif %}
+
+        {% if can_view_statistics %}
+        <a href="{% url 'statistics' %}"
+           data-mobile-bottom-link
+           class="mobile-bottom-link {% if request.resolver_match.url_name == 'statistics' %}is-active{% endif %}"
+           aria-label="{% trans 'Statistiques' %}">
+            <i class="bi bi-bar-chart-line" aria-hidden="true"></i>
+            <span class="mobile-bottom-label">{% trans "Statistiques" %}</span>
+        </a>
+        {% endif %}
+    </nav>
+
+        {# V16.11_STATIC_CANVAS_START — server-rendered shell #}
+    <div class="mobile-app-canvas" data-mobile-app-canvas>
+<a class="skip-link" href="#main-content">{% trans "Aller au contenu principal" %}</a>
     <header class="page-header">
         <a class="brand" href="{% url 'home' %}">🎓 {% trans "Satisfaction Étudiante" %}</a>
         <div class="user-info">
@@ -524,6 +799,8 @@
             <p class="text-center mb-0">&copy; 2026 - {% trans "Projet de Classification ML" %}</p>
         </div>
     </footer>
+    </div>
+    <!-- V16.11_STATIC_CANVAS_END -->
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -533,8 +810,19 @@
             const links = Array.from(nav.querySelectorAll('a'));
             if (!indicator || links.length === 0) return;
 
-            const activeLink = links.find((link) => link.classList.contains('active')) || links[0];
-            activeLink.setAttribute('aria-current', 'page');
+            /* V16.13.2_DYNAMIC_ACTIVE_LINK
+   V16.13 keeps the shell mounted, so active route state
+   must be resolved dynamically instead of captured once. */
+const getActiveLink = () => (
+    links.find((link) => link.classList.contains('active'))
+    || links.find((link) => link.getAttribute('aria-current') === 'page')
+    || links[0]
+);
+
+const initialActiveLink = getActiveLink();
+if (initialActiveLink) {
+    initialActiveLink.setAttribute('aria-current', 'page');
+}
 
             const moveIndicator = (link, animate = true) => {
                 if (!link) return;
@@ -550,12 +838,41 @@
             links.forEach((link) => {
                 link.addEventListener('mouseenter', () => moveIndicator(link));
                 link.addEventListener('focus', () => moveIndicator(link));
-                link.addEventListener('blur', () => moveIndicator(activeLink));
+                link.addEventListener('blur', () => moveIndicator(getActiveLink()));
             });
 
-            nav.addEventListener('mouseleave', () => moveIndicator(activeLink));
-            window.addEventListener('resize', () => moveIndicator(activeLink, false));
-            moveIndicator(activeLink, false);
+            nav.addEventListener('mouseleave', () => moveIndicator(getActiveLink()));
+            window.addEventListener('resize', () => moveIndicator(getActiveLink(), false));
+            const activeStateObserver = new MutationObserver((mutations) => {
+                const changed = mutations.some((mutation) => (
+                    mutation.type === "attributes"
+                    && (
+                        mutation.attributeName === "class"
+                        || mutation.attributeName === "aria-current"
+                    )
+                ));
+
+                if (changed) {
+                    window.requestAnimationFrame(() => {
+                        moveIndicator(getActiveLink());
+                    });
+                }
+            });
+
+            links.forEach((link) => {
+                activeStateObserver.observe(link, {
+                    attributes: true,
+                    attributeFilter: ["class", "aria-current"],
+                });
+            });
+
+            window.addEventListener("v1613:navigated", () => {
+                window.requestAnimationFrame(() => {
+                    moveIndicator(getActiveLink());
+                });
+            });
+
+            moveIndicator(getActiveLink(), false);
         });
     });
     </script>
@@ -778,6 +1095,17 @@
         };
     </script>
     <script src="{% static 'ux/theme_accessibility.js' %}"></script>
-    {% block scripts %}{% endblock %}
+    <div id="v1613-page-scripts" hidden aria-hidden="true">
+        {% block scripts %}{% endblock %}
+    </div>
+    <script defer src="{% static 'ux/navigation_performance_v16_5.js' %}"></script>
+    <script defer src="{% static 'ux/mobile_navigation_indicators_v16_6.js' %}"></script>
+        <script defer src="{% static 'ux/language_same_document_v16_13_6.js' %}"></script>
+<script defer src="{% static 'ux/theme_language_switches_v16_8.js' %}"></script>
+    <script defer src="{% static 'ux/mobile_polish_v16_9.js' %}"></script>
+    <script defer src="{% static 'ux/static_mobile_canvas_v16_11.js' %}"></script>
+        <script defer src="{% static 'ux/partial_navigation_indicator_v16_13_1.js' %}"></script>
+<script defer src="{% static 'ux/partial_navigation_v16_13.js' %}"></script>
+    <script defer src="{% static 'ux/mobile_visual_state_recovery_v16_13_8.js' %}"></script>
 </body>
 </html>

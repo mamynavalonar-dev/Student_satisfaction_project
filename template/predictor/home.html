@@ -14,8 +14,8 @@
         </div>
     </div>
 
-    <div class="row g-3 mb-5">
-        <div class="col-sm-6 col-xl-3">
+    <div class="row g-3 mb-5 v169-responsive-kpi-grid">
+        <div class="col-sm-6 col-xl-3 v169-responsive-kpi-item">
             <div class="card stats-card h-100 border-0 shadow-sm">
                 <div class="card-body text-center">
                     <div class="fs-2 fw-bold">{{ total_feedbacks|default:0 }}</div>
@@ -23,7 +23,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-6 col-xl-3">
+        <div class="col-sm-6 col-xl-3 v169-responsive-kpi-item">
             <div class="card bg-success text-white h-100 border-0 shadow-sm">
                 <div class="card-body text-center">
                     <div class="fs-2 fw-bold">{{ satisfied_count|default:0 }}</div>
@@ -31,7 +31,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-6 col-xl-3">
+        <div class="col-sm-6 col-xl-3 v169-responsive-kpi-item">
             <div class="card bg-danger text-white h-100 border-0 shadow-sm">
                 <div class="card-body text-center">
                     <div class="fs-2 fw-bold">{{ unsatisfied_count|default:0 }}</div>
@@ -39,7 +39,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-6 col-xl-3">
+        <div class="col-sm-6 col-xl-3 v169-responsive-kpi-item">
             <div class="card bg-info text-white h-100 border-0 shadow-sm">
                 <div class="card-body text-center">
                     <div class="fs-2 fw-bold">{{ satisfaction_rate|floatformat:1 }}%</div>

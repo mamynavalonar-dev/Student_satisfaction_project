@@ -1,0 +1,66 @@
+/* V16.13_PARTIAL_NAVIGATION_START
+   Same-document navigation: the application shell never disappears.
+*/
+
+html.v1613-partial-loading {
+    cursor: progress;
+}
+
+html.v1613-partial-loading::after {
+    content: "";
+    position: fixed;
+    z-index: 2147482000;
+    top: 0;
+    left: 0;
+    width: 34%;
+    height: 3px;
+    border-radius: 0 999px 999px 0;
+    pointer-events: none;
+    background: linear-gradient(90deg, #0868d7, #58a7ff);
+    transform-origin: left center;
+    animation: v1613-progress 720ms cubic-bezier(.22, .78, .2, 1) infinite;
+}
+
+html.v1613-partial-loading.app-navigating::after {
+    /* Replaces the older V16.5 progress pseudo-element. */
+    display: block !important;
+}
+
+main.main-content[data-v1613-busy="true"] {
+    pointer-events: none;
+}
+
+@keyframes v1613-progress {
+    0% {
+        opacity: .72;
+        transform: translateX(-105%) scaleX(.52);
+    }
+    58% {
+        opacity: 1;
+        transform: translateX(145%) scaleX(1.15);
+    }
+    100% {
+        opacity: .70;
+        transform: translateX(335%) scaleX(.62);
+    }
+}
+
+/*
+ * The shell stays rendered during fetch. No white document frame is exposed.
+ * Only the page payload is replaced after its CSS is ready.
+ */
+.mobile-app-canvas,
+.page-header,
+.nav-container,
+.mobile-side-drawer,
+.mobile-bottom-nav {
+    backface-visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html.v1613-partial-loading::after {
+        animation: none !important;
+        width: 100%;
+    }
+}
+/* V16.13_PARTIAL_NAVIGATION_END */

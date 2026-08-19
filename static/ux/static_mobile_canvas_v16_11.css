@@ -1,0 +1,132 @@
+/* V16.11_STATIC_MOBILE_CANVAS_START
+   Source-level solution:
+   the application canvas now exists directly in base.html.
+   There is no DOMContentLoaded re-parenting between Django pages.
+*/
+
+/* Preserve the original body flex-shell behavior now that header/main/footer
+   live inside a single server-rendered wrapper. */
+.mobile-app-canvas {
+    display: flex;
+    flex: 1 0 auto;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+    min-height: 100vh;
+}
+
+.mobile-app-canvas > main.main-content {
+    flex: 1 0 auto;
+}
+
+/* Footer remains at the bottom on short desktop pages. */
+.mobile-app-canvas > footer {
+    flex: 0 0 auto;
+}
+
+/* Never use browser root cross-document scaling for this shell. */
+@view-transition {
+    navigation: none;
+}
+
+@media (max-width: 820px) {
+    /*
+     * The early <head> boot sets this class before the body is painted.
+     * Since .mobile-app-canvas already exists in server HTML, its first
+     * visible frame is already the final drawer-open geometry.
+     */
+    html.v1611-drawer-preopen {
+        background: var(--mobile-nav-cobalt, #1769c2);
+    }
+
+    html.v1611-drawer-preopen body {
+        overflow: hidden !important;
+        background: var(--mobile-nav-cobalt, #1769c2) !important;
+    }
+
+    html.v1611-drawer-preopen .mobile-side-drawer {
+        visibility: visible !important;
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+        animation: none !important;
+        pointer-events: auto !important;
+    }
+
+    html.v1611-drawer-preopen .mobile-menu-toggle {
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+
+    html.v1611-drawer-preopen .mobile-bottom-nav {
+        opacity: 0 !important;
+        transform: translateY(calc(100% + 24px)) !important;
+        transition: none !important;
+        pointer-events: none !important;
+    }
+
+    html.v1611-drawer-preopen .mobile-app-canvas {
+        position: fixed !important;
+        z-index: 2 !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100dvh !important;
+        min-height: 100dvh !important;
+
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+
+        transform-origin: top left !important;
+        transform:
+            translate3d(
+                var(--mobile-card-x, 64vw),
+                var(--mobile-card-top, 94px),
+                0
+            )
+            scale(var(--mobile-card-scale, .74)) !important;
+
+        border-radius: 27px !important;
+        box-shadow:
+            -16px 20px 46px rgba(5, 24, 44, .23) !important;
+
+        transition: none !important;
+        animation: none !important;
+        will-change: auto !important;
+    }
+
+    /*
+     * Freeze the old page as soon as a sidebar navigation begins.
+     * It remains reduced until the browser replaces the document.
+     */
+    html.v1611-navigation-lock .mobile-app-canvas {
+        transition: none !important;
+        animation: none !important;
+        transform:
+            translate3d(
+                var(--mobile-card-x, 64vw),
+                var(--mobile-card-top, 94px),
+                0
+            )
+            scale(var(--mobile-card-scale, .74)) !important;
+    }
+
+    /*
+     * Once body.mobile-nav-open catches up, removing the html preopen class
+     * changes no geometry, so there is no visual interpolation.
+     */
+    html.v1611-drawer-settling .mobile-app-canvas,
+    html.v1611-drawer-settling .mobile-side-drawer {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mobile-app-canvas,
+    .mobile-side-drawer {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+/* V16.11_STATIC_MOBILE_CANVAS_END */

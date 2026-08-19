@@ -1,0 +1,102 @@
+/* V16.5 — navigation feedback + cross-document transition */
+
+:root {
+    --nav-motion-fast: 165ms;
+    --nav-motion-ease: cubic-bezier(.22, .78, .2, 1);
+}
+
+nav.animated-nav .nav-indicator {
+    transition:
+        transform var(--nav-motion-fast) var(--nav-motion-ease),
+        width var(--nav-motion-fast) var(--nav-motion-ease),
+        height var(--nav-motion-fast) var(--nav-motion-ease) !important;
+    transform-origin: left center;
+    backface-visibility: hidden;
+}
+
+nav.animated-nav a {
+    transition:
+        color 120ms ease-out,
+        transform 120ms ease-out !important;
+}
+
+nav.animated-nav a[data-nav-pending="true"] {
+    color: #ffffff !important;
+    transform: translateY(-1px);
+}
+
+.mobile-bottom-link {
+    transition:
+        flex 180ms var(--nav-motion-ease),
+        background-color 140ms ease-out,
+        color 140ms ease-out,
+        transform 100ms ease-out !important;
+}
+
+.mobile-bottom-link[data-nav-pending="true"] {
+    transform: scale(.97);
+}
+
+.mobile-drawer-link[data-nav-pending="true"] {
+    opacity: .78;
+}
+
+html.app-navigating::after {
+    content: "";
+    position: fixed;
+    z-index: 10000;
+    top: 0;
+    left: 0;
+    width: 42%;
+    height: 3px;
+    pointer-events: none;
+    background: var(--app-primary-light, #0d6efd);
+    transform-origin: left center;
+    animation: v165-nav-progress 650ms ease-out forwards;
+}
+
+@keyframes v165-nav-progress {
+    0% {
+        opacity: 1;
+        transform: scaleX(.12);
+    }
+    65% {
+        opacity: 1;
+        transform: scaleX(1.8);
+    }
+    100% {
+        opacity: .65;
+        transform: scaleX(2.25);
+    }
+}
+
+@view-transition {
+    navigation: none;
+}
+
+::view-transition-old(root) {
+    animation-duration: 110ms;
+}
+
+::view-transition-new(root) {
+    animation-duration: 150ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    nav.animated-nav .nav-indicator,
+    nav.animated-nav a,
+    .mobile-bottom-link,
+    .mobile-drawer-link {
+        transition: none !important;
+    }
+
+    html.app-navigating::after {
+        animation: none !important;
+        width: 100%;
+    }
+}
+
+/* V16.10.1_NO_CROSS_DOCUMENT_NAVIGATION */
+@view-transition {
+    navigation: none;
+}

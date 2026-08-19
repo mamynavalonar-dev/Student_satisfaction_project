@@ -1,0 +1,123 @@
+/* V16.13.7_LANGUAGE_VISUAL_INTEGRITY_START */
+
+html.v16137-language-busy {
+    cursor: progress;
+}
+
+html.v16137-language-busy::after {
+    content: "";
+    position: fixed;
+    z-index: 2147482500;
+    top: 0;
+    left: 0;
+    width: 26%;
+    height: 3px;
+    border-radius: 0 999px 999px 0;
+    pointer-events: none;
+    background:
+        linear-gradient(
+            90deg,
+            #0868d7,
+            #65b4ff
+        );
+    animation:
+        v16137-language-progress
+        620ms
+        cubic-bezier(.22, .78, .2, 1)
+        infinite;
+}
+
+@keyframes v16137-language-progress {
+    0% {
+        opacity: .65;
+        transform:
+            translateX(-110%)
+            scaleX(.50);
+    }
+
+    60% {
+        opacity: 1;
+        transform:
+            translateX(185%)
+            scaleX(1.08);
+    }
+
+    100% {
+        opacity: .70;
+        transform:
+            translateX(390%)
+            scaleX(.62);
+    }
+}
+
+/*
+ * Emergency fallback only.
+ * Normal FR/EN operation never replaces the browser document.
+ */
+html.v16137-language-fallback::before {
+    content: "";
+    position: fixed;
+    z-index: 2147483640;
+    inset: 0;
+    background:
+        var(
+            --acr-canvas,
+            var(--app-bg, #edf3fa)
+        );
+    pointer-events: auto;
+}
+
+html[data-app-theme="dark"]
+.v16137-language-fallback::before {
+    background:
+        var(
+            --acr-canvas,
+            var(--app-bg, #0f1926)
+        );
+}
+
+/*
+ * Defensive visual invariants.
+ * These do NOT redesign the UI; they only prevent the impossible
+ * states shown in the V16.13.6 screenshots.
+ */
+@media (max-width: 820px) {
+    body:not(.mobile-nav-open)
+    .mobile-side-drawer {
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    body.mobile-nav-open
+    .mobile-side-drawer {
+        visibility: visible;
+    }
+
+    .mobile-bottom-nav {
+        overflow: hidden;
+    }
+
+    .mobile-bottom-slider {
+        max-width:
+            calc(
+                100%
+                - 14px
+            );
+    }
+
+    .skip-link:not(:focus-visible) {
+        position: fixed;
+        left: 12px;
+        top: 8px;
+        transform:
+            translateY(-180%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html.v16137-language-busy::after {
+        animation: none !important;
+        width: 100%;
+    }
+}
+/* V16.13.7_LANGUAGE_VISUAL_INTEGRITY_END */
