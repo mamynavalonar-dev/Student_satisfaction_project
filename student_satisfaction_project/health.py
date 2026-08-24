@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from django.db import DatabaseError, connections
 from django.http import JsonResponse
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_http_methods
 
 
 def _database_ready() -> bool:
@@ -15,7 +15,7 @@ def _database_ready() -> bool:
     return True
 
 
-@require_GET
+@require_http_methods(["GET", "HEAD"])
 def health_check(request):
     ready = _database_ready()
     response = JsonResponse(
