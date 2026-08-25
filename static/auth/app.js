@@ -141,3 +141,26 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+
+// V17.6 - portfolio demo secure handoff.
+// Le GET ?demo=1 reste passif : le changement de session passe
+// uniquement par un POST protege par le jeton CSRF Django.
+document.addEventListener('DOMContentLoaded', () => {
+    const demoForm = document.querySelector('[data-demo-autologin]');
+    if (!demoForm) return;
+
+    const submitButton = demoForm.querySelector('[data-demo-submit]');
+    if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = 'Ouverture de la démo...';
+    }
+
+    window.setTimeout(() => {
+        if (typeof demoForm.requestSubmit === 'function') {
+            demoForm.requestSubmit();
+            return;
+        }
+
+        demoForm.submit();
+    }, 0);
+});

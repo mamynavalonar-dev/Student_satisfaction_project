@@ -11,7 +11,7 @@ from uuid import uuid4
 import pandas as pd
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth import login, logout
+from django.contrib.auth import get_user_model, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db import transaction
@@ -24,7 +24,12 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from accounts.demo import is_portfolio_demo_user
-from accounts.rbac import ROLE_USER, assign_role
+from accounts.rbac import (
+    ROLE_USER,
+    assign_role,
+    get_user_role,
+    has_explicit_managed_role,
+)
 from .forms import (
     LoginForm,
     PredictionForm,
@@ -89,6 +94,11 @@ def login_register_view(request):
 
     next_url = request.POST.get("next") or request.GET.get("next") or ""
     active_panel = "register" if request.GET.get("mode") == "register" else "login"
+    demo_requested = bool(
+        getattr(settings, "PORTFOLIO_DEMO_ENABLED", False)
+        and request.method == "GET"
+        and request.GET.get("demo") == "1"
+    )
 
     login_form = LoginForm(request=request, prefix="login")
     register_form = RegistrationForm(prefix="register")
@@ -150,8 +160,65 @@ def login_register_view(request):
             "register_form": register_form,
             "active_panel": active_panel,
             "next_url": next_url,
+            "demo_requested": demo_requested,
         },
     )
+
+
+@require_POST
+def portfolio_demo_login(request):
+    if not getattr(settings, "PORTFOLIO_DEMO_ENABLED", False):
+        messages.error(
+            request,
+            "La démonstration publique est temporairement indisponible.",
+        )
+        return redirect("login_register")
+
+    username = str(
+        getattr(settings, "PORTFOLIO_DEMO_USERNAME", "") or ""
+    ).strip()
+
+    if not username:
+        messages.error(
+            request,
+            "La démonstration publique est temporairement indisponible.",
+        )
+        return redirect("login_register")
+
+    user = (
+        get_user_model()
+        .objects.filter(
+            username__iexact=username,
+            is_active=True,
+        )
+        .first()
+    )
+
+    if (
+        user is None
+        or not is_portfolio_demo_user(user)
+        or not has_explicit_managed_role(user)
+        or get_user_role(user) != ROLE_USER
+        or user.is_staff
+        or user.is_superuser
+    ):
+        messages.error(
+            request,
+            "La démonstration publique est temporairement indisponible.",
+        )
+        return redirect("login_register")
+
+    login(
+        request,
+        user,
+        backend="django.contrib.auth.backends.ModelBackend",
+    )
+
+    messages.info(
+        request,
+        "Mode démonstration : compte public protégé.",
+    )
+    return redirect("home")
 
 
 @login_required(login_url="login_register")
