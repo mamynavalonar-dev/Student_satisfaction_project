@@ -934,6 +934,7 @@
         {
             historyMode = "push",
             sequence,
+            allowLanguageChange = false,
         } = {}
     ) => {
         if (
@@ -946,6 +947,23 @@
             parseFetchedDocument(
                 payload
             );
+
+        const nextLang =
+            nextDoc.documentElement
+                .getAttribute("lang");
+
+        // Another tab can change Django's language cookie. Ordinary
+        // navigation preserves the header, footer and language switches,
+        // so rebuild the whole page before inserting a different language.
+        // The explicit language-switch flow synchronizes that shell itself.
+        if (
+            nextLang
+            && nextLang.toLowerCase() !== root.lang.toLowerCase()
+            && !allowLanguageChange
+        ) {
+            hardNavigate(payload.finalUrl);
+            return;
+        }
 
         const nextMain =
             nextDoc.querySelector(
@@ -984,10 +1002,6 @@
         document.title =
             nextDoc.title
             || document.title;
-
-        const nextLang =
-            nextDoc.documentElement
-                .getAttribute("lang");
 
         if (nextLang) {
             document.documentElement
@@ -1334,6 +1348,7 @@
                         {
                             historyMode,
                             sequence,
+                            allowLanguageChange: true,
                         }
                     );
                 } finally {
