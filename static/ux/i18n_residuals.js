@@ -37,6 +37,47 @@
         ["Distanciel", "Online"],
         ["Hybride", "Hybrid"],
 
+        ["Insatisfait", "Dissatisfied"],
+        ["Plutôt insatisfait / Peu satisfait", "Somewhat dissatisfied / Slightly satisfied"],
+        ["Neutre / Sans opinion", "Neutral / No opinion"],
+        ["Plutôt satisfait / Assez satisfait", "Somewhat satisfied / Fairly satisfied"],
+        ["Satisfait", "Satisfied"],
+        ["Léger", "Light"],
+        ["Plutôt léger / Assez léger", "Somewhat light / Fairly light"],
+        ["Moyen / Modéré", "Medium / Moderate"],
+        ["Plutôt lourd / Assez lourd", "Somewhat heavy / Fairly heavy"],
+        ["Lourd", "Heavy"],
+        ["Non interactif", "Non-interactive"],
+        ["Peu interactif / Plutôt passif", "Slightly interactive / Mostly passive"],
+        ["Neutre / Interaction moyenne", "Neutral / Average interaction"],
+        ["Plutôt interactif / Assez interactif", "Somewhat interactive / Fairly interactive"],
+        ["Interactif", "Interactive"],
+
+        ["Résultat de la Prediction", "Prediction result"],
+        ["Résultat de la Prédiction", "Prediction result"],
+        ["Confidence de la prédiction:", "Prediction confidence:"],
+        ["Confiance de la prédiction:", "Prediction confidence:"],
+        ["Données utilisées:", "Input data:"],
+        ["Quality enseignement:", "Teaching quality:"],
+        ["Qualité enseignement:", "Teaching quality:"],
+        ["Contribution de chaque caractéristique à la probabilité d'être satisfait.", "Contribution of each feature to the probability of being satisfied."],
+        ["💡 Recommandations:", "💡 Recommendations:"],
+        ["Pour améliorer la satisfaction:", "To improve satisfaction:"],
+        ["Points forts identifiés:", "Identified strengths:"],
+        ["Améliorer la qualité de l'enseignement.", "Improve teaching quality."],
+        ["Augmenter l'interactivité des cours.", "Increase course interactivity."],
+        ["Envisager de réduire la charge de travail.", "Consider reducing the workload."],
+        ["La charge de travail est peut-être trop légère, vérifier si le contenu est suffisant.", "The workload may be too light; check whether the course content is sufficient."],
+        ["Analyser les retours qualitatifs pour identifier des points d'amélioration spécifiques.", "Analyze qualitative feedback to identify specific areas for improvement."],
+        ["Excellente qualité d'enseignement perçue.", "Excellent perceived teaching quality."],
+        ["Très bonne interactivité en cours.", "Very good course interactivity."],
+        ["La charge de travail semble bien équilibrée.", "The workload appears well balanced."],
+        ["La configuration générale du cours est favorable à la satisfaction.", "The overall course configuration supports student satisfaction."],
+        ["Nouvelle Prediction", "New prediction"],
+        ["Nouvelle Prédiction", "New prediction"],
+        ["Prediction en cours...", "Prediction in progress..."],
+        ["Prédiction en cours...", "Prediction in progress..."],
+
         ["Taux satisfait prédit (%)", "Predicted satisfaction rate (%)"],
         ["Cette mesure décrit ce que le MLP actif utilise pour prédire.", "This measure describes what the active MLP uses for prediction."],
         ["Elle est différente des « Observed Associations » et ne constitue pas une preuve de causalité.", "It differs from “Observed Associations” and is not evidence of causality."],
@@ -60,6 +101,21 @@
     ]);
 
     const replacements = [
+        [/^Non Satisfied\s*\(/, "Dissatisfied ("],
+        [/(\d+(?:[.,]\d+)?%)\s+satisfait\b/g, "$1 satisfied"],
+        [
+            /Une contribution positive augmente cette probabilité\s*;\s*une contribution négative la diminue\./g,
+            "A positive contribution increases this probability; a negative contribution decreases it."
+        ],
+        [
+            /Valeurs de Shapley exactes sur la probabilité d'être satisfait/g,
+            "Exact Shapley values for the probability of being satisfied"
+        ],
+        [/échantillon d'entraînement enregistré avec le modèle/g, "training sample saved with the model"],
+        [
+            /Ces contributions expliquent le comportement prédictif du modèle\s*;\s*elles ne prouvent pas une relation causale\./g,
+            "These contributions explain the model's predictive behavior; they do not prove a causal relationship."
+        ],
         [
             /seulement\s+(\d+)\s+prédictions?\s+enregistrées?\./gi,
             (_, count) => `only ${count} recorded prediction${count === "1" ? "" : "s"}.`
