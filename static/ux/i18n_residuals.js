@@ -4,8 +4,6 @@
     const isEnglish = () =>
         (document.documentElement.lang || "").toLowerCase().startsWith("en");
 
-    if (!isEnglish()) return;
-
     const exact = new Map([
         ["Données", "Data"],
 
@@ -187,6 +185,7 @@
     }
 
     function translateCharts() {
+        if (!isEnglish()) return;
         if (!window.Chart || !Chart.instances) return;
 
         const instances = Array.isArray(Chart.instances)
@@ -262,6 +261,7 @@
         });
 
         const observer = new MutationObserver((mutations) => {
+            if (!isEnglish()) return;
             for (const mutation of mutations) {
                 for (const node of mutation.addedNodes) {
                     if (node.nodeType === Node.ELEMENT_NODE) {
@@ -283,6 +283,13 @@
         observer.observe(document.body, {
             childList: true,
             subtree: true
+        });
+
+        // The document survives FR/EN switches. Keep the translator registered
+        // after a French startup, and evaluate the current language each time.
+        window.addEventListener("v16137:language-changed", () => {
+            translateRoot(document.body);
+            translateCharts();
         });
     }
 
